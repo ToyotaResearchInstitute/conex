@@ -1,5 +1,5 @@
 cc_test(
-    name = "MyTest",
+    name = "lp",
     srcs = glob(["test/test_lp.cc"]),
     copts = ["-Iexternal/gtest/include"], 
     deps = ["@gtest//:main", "conex_lib"],
@@ -11,6 +11,15 @@ cc_test(
     copts = ["-Iexternal/gtest/include"], 
     deps = ["@gtest//:main", "conex_lib"],
 )
+
+cc_test(
+    name = "socp",
+    srcs = glob(["test/test_socp.cc"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "conex_lib"],
+)
+
+
 
 cc_library(
     name = "conex_lib",
