@@ -24,6 +24,13 @@ inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& P) {
   return os;
 }
 
+template<typename T, int size>
+inline std::ostream& operator<<(std::ostream& os, const std::array<T, size>& P) {
+  for (auto e : P) {
+    os << e << "\n\n";
+  }
+  return os;
+}
 
 
 #   define LOG(x) \

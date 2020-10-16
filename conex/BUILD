@@ -19,6 +19,12 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
+cc_test(
+    name = "octo",
+    srcs = glob(["test/test_octonions.cc"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "conex_lib"],
+)
 
 
 cc_library(
