@@ -37,7 +37,7 @@ ConexSolverStatus ConexSolve(void* prog, const double*b, int br, const ConexSolv
 
 void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
-inline ConexSolverConfiguration ConexDefaultOptions() {
+ConexSolverConfiguration ConexDefaultOptions() {
   ConexSolverConfiguration config;
   config.prepare_dual_variables = 0;
   config.max_iter = 100;
