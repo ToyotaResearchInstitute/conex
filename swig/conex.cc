@@ -79,7 +79,6 @@ int ConexAddDenseLMIConstraint(void* prog,
 int ConexAddDenseLinearConstraint(ConexConeProgram fred, 
   const double* A, int Ar, int Ac,
   const double* c, int cr) {
-
   assert(Ar == cr);
 
   int n = Ar;

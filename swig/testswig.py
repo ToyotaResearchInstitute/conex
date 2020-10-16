@@ -21,7 +21,6 @@ def randominstance():
     b = np.array( (np.matrix(A).transpose()*np.matrix(c).transpose()).transpose()  ).astype(real)
     b = b[0,:]
     return A, b, c
-
 class Solution:
     x = []
     y = []

@@ -3,12 +3,7 @@ import re
 import requests
 import numpy
 
-
-# System imports
-from distutils.core import *
-from distutils      import sysconfig
-
-
+import distutils.core
 
 np_version = re.compile(r'(?P<MAJOR>[0-9]+)\.'
                         '(?P<MINOR>[0-9]+)') \
@@ -29,25 +24,22 @@ with open(np_file_name, 'wb') as file:
                               stream=True).iter_content(chunk_size):
         file.write(chunk)
 
-# Third-party modules - we depend on numpy for everything
-import numpy
-
 # Obtain the numpy include directory.  This logic works across numpy versions.
 try:
     numpy_include = numpy.get_include()
 except AttributeError:
     numpy_include = numpy.get_numpy_include()
 
-_conex = Extension("_conex",
+_conex = distutils.core.Extension("_conex",
                    ["conex.i"],
                    libraries = ["conex"],
                    include_dirs = [numpy_include],
-                   library_dirs = ["/home/frank/research/conex/swig"],
+                   library_dirs = ["./"],
                    )
 
-setup(name        = "Conex",
-      description = "Provides python interface to the Conex optimizer",
-      author      = "Frank Permenter",
-      version     = "1.0",
-      ext_modules = [_conex])
+distutils.core.setup(name        = "Conex",
+                  description = "Provides python interface to the Conex optimizer",
+                  author      = "Frank Permenter",
+                  version     = "1.0",
+                  ext_modules = [_conex])
 
