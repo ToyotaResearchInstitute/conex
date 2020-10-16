@@ -7,8 +7,6 @@
 #include "workspace.h"
 #include "newton_step.h"
 
-using DenseMatrix = Eigen::MatrixXd;
-using Ref = Eigen::Map<DenseMatrix, Eigen::Aligned>;
 
 class Constraint {
  public:

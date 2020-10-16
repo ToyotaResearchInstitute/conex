@@ -1,3 +1,4 @@
+#define EIGEN_RUNTIME_NO_MALLOC
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 #include <iostream>
@@ -31,7 +32,9 @@ TEST(message_test,content) {
 
     auto b = GetFeasibleObjective(m, prog.constraints);
     DenseMatrix y(m, 1);
+    Eigen::internal::set_is_malloc_allowed(false);
     Solve(b, prog,  config, y.data());
+    Eigen::internal::set_is_malloc_allowed(true);
 
     VectorXd x(n);
     prog.constraints.at(0).get_dual_variable(x.data());

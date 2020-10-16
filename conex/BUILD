@@ -5,6 +5,13 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
+cc_test(
+    name = "sdp",
+    srcs = glob(["test/test_util.h", "test/test_util.cc", "test/test_sdp.cc"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "conex_lib"],
+)
+
 cc_library(
     name = "conex_lib",
     hdrs = glob([ "*.h" ]),
