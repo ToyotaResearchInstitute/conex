@@ -1,0 +1,6 @@
+build --cxxopt='-std=c++17'
+
+build:debug -c dbg
+build:debug --javacopt="-g"
+build:debug --copt="-g"
+build:debug --strip="never"
