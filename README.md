@@ -1,2 +1,2 @@
 # conex
-A geodesic interior-point method for symmetric cone optimization
+A geodesic interior-point method for symmetric cone optimization.
