@@ -1,4 +1,4 @@
-#include "conex/conex.h"
+#include "swig/conex.h"
 
 #include <iostream>
 #include <memory>
@@ -13,7 +13,7 @@
 using DenseMatrix = Eigen::MatrixXd;
 using ConexConeProgram = void*;
 
-ConexSolverStatus ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfiguration* config,
+int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfiguration* config,
            Real* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);

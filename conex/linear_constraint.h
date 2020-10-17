@@ -40,9 +40,7 @@ class LinearConstraint {
   LinearConstraint(int n, T* constraint_matrix, T* constraint_affine) : 
       workspace_(n, constraint_matrix->cols()),
       constraint_matrix_(*constraint_matrix),
-      constraint_affine_(*constraint_affine) {
-      DUMP("Constructed");
-      }
+      constraint_affine_(*constraint_affine) { }
 
   LinearConstraint(int n, int m, const double* constraint_matrix, const double* constraint_affine) : 
       workspace_(n, m),

@@ -54,7 +54,7 @@ class PolynomialProgram {
 };
 
 DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints);
-ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,  
+bool Solve(const DenseMatrix& b, Program& prog,  
            const ConexSolverConfiguration& config,
            double* primal_variable);
 

@@ -57,7 +57,7 @@ void ConstructSchurComplementSystem(std::vector<T>* c, bool initialize, SchurCom
 }
 
 
-ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,  
+bool Solve(const DenseMatrix& b, Program& prog,  
            const ConexSolverConfiguration& config,
            double* primal_variable) {
 
@@ -65,8 +65,7 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
   auto& sys = prog.sys;
 
   ConexSolverStatus status;
-  status.solved = 1;
-  status.infeasible_or_unbounded = 0;
+  bool solved = 1;
 
   std::cout.precision(2);
   std::cout << std::scientific;
@@ -77,10 +76,9 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
   // Empty program
   if (prog.constraints.size() == 0) {
     Eigen::Map<DenseMatrix> ynan(primal_variable, m, 1);
-    status.infeasible_or_unbounded = 1;
-    status.solved = 0;
+    solved = 0;
     ynan.array() = b.array() * std::numeric_limits<double>::infinity();
-    return status;
+    return solved;
   }
 
   prog.InitializeWorkspace();
@@ -102,6 +100,8 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
   opt.affine = false;
 
   int rankK = Rank(constraints);
+
+  bool error_converging = false;
 
   for (int i = 0; i < max_iter; i++) {
     MuSelectionParameters mu_param;
@@ -125,8 +125,7 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
     // 
     //  t = inv(S11) (b1 - S12 x)
     //  (S22 - S12 inv(S11) S12 x) = b - S12 inv(S11) * b1
-
-    if (opt.inv_sqrt_mu < inv_sqrt_mu_max) {
+    if ((opt.inv_sqrt_mu < inv_sqrt_mu_max ) || (!error_converging)) {
       double inv_sqrt_mu_last = opt.inv_sqrt_mu;
       mu_param.inv_sqrt_mu = inv_sqrt_mu_max;
       mu_param.limit = config.dinf_limit;
@@ -136,8 +135,8 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
 
       CalcMinMu(mu_param.gw_lambda_max, mu_param.gw_lambda_min, &mu_param);
       opt.inv_sqrt_mu = mu_param.inv_sqrt_mu;
-      //double normsqrd = mu_param.inv_sqrt_mu * mu_param.inv_sqrt_mu *  mu_param.gw_norm_squared +
-      //               -2*mu_param.inv_sqrt_mu * mu_param.gw_trace  + rankK;
+      double normsqrd = mu_param.inv_sqrt_mu * mu_param.inv_sqrt_mu *  mu_param.gw_norm_squared +
+                     -2*mu_param.inv_sqrt_mu * mu_param.gw_trace  + rankK;
 
       // double divub = normsqrd/1-config.dinf_limit;
       // double divlb = normsqrd/(1+config.dinf_limit);
@@ -151,6 +150,16 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
         }
       }
       max_iter = i + config.final_centering_steps;
+
+      if (normsqrd > config.divergence_threshold * rankK) {
+        if (i > 3) {
+          solved = 0;
+          PRINTSTATUS("Infeasible Or Unbounded.");
+          return solved;
+        }
+      } else {
+        error_converging = true;
+      }
     } 
 
     double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
@@ -173,20 +182,13 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
+    REPORT(config.divergence_threshold * rankK);
 
 
     prog.stats.num_iter = iter_cnt;
     prog.stats.sqrt_inv_mu[iter_cnt - 1] = opt.inv_sqrt_mu;
     std::cout << "\n";
 
-    if (i > 3) {
-      if (d_2 > config.divergence_threshold * rankK) {
-        status.solved = 0;
-        status.infeasible_or_unbounded = 1;
-        PRINTSTATUS("Infeasible Or Unbounded.");
-        return status;
-      }
-    }
   }
 
   if (config.prepare_dual_variables) {
@@ -217,11 +219,10 @@ ConexSolverStatus Solve(const DenseMatrix& b, Program& prog,
   }
   y /= opt.inv_sqrt_mu;
   yout = y;
-  status.infeasible_or_unbounded = 0;
-  status.solved = 1;
+  solved = 1;
 
-  PRINTSTATUS("Solved.");
-  return status;
+  PRINTSTATUS("Solved!!!");
+  return solved;
 }
 
 

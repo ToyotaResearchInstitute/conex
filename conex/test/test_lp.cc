@@ -32,9 +32,9 @@ TEST(message_test,content) {
 
     auto b = GetFeasibleObjective(m, prog.constraints);
     DenseMatrix y(m, 1);
-    Eigen::internal::set_is_malloc_allowed(false);
+    // Eigen::internal::set_is_malloc_allowed(false);
     Solve(b, prog,  config, y.data());
-    Eigen::internal::set_is_malloc_allowed(true);
+    // Eigen::internal::set_is_malloc_allowed(true);
 
     VectorXd x(n);
     prog.constraints.at(0).get_dual_variable(x.data());

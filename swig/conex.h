@@ -15,10 +15,6 @@ typedef struct {
   double divergence_threshold; 
 } ConexSolverConfiguration;
 
-typedef struct {
-  int infeasible_or_unbounded;
-  int solved;
-} ConexSolverStatus;
 
 
 void* ConexCreateConeProgram();
@@ -32,7 +28,7 @@ int ConexAddDenseLMIConstraint(void* prog,
   const double* Aarray, int Aarrayr, int Aarrayc, int m,
   const double* cmat, int cr, int cc);
 
-ConexSolverStatus ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguration* config, 
+int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguration* config, 
                 double* y, int yr);
 
 void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
@@ -45,7 +41,7 @@ ConexSolverConfiguration ConexDefaultOptions() {
   config.dinf_limit = .95;
   config.final_centering_steps = 5;
   config.convergence_rate_threshold = .5;
-  config.divergence_threshold = 1e2;
+  config.divergence_threshold = 100;
   return config;
 }
 
