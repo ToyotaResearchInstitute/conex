@@ -6,7 +6,6 @@
 #include "conex/linear_constraint.h"
 #include "conex/dense_lmi_constraint.h"
 #include "conex/constraint.h"
-#include "conex/conex.h"
 #include "conex/cone_program.h"
 #include "conex/test/test_util.h"
 #include "conex/eigen_decomp.h"
@@ -16,7 +15,7 @@ using DenseMatrix = Eigen::MatrixXd;
 int TestDiagonalSDP() {
   int n = 20;
   int m = 10;
-  ConexSolverConfiguration config = ConexDefaultOptions();
+  SolverConfiguration config;
   config.inv_sqrt_mu_max = 25000;
   config.prepare_dual_variables = true;
 
@@ -58,7 +57,7 @@ int TestDiagonalSDP() {
 }
 
 int TestSDP() {
-  ConexSolverConfiguration config = ConexDefaultOptions();
+  SolverConfiguration config;
   int n = 15;
   int m = 13;
   auto constraints2 = GetRandomDenseMatrices(n, m);

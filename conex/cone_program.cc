@@ -1,5 +1,5 @@
-#include "cone_program.h"
-#include "newton_step.h"
+#include "conex/cone_program.h"
+#include "conex/newton_step.h"
 
 inline void CalcMinMu(double lambda_max, double, MuSelectionParameters* p) { 
   const double kMaxNormInfD = p->limit;
@@ -58,13 +58,12 @@ void ConstructSchurComplementSystem(std::vector<T>* c, bool initialize, SchurCom
 
 
 bool Solve(const DenseMatrix& b, Program& prog,  
-           const ConexSolverConfiguration& config,
+           const SolverConfiguration& config,
            double* primal_variable) {
 
   auto& constraints = prog.constraints;
   auto& sys = prog.sys;
 
-  ConexSolverStatus status;
   bool solved = 1;
 
   std::cout.precision(2);

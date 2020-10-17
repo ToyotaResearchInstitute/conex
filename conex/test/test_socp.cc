@@ -6,7 +6,6 @@
 #include "conex/constraint.h"
 #include "conex/soc_constraint.h"
 #include "conex/quadratic_cone_constraint.h"
-#include "conex/conex.h"
 #include "conex/cone_program.h"
 
 using DenseMatrix = Eigen::MatrixXd;
@@ -14,7 +13,7 @@ using DenseMatrix = Eigen::MatrixXd;
 
 int DoMain() {
   int n = 3;
-  ConexSolverConfiguration config = ConexDefaultOptions();
+  SolverConfiguration config;
   config.inv_sqrt_mu_max = 10000;
 
   std::vector<Eigen::MatrixXd>  A;

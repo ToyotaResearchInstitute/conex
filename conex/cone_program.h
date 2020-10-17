@@ -1,9 +1,20 @@
 #pragma once
-#include "conex.h"
 #include "constraint.h"
 #include "workspace.h"
 
 //  Allocates memory for internal computations.
+
+struct SolverConfiguration {
+  int prepare_dual_variables = 0;
+  int max_iter = 100;
+  double inv_sqrt_mu_max = 1000;
+  double dinf_limit = .95;
+  int final_centering_steps = 5;
+  double convergence_rate_threshold = .5;
+  double divergence_threshold = 100; 
+};
+
+
 class Program {
  public:
   void SetNumberOfVariables(int m) {
@@ -55,6 +66,6 @@ class PolynomialProgram {
 
 DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints);
 bool Solve(const DenseMatrix& b, Program& prog,  
-           const ConexSolverConfiguration& config,
+           const SolverConfiguration& config,
            double* primal_variable);
 

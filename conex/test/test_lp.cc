@@ -7,13 +7,12 @@
 #include "conex/constraint.h"
 #include "conex/cone_program.h"
 
-#include "conex/conex.h"
 
 using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
 TEST(message_test,content) {
   for (int i = 0; i < 1; i++) {
-    ConexSolverConfiguration config = ConexDefaultOptions();
+    SolverConfiguration config;
     config.prepare_dual_variables = true;
     config.inv_sqrt_mu_max = 1000000;
     int m = 5;

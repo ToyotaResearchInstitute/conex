@@ -30,7 +30,6 @@ class SpectralDecompSpinFactor  {
       if ((i == 1) && (j == 1)) {
         return X11;
       }
-      bool valid_indices = false;
       return EigenType();
     }
   };
