@@ -181,13 +181,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
-    REPORT(config.divergence_threshold * rankK);
-
 
     prog.stats.num_iter = iter_cnt;
     prog.stats.sqrt_inv_mu[iter_cnt - 1] = opt.inv_sqrt_mu;
     std::cout << "\n";
-
   }
 
   if (config.prepare_dual_variables) {
@@ -220,7 +217,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
   yout = y;
   solved = 1;
 
-  PRINTSTATUS("Solved!!!");
+  PRINTSTATUS("Solved.");
   return solved;
 }
 

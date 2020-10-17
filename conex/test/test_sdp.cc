@@ -84,12 +84,9 @@ int TestSDP() {
     b(i) -= (constraints2.at(i) * x).trace();
   }
 
-
   EXPECT_TRUE(conex::jordan_algebra::eig(slack).eigenvalues.minCoeff() > 1e-8);
   EXPECT_TRUE(b.norm() < 1e-8);
-  DUMP(slack*x);
   EXPECT_TRUE((slack*x).trace() < 1e-4);
-
 
   return 0;
 }
