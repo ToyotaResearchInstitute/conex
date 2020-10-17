@@ -6,19 +6,21 @@ using Eigen::VectorXd;
 
 constexpr int n = 8;
 constexpr int d = 3;
-using Octonion = Eigen::Matrix<double, n, 1>;
 using Table = Eigen::Matrix<int, n, n>;
-using OctonionMatrix = std::array<Octonion, d*d>;
 
 
 int LinIndex(int i, int j) {
    return j * d + i;
 }
 
-class Octonions {
+template<int n = 8>
+class DivisionAlgebra {
  public:
-  Octonions() {
-  M << 1, 1,   1,  1,  1,  1,  1,  1, 
+  using Octonion = Eigen::Matrix<double, n, 1>;
+  using OctonionMatrix = std::array<Octonion, d*d>;
+
+  DivisionAlgebra() {
+  M << 1,  1,  1,  1,  1,  1,  1,  1, 
        1, -1, -1,  1, -1,  1,  1, -1,
        1,  1, -1, -1, -1, -1,  1,  1, 
        1, -1,  1, -1, -1,  1, -1,  1, 
@@ -36,7 +38,6 @@ class Octonions {
        6,  7,  4,  5,  2,  3,  0,  1,
        7,  6,  5,  4,  3,  2,  1,  0;
   }
-
 
   void mult(Eigen::VectorXd x, Eigen::VectorXd y, Octonion* z) {
     z->setZero();
@@ -56,7 +57,7 @@ class Octonions {
       for (int j = 0; j < d; j++) {
         z.at(LinIndex(i, j)).setZero();
         for (int k = 0; k < d; k++) {
-          mult(x.at( LinIndex(i, k)  ), y.at(  LinIndex(k, j) ), &temp);
+          mult(x.at(LinIndex(i, k)), y.at(LinIndex(k, j)), &temp);
           z.at(LinIndex(i, j)) += temp;
         }
       }
@@ -104,48 +105,55 @@ class Octonions {
     return true;
   }
 
+  static Octonion Conjugate(const Octonion& x) {
+    Octonion y = x;
+    y.bottomRows(n-1).array() *= -1;
+    return y;
+  }
+
+  static OctonionMatrix Random() {
+    OctonionMatrix w;
+    Octonion e;
+    e(0) = 1;
+    e.bottomRows(n-1).setZero();
+    for (int i = 0; i < d; i++) {
+      w.at(LinIndex(i, i)) = e * Eigen::MatrixXd::Random(1, 1);
+      for (int j = i+1; j < d; j++) {
+        w.at(LinIndex(i, j)) = Octonion::Random(); 
+        w.at(LinIndex(j, i)) = Conjugate(w.at(LinIndex(i, j)));
+      }
+    }
+    return w;
+  }
+
+  static bool IsHermitian(const OctonionMatrix& w) {
+    double eps = 1e-12;
+    for (int i = 0; i < d; i++) {
+      if (w.at(LinIndex(i, i)).bottomRows(n-1).norm() > eps) {
+        return false;
+      }
+      for (int j = i+1; j < d; j++) {
+        if ((w.at(LinIndex(i, j)) - Conjugate(w.at(LinIndex(j, i)))).norm() > eps) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
 
   Table M;
   Table I;
 };
 
-Octonion Conjugate(const Octonion& x) {
-  Octonion y = x;
-  y.bottomRows(7).array() *= -1;
-  return y;
-}
+using Octonions = DivisionAlgebra<8>;
+using Quaternions = DivisionAlgebra<4>;
+using Complex = DivisionAlgebra<2>;
+using Real = DivisionAlgebra<1>;
 
-OctonionMatrix Random() {
-  OctonionMatrix w;
-  Octonion e;
-  e(0) = 1;
-  e.bottomRows(7).setZero();
-  for (int i = 0; i < d; i++) {
-    w.at(LinIndex(i, i)) = e * Eigen::MatrixXd::Random(1, 1);
-    for (int j = i+1; j < d; j++) {
-      w.at(LinIndex(i, j)) = Octonion::Random(); 
-      w.at(LinIndex(j, i)) = Conjugate(w.at(LinIndex(i, j)));
-    }
-  }
-  return w;
-}
-
-bool IsHermitian(const OctonionMatrix& w) {
-  double eps = 1e-12;
-  for (int i = 0; i < d; i++) {
-    if (w.at(LinIndex(i, i)).bottomRows(7).norm() > eps) {
-      return false;
-    }
-    for (int j = i+1; j < d; j++) {
-      if ((w.at(LinIndex(i, j)) - Conjugate(w.at(LinIndex(j, i)))).norm() > eps) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-TEST(JordanAlgebra, OctonionMultIdentity) {
+template<typename T>
+void DoMultTest() {
+  using Octonion = typename T::Octonion;
   Octonion x;
   Octonion y;
   x.setZero();
@@ -153,29 +161,47 @@ TEST(JordanAlgebra, OctonionMultIdentity) {
   y.setConstant(3);
 
   Octonion z;
-  Octonions().mult(x,y, &z);
+  T().mult(x,y, &z);
   EXPECT_TRUE((y - z).norm() < 1e-8);
+}
+
+TEST(JordanAlgebra, OctonionMultIdentity) {
+  DoMultTest<Octonions>();
+  DoMultTest<Quaternions>();
+  DoMultTest<Complex>();
+  DoMultTest<Real>();
+}
+
+
+template<typename T>
+void DoMatrixTest() {
+  using OctonionMatrix = typename T::OctonionMatrix;
+  OctonionMatrix A = T::Random();
+  OctonionMatrix B = T::Random();
+  auto W =  T().JordanMult(A, B);
+
+  EXPECT_TRUE(T::IsHermitian(B));
+  EXPECT_TRUE(T::IsHermitian(A));
+  EXPECT_TRUE(T::IsHermitian(W));
+
+  // Test Jordan identity.
+  auto Asqr = T().JordanMult(A, A);
+  auto BA = T().JordanMult(A, B);
+  auto P1 = T().JordanMult(Asqr, BA);
+
+  auto BAsqr = T().JordanMult(B, Asqr);
+  auto P2 = T().JordanMult(A, BAsqr);
+
+  EXPECT_TRUE(T().IsEqual(P1, P2));
 }
 
 
 TEST(JordanAlgebra, OctonionMatrices) {
-  OctonionMatrix A = Random();
-  OctonionMatrix B = Random();
-  auto W =  Octonions().JordanMult(A, B);
-
-  EXPECT_TRUE(IsHermitian(B));
-  EXPECT_TRUE(IsHermitian(A));
-  EXPECT_TRUE(IsHermitian(W));
-
-  // Test Jordan identity.
-  auto Asqr = Octonions().JordanMult(A, A);
-  auto BA = Octonions().JordanMult(A, B);
-  auto P1 = Octonions().JordanMult(Asqr, BA);
-
-  auto BAsqr = Octonions().JordanMult(B, Asqr);
-  auto P2 = Octonions().JordanMult(A, BAsqr);
-
-  EXPECT_TRUE(Octonions().IsEqual(P1, P2));
+  using OctonionMatrix = Octonions::OctonionMatrix;
+  DoMatrixTest<Octonions>();
+  DoMatrixTest<Quaternions>();
+  DoMatrixTest<Complex>();
+  DoMatrixTest<Real>();
 }
 
 
