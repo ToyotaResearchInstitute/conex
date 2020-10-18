@@ -40,7 +40,7 @@ void DoMultTest() {
   EXPECT_TRUE((y - z).norm() < 1e-8);
 }
 
-TEST(DivisionAlgebra, Scalars) {
+TEST(JordanMatrixAlgebra, Scalars) {
   DoMultTest<Octonions>();
   DoMultTest<Quaternions>();
   DoMultTest<Complex>();
@@ -71,7 +71,7 @@ void DoMatrixTest() {
 }
 
 
-TEST(DivisionAlgebra, Matrices) {
+TEST(JordanMatrixAlgebra, Matrices) {
   DoMatrixTest<Octonions>();
   DoMatrixTest<Quaternions>();
   DoMatrixTest<Complex>();
@@ -94,7 +94,7 @@ bool DoQuadAssociativeTest() {
   return T().IsEqual(Y1, Yref);
 }
 
-TEST(DivisionAlgebra, QuadRep) {
+TEST(JordanMatrixAlgebra, QuadRep) {
   EXPECT_TRUE(DoQuadAssociativeTest<Quaternions>());
   EXPECT_TRUE(DoQuadAssociativeTest<Complex>());
   EXPECT_TRUE(DoQuadAssociativeTest<Real>());
@@ -120,7 +120,7 @@ VectorXd sort(const VectorXd& x) {
   return y;
 }
 
-TEST(DivisionAlgebra, EigReal) {
+TEST(JordanMatrixAlgebra, EigReal) {
   using T = Real;
   auto Q = T::Random();
   Q = T().JordanMult(Q, Q);
@@ -136,7 +136,7 @@ TEST(DivisionAlgebra, EigReal) {
               sort(eig(Xs).eigenvalues)).norm() < 1e-8);
 }
 
-TEST(DivisionAlgebra, Op) {
+TEST(JordanMatrixAlgebra, Op) {
   using T = Octonions;
   auto Q = T::Random();
   Q = T().JordanMult(Q, Q);

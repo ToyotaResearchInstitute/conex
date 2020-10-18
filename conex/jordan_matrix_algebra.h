@@ -7,13 +7,13 @@ inline int LinIndex(int i, int j) {
 }
 
 template<int n = 8>
-class DivisionAlgebra {
+class JordanMatrixAlgebra {
  public:
   static constexpr int dim = (.5*(d*d-d))*n + d;
   using Element = Eigen::Matrix<double, n, 1>;
   using Matrix = std::array<Element, d*d>;
 
-  DivisionAlgebra(); 
+  JordanMatrixAlgebra(); 
 
   void ScalarMult(const Element& x, const Element& y, Element* z);
 
@@ -55,8 +55,8 @@ class DivisionAlgebra {
   Eigen::Matrix<int, 8, 8> I;
 };
 
-using Octonions = DivisionAlgebra<8>;
-using Quaternions = DivisionAlgebra<4>;
-using Complex = DivisionAlgebra<2>;
-using Real = DivisionAlgebra<1>;
+using Octonions = JordanMatrixAlgebra<8>;
+using Quaternions = JordanMatrixAlgebra<4>;
+using Complex = JordanMatrixAlgebra<2>;
+using Real = JordanMatrixAlgebra<1>;
 

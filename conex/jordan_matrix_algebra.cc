@@ -1,5 +1,5 @@
 #include "jordan_matrix_algebra.h"
-template<int n> DivisionAlgebra<n>::DivisionAlgebra() {
+template<int n> JordanMatrixAlgebra<n>::JordanMatrixAlgebra() {
   M << 1,  1,  1,  1,  1,  1,  1,  1, 
        1, -1, -1,  1, -1,  1,  1, -1,
        1,  1, -1, -1, -1, -1,  1,  1, 
@@ -20,7 +20,7 @@ template<int n> DivisionAlgebra<n>::DivisionAlgebra() {
   }
 
 template<int n>
-  void DivisionAlgebra<n>::ScalarMult(const Element& x, const Element& y, Element* z) {
+  void JordanMatrixAlgebra<n>::ScalarMult(const Element& x, const Element& y, Element* z) {
     z->setZero();
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
@@ -32,7 +32,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::MatrixMult(const Matrix&x, const Matrix& y) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::MatrixMult(const Matrix&x, const Matrix& y) {
     Matrix z;
     Element temp;
     for (int i = 0; i < d; i++) {
@@ -48,7 +48,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::MatrixAdd(const Matrix&x, const Matrix& y) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::MatrixAdd(const Matrix&x, const Matrix& y) {
     Matrix z;
     Element temp;
     for (int i = 0; i < d; i++) {
@@ -60,7 +60,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::ScalarMult(const Matrix&x, double s) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::ScalarMult(const Matrix&x, double s) {
     Matrix z;
     Element temp;
     for (int i = 0; i < d; i++) {
@@ -72,14 +72,14 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::JordanMult(const Matrix& x, const Matrix& y) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::JordanMult(const Matrix& x, const Matrix& y) {
     return ScalarMult(MatrixAdd(MatrixMult(x, y),
                                 MatrixMult(y, x)), 
                       .5);
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::QuadRep(const Matrix& x, const Matrix& y) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::QuadRep(const Matrix& x, const Matrix& y) {
     auto X1 =  ScalarMult(JordanMult(x, JordanMult(x, y)), 2);
     auto X2 =  ScalarMult(JordanMult(JordanMult(x, x), y), -1);
     return  MatrixAdd(X1, X2);
@@ -87,7 +87,7 @@ template<int n>
 
 
 template<int n>
-  bool DivisionAlgebra<n>::IsEqual(const Matrix&x, const Matrix& y) {
+  bool JordanMatrixAlgebra<n>::IsEqual(const Matrix&x, const Matrix& y) {
     Matrix z;
     Element temp;
     for (int i = 0; i < d; i++) {
@@ -101,14 +101,14 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Element DivisionAlgebra<n>::Conjugate(const Element& x) {
+  typename JordanMatrixAlgebra<n>::Element JordanMatrixAlgebra<n>::Conjugate(const Element& x) {
     Element y = x;
     y.bottomRows(n-1).array() *= -1;
     return y;
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::Identity() {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::Identity() {
     auto e = Random();
     e = ScalarMult(e, 0);
     for (int i = 0; i < d; i++) {
@@ -118,7 +118,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::Random() {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::Random() {
     Matrix w;
     Element e;
     e(0) = 1;
@@ -134,7 +134,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::Ones() {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::Ones() {
     Matrix w;
     Element e;
     e(0) = 1;
@@ -150,7 +150,7 @@ template<int n>
   }
 
 template<int n>
-  bool DivisionAlgebra<n>::IsHermitian(const Matrix& w) {
+  bool JordanMatrixAlgebra<n>::IsHermitian(const Matrix& w) {
     double eps = 1e-12;
     for (int i = 0; i < d; i++) {
       if (w.at(LinIndex(i, i)).bottomRows(n-1).norm() > eps) {
@@ -166,7 +166,7 @@ template<int n>
   }
 
 template<int n>
-  double DivisionAlgebra<n>::TraceInnerProduct(const Matrix& x, const Matrix& y) {
+  double JordanMatrixAlgebra<n>::TraceInnerProduct(const Matrix& x, const Matrix& y) {
     auto w = JordanMult(x, y);
     double ip = 0;
     for (int i = 0; i < d; i++) {
@@ -176,7 +176,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::Basis(int i, int j, int k) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::Basis(int i, int j, int k) {
     auto w = ScalarMult(Random(), 0);
     double val = 1;
     if (i != j) {
@@ -194,7 +194,7 @@ template<int n>
   }
 
 template<int n>
-  typename DivisionAlgebra<n>::Matrix DivisionAlgebra<n>::Basis(int dim) {
+  typename JordanMatrixAlgebra<n>::Matrix JordanMatrixAlgebra<n>::Basis(int dim) {
     if (dim < d) {
       return Basis(dim, dim, 0);
     }
@@ -213,7 +213,7 @@ template<int n>
   }
 
 template<int n>
-  Eigen::MatrixXd DivisionAlgebra<n>::LOperator(const Matrix& Q) {
+  Eigen::MatrixXd JordanMatrixAlgebra<n>::LOperator(const Matrix& Q) {
     Eigen::MatrixXd D(dim, dim);
     for (int i = 0; i < dim; i++) {
       auto Mi = Basis(i);
@@ -227,7 +227,7 @@ template<int n>
   }
 
 template<int n>
-  Eigen::VectorXd DivisionAlgebra<n>::Vect(const Matrix&X) {
+  Eigen::VectorXd JordanMatrixAlgebra<n>::Vect(const Matrix&X) {
     Eigen::VectorXd y(dim);
     for (int i = 0; i < dim; i++) {
       y(i) = TraceInnerProduct(Basis(i), X);
@@ -236,7 +236,7 @@ template<int n>
   }
 
 template<int n>
-  Eigen::VectorXd DivisionAlgebra<n>::MinimalPolynomial(const Matrix& x) {
+  Eigen::VectorXd JordanMatrixAlgebra<n>::MinimalPolynomial(const Matrix& x) {
     Matrix xsqr = JordanMult(x, x); 
     Matrix xcub = JordanMult(xsqr, x); 
     Eigen::MatrixXd M(dim, 3);
@@ -246,8 +246,8 @@ template<int n>
     return M.colPivHouseholderQr().solve(-Vect(xcub));
   }
 
-template class DivisionAlgebra<1>;
-template class DivisionAlgebra<2>;
-template class DivisionAlgebra<4>;
-template class DivisionAlgebra<8>;
+template class JordanMatrixAlgebra<1>;
+template class JordanMatrixAlgebra<2>;
+template class JordanMatrixAlgebra<4>;
+template class JordanMatrixAlgebra<8>;
 
