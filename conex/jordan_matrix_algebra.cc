@@ -1,5 +1,6 @@
 #include "jordan_matrix_algebra.h"
-template<int n> JordanMatrixAlgebra<n>::JordanMatrixAlgebra() {
+
+template<int n> DivisionAlgebra<n>::DivisionAlgebra() {
   M << 1,  1,  1,  1,  1,  1,  1,  1, 
        1, -1, -1,  1, -1,  1,  1, -1,
        1,  1, -1, -1, -1, -1,  1,  1, 
@@ -20,7 +21,7 @@ template<int n> JordanMatrixAlgebra<n>::JordanMatrixAlgebra() {
   }
 
 template<int n>
-  void JordanMatrixAlgebra<n>::ScalarMult(const Element& x, const Element& y, Element* z) {
+  void DivisionAlgebra<n>::Multiply(const Element& x, const Element& y, Element* z) {
     z->setZero();
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
@@ -39,7 +40,7 @@ template<int n>
       for (int j = 0; j < d; j++) {
         z.at(LinIndex(i, j)).setZero();
         for (int k = 0; k < d; k++) {
-          ScalarMult(x.at(LinIndex(i, k)), y.at(LinIndex(k, j)), &temp);
+          division_algebra_.Multiply(x.at(LinIndex(i, k)), y.at(LinIndex(k, j)), &temp);
           z.at(LinIndex(i, j)) += temp;
         }
       }
@@ -250,4 +251,8 @@ template class JordanMatrixAlgebra<1>;
 template class JordanMatrixAlgebra<2>;
 template class JordanMatrixAlgebra<4>;
 template class JordanMatrixAlgebra<8>;
+template class DivisionAlgebra<1>;
+template class DivisionAlgebra<2>;
+template class DivisionAlgebra<4>;
+template class DivisionAlgebra<8>;
 

@@ -36,15 +36,15 @@ void DoMultTest() {
   y.setConstant(3);
 
   Element z;
-  T().ScalarMult(x,y, &z);
+  T().Multiply(x,y, &z);
   EXPECT_TRUE((y - z).norm() < 1e-8);
 }
 
 TEST(JordanMatrixAlgebra, Scalars) {
-  DoMultTest<Octonions>();
-  DoMultTest<Quaternions>();
-  DoMultTest<Complex>();
-  DoMultTest<Real>();
+  DoMultTest<DivisionAlgebra<1>>();
+  DoMultTest<DivisionAlgebra<2>>();
+  DoMultTest<DivisionAlgebra<4>>();
+  DoMultTest<DivisionAlgebra<8>>();
 }
 
 

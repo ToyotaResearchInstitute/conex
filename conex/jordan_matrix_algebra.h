@@ -6,16 +6,24 @@ inline int LinIndex(int i, int j) {
    return j * d + i;
 }
 
+
+template<int n = 8>
+class DivisionAlgebra {
+ public:
+  using Element = Eigen::Matrix<double, n, 1>;
+  DivisionAlgebra();
+  void Multiply(const Element& x, const Element& y, Element* z);
+ private:
+  Eigen::Matrix<int, 8, 8> M;
+  Eigen::Matrix<int, 8, 8> I;
+};
+
 template<int n = 8>
 class JordanMatrixAlgebra {
  public:
   static constexpr int dim = (.5*(d*d-d))*n + d;
-  using Element = Eigen::Matrix<double, n, 1>;
+  using Element =  typename DivisionAlgebra<n>::Element;
   using Matrix = std::array<Element, d*d>;
-
-  JordanMatrixAlgebra(); 
-
-  void ScalarMult(const Element& x, const Element& y, Element* z);
 
   Matrix MatrixMult(const Matrix&x, const Matrix& y);
 
@@ -50,9 +58,8 @@ class JordanMatrixAlgebra {
   Eigen::VectorXd Vect(const Matrix&X);
 
   Eigen::VectorXd MinimalPolynomial(const Matrix& x);
-
-  Eigen::Matrix<int, 8, 8> M;
-  Eigen::Matrix<int, 8, 8> I;
+ private:
+  DivisionAlgebra<n> division_algebra_;
 };
 
 using Octonions = JordanMatrixAlgebra<8>;
