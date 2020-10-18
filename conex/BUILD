@@ -20,9 +20,9 @@ cc_test(
 )
 
 cc_test(
-    name = "octo",
-    srcs = glob(["test/test_octonions.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
+    name = "division_algebras",
+    srcs = glob(["test/test_division_algebras.cc", "jordan_matrix_algebra.h", "jordan_matrix_algebra.cc"]),
+    copts = ["-Iexternal/gtest/include -O0"], 
     deps = ["@gtest//:main", "conex_lib"],
 )
 
