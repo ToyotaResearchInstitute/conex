@@ -25,6 +25,12 @@ struct DenseLMIConstraint final : public PsdConstraint {
       //                      constraint_affine->cols()) {
       constraint_affine_(*constraint_affine) {}
 
+
+  DenseLMIConstraint(int n, const std::vector<DenseMatrix>& constraint_matrices,
+                     const DenseMatrix& constraint_affine) : 
+      PsdConstraint(n, static_cast<int>(constraint_matrices.size())),
+      constraint_matrices_(constraint_matrices), constraint_affine_(constraint_affine) {}
+
   /*
   DenseLMIConstraint(int n, const std::vector<StorageType>& constraint_matrices,
                      const StorageType& constraint_affine) : 

@@ -25,6 +25,7 @@ class JordanMatrixAlgebra {
   static constexpr int dim = (.5*(d*d-d))*n + d;
   using Element =  typename DivisionAlgebra<n>::Element;
   using Matrix = std::array<Element, d*d>;
+  static int Rank() { return d; };
 
   Matrix MatrixMult(const Matrix&x, const Matrix& y);
 
@@ -67,6 +68,63 @@ template<typename T>
 Eigen::VectorXd eigenvalues(const typename T::Matrix& Q) {
   return conex::jordan_algebra::Roots(T().MinimalPolynomial(Q));
 }
+
+
+inline int factorial(int n) {
+  int y = 1;
+  for (int i = 2; i <= n; i++) {
+    y *= i; 
+  }
+  return y;
+}
+
+template<typename T>
+typename T::Matrix Geodesic(const typename T::Matrix& w, 
+                            const typename T::Matrix& s) {
+  auto y1 = w; 
+  auto y2 = T().QuadRep(w, s);
+  auto y = T().MatrixAdd(y1, y2);
+  for (int i = 1; i < 6; i++) {
+    y1 = T().QuadRep(w , T().QuadRep(s , y1));
+    y2 = T().QuadRep(w , T().QuadRep(s , y2));
+    y =  T().MatrixAdd(y, 
+                          T().MatrixAdd( 
+                             T::ScalarMult(y1, 1.0/factorial(2*i)),
+                             T::ScalarMult(y2, 1.0/factorial(2*i+1)))
+                      );
+  }
+  return y;
+}
+
+template<typename T>
+double NormInfWeighted(const typename T::Matrix& w, 
+                            const typename T::Matrix& s) {
+
+  // |Q(w^{1/2}) s - e|_{\inf}
+
+  // Computes |Q(w^{1/2}) s|_{\inf}
+  double k_s = std::sqrt(T().TraceInnerProduct(s, s));
+  double k_w = std::sqrt(T().TraceInnerProduct(w, w));
+
+  int iter = 2 * T::Rank();
+  Eigen::MatrixXd M(T::dim, iter);
+  auto y = T::Identity();
+  for (int i = 0; i < iter; i++) {
+    M.col(i) = T().Vect(y);
+    y = T().QuadRep(w , T().QuadRep(s , y));
+    y = T().ScalarMult(y, 1.0/(k_s * k_w));
+  }
+
+  Eigen::MatrixXd G = M.transpose() * M;
+  Eigen::VectorXd f = M.transpose() * T().Vect(y);
+
+  Eigen::VectorXd c = G.colPivHouseholderQr().solve(-f);
+  double z_inf_sqr_cal = conex::jordan_algebra::Roots(c).maxCoeff() * k_s * k_w;
+  return std::sqrt(z_inf_sqr_cal);
+}
+
+
+
 
 using Octonions = JordanMatrixAlgebra<8>;
 using Quaternions = JordanMatrixAlgebra<4>;

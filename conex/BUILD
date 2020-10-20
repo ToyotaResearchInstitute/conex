@@ -5,6 +5,14 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
+
+cc_test(
+    name = "hermitian",
+    srcs = glob(["test/test_util.h", "test/test_util.cc", "test/test_hermitian.cc"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "conex_lib"],
+)
+
 cc_test(
     name = "sdp",
     srcs = glob(["test/test_util.h", "test/test_util.cc", "test/test_sdp.cc"]),

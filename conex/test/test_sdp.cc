@@ -1,8 +1,5 @@
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
-#include <iostream>
-#include <memory>
-#include "conex/psd_constraint.h"
 #include "conex/linear_constraint.h"
 #include "conex/dense_lmi_constraint.h"
 #include "conex/constraint.h"

@@ -137,32 +137,7 @@ TEST(JordanMatrixAlgebra, Op) {
   EXPECT_TRUE(std::fabs(eigvals.squaredNorm() - normsqr) < 1e-9);
 }
 
-int factorial(int n) {
-  int y = 1;
-  for (int i = 2; i <= n; i++) {
-    y *= i; 
-  }
-  return y;
-}
 
-template<typename T>
-typename T::Matrix Geodesic(typename T::Matrix& w, 
-                            typename T::Matrix& s) {
-  
-  auto y1 = w; 
-  auto y2 = T().QuadRep(w, s);
-  auto y = T().MatrixAdd(y1, y2);
-  for (int i = 1; i < 6; i++) {
-    y1 = T().QuadRep(w , T().QuadRep(s , y1));
-    y2 = T().QuadRep(w , T().QuadRep(s , y2));
-    y =  T().MatrixAdd(y, 
-                          T().MatrixAdd( 
-                             T::ScalarMult(y1, 1.0/factorial(2*i)),
-                             T::ScalarMult(y2, 1.0/factorial(2*i+1)))
-                      );
-  }
-  return y;
-}
 
 template<typename T>
 bool TestExponential() {
@@ -193,25 +168,11 @@ bool TestInfNorm() {
   auto w = T().JordanMult(wsqrt, wsqrt);
 
   auto z = T().QuadRep(wsqrt, s);
-  double k_s = std::sqrt(T().TraceInnerProduct(s, s));
-  double k_w = std::sqrt(T().TraceInnerProduct(w, w));
   double z_inf_norm = eigenvalues<T>(z).array().abs().maxCoeff();
 
-  int iter = 2*d;
-  MatrixXd M(T::dim, iter);
-  auto y = T::Identity();
-  for (int i = 0; i < iter; i++) {
-    M.col(i) = T().Vect(y);
-    y = T().QuadRep(w , T().QuadRep(s , y));
-    y = T().ScalarMult(y, 1.0/(k_s * k_w));
-  }
+  double z_inf = NormInfWeighted<T>(w, s);
 
-  MatrixXd G = M.transpose() * M;
-  VectorXd f = M.transpose() * T().Vect(y);
-
-  VectorXd c = G.colPivHouseholderQr().solve(-f);
-  double z_inf_sqr_cal = Roots(c).maxCoeff() * k_s * k_w;
-  return std::fabs(z_inf_sqr_cal - z_inf_norm*z_inf_norm) < 1e-6;
+  return std::fabs(z_inf * z_inf - z_inf_norm*z_inf_norm) < 1e-6;
 }
 
 TEST(JordanMatrixAlgebra, InfNorm) {
