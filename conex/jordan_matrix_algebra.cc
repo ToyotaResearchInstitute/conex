@@ -247,6 +247,8 @@ template<int n>
     return M.colPivHouseholderQr().solve(-Vect(xcub));
   }
 
+
+
 template class JordanMatrixAlgebra<1>;
 template class JordanMatrixAlgebra<2>;
 template class JordanMatrixAlgebra<4>;

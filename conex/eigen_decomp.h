@@ -20,5 +20,7 @@ std::pair<double, double> SpectralRadius(const Eigen::MatrixXd& X);
 double NormInf(const Eigen::MatrixXd& X);
 double NormInfPowerMethod(Ref*, Ref*);
 
+Eigen::VectorXd Roots(const Eigen::VectorXd& x);
+
 }  // namespace jordan_algebra
 }  // namespace conex

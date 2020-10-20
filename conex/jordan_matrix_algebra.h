@@ -1,11 +1,11 @@
 #pragma once
 #include <Eigen/Dense>
+#include "conex/eigen_decomp.h"
 
 constexpr int d = 3;
 inline int LinIndex(int i, int j) {
    return j * d + i;
 }
-
 
 template<int n = 8>
 class DivisionAlgebra {
@@ -20,6 +20,7 @@ class DivisionAlgebra {
 
 template<int n = 8>
 class JordanMatrixAlgebra {
+  static_assert(n < 8 || (d <= 3 || n <= 8), "Invalid template parameters.");
  public:
   static constexpr int dim = (.5*(d*d-d))*n + d;
   using Element =  typename DivisionAlgebra<n>::Element;
@@ -62,8 +63,17 @@ class JordanMatrixAlgebra {
   DivisionAlgebra<n> division_algebra_;
 };
 
+template<typename T>
+Eigen::VectorXd eigenvalues(const typename T::Matrix& Q) {
+  return conex::jordan_algebra::Roots(T().MinimalPolynomial(Q));
+}
+
 using Octonions = JordanMatrixAlgebra<8>;
 using Quaternions = JordanMatrixAlgebra<4>;
 using Complex = JordanMatrixAlgebra<2>;
 using Real = JordanMatrixAlgebra<1>;
+
+
+
+
 

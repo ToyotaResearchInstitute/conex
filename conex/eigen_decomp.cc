@@ -3,6 +3,7 @@
 namespace conex {
 namespace jordan_algebra {
 
+using Eigen::MatrixXd;
 
 EigenvalueDecomposition eig(const Eigen::MatrixXd& x) {
   //conex::jordan_algebra::SpectralDecompSymmetricMatrices<d> spec;
@@ -71,7 +72,7 @@ double NormInf(const Eigen::MatrixXd& X) {
 //    DUMP(lamb);
 //  }
 
-  
+   //  L, jL x 
 
 
 
@@ -98,6 +99,13 @@ double NormInfPowerMethod(Ref* X, Ref* temp1) {
   return sqrt(norm_xn_sqr /  norm_x_sqr);
 }
 
+Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
+  Eigen::MatrixXd c(x.rows(), x.rows());
+  c.setZero();
+  c.bottomRows(1) = -x.transpose();
+  c.topRightCorner(x.rows() - 1, x.rows() - 1) = MatrixXd::Identity(x.rows() - 1, x.rows() - 1);
+  return eig(c).eigenvalues;
+}
 
 
 
