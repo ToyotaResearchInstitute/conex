@@ -81,6 +81,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
   }
 
   prog.InitializeWorkspace();
+
   SetIdentity(&constraints);
 
   Eigen::MatrixXd ydata(m, 1);
@@ -116,6 +117,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
     Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G); 
     if (llt.info() != Eigen::Success) {
       PRINTSTATUS("LLT FAILURE.");
+      return false;
       break;
     }
 
@@ -133,7 +135,6 @@ bool Solve(const DenseMatrix& b, Program& prog,
       MinMu(&constraints,  y, &mu_param);
 
       CalcMinMu(mu_param.gw_lambda_max, mu_param.gw_lambda_min, &mu_param);
-      DUMP(mu_param.gw_lambda_max);
       opt.inv_sqrt_mu = mu_param.inv_sqrt_mu;
       double normsqrd = mu_param.inv_sqrt_mu * mu_param.inv_sqrt_mu *  mu_param.gw_norm_squared +
                      -2*mu_param.inv_sqrt_mu * mu_param.gw_trace  + rankK;
@@ -164,7 +165,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
     double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
 
-    y = (b + sys.AQc) - 2 * sys.AW;
+    y = opt.inv_sqrt_mu*(b + sys.AQc) - 2 * sys.AW;
     llt.solveInPlace(y);
     opt.e_weight = 1;
     opt.c_weight = opt.inv_sqrt_mu;
@@ -239,5 +240,5 @@ DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints) {
 
   SetIdentity(&constraints);
   ConstructSchurComplementSystem(&constraints, true, &sys);
-  return sys.AW;
+  return .5*sys.AW;
 }

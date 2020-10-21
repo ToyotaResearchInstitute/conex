@@ -103,23 +103,34 @@ double NormInfWeighted(const typename T::Matrix& w,
   // |Q(w^{1/2}) s - e|_{\inf}
 
   // Computes |Q(w^{1/2}) s|_{\inf}
-  double k_s = std::sqrt(T().TraceInnerProduct(s, s));
-  double k_w = std::sqrt(T().TraceInnerProduct(w, w));
 
+  // int iter = T::Rank() * T::Rank();
   int iter = 2 * T::Rank();
   Eigen::MatrixXd M(T::dim, iter);
   auto y = T::Identity();
+
+  double k = 1;
   for (int i = 0; i < iter; i++) {
     M.col(i) = T().Vect(y);
     y = T().QuadRep(w , T().QuadRep(s , y));
-    y = T().ScalarMult(y, 1.0/(k_s * k_w));
+
+    if (i == 0) {
+      k = T().TraceInnerProduct(y, y);
+      if (k > 1e-8) {
+        k = std::sqrt(k);
+      } else {
+        k = std::sqrt(1e-8);
+      }
+    }
+
+    y = T().ScalarMult(y, 1.0/k);
   }
 
   Eigen::MatrixXd G = M.transpose() * M;
   Eigen::VectorXd f = M.transpose() * T().Vect(y);
 
   Eigen::VectorXd c = G.colPivHouseholderQr().solve(-f);
-  double z_inf_sqr_cal = conex::jordan_algebra::Roots(c).maxCoeff() * k_s * k_w;
+  double z_inf_sqr_cal = conex::jordan_algebra::Roots(c).maxCoeff() * k;
   return std::sqrt(z_inf_sqr_cal);
 }
 

@@ -49,7 +49,7 @@ int TestDiagonalSDP() {
   Solve(b, prog2, config, y3.data());
 
   EXPECT_TRUE((y2 - y1).norm() < 1e-6);
-  EXPECT_TRUE((y3 - y1).norm() < 1e-5);
+  EXPECT_TRUE((y3 - y1).norm() < 1e-4);
   return 0;
 }
 
@@ -78,11 +78,11 @@ int TestSDP() {
   DenseMatrix res = b;
   for (int i = 0; i < m; i++) {
     slack -= constraints2.at(i) * y(i);
-    b(i) -= (constraints2.at(i) * x).trace();
+    res(i) -= (constraints2.at(i) * x).trace();
   }
 
   EXPECT_TRUE(conex::jordan_algebra::eig(slack).eigenvalues.minCoeff() > 1e-8);
-  EXPECT_TRUE(b.norm() < 1e-8);
+  EXPECT_TRUE(res.norm() < 1e-7);
   EXPECT_TRUE((slack*x).trace() < 1e-4);
 
   return 0;

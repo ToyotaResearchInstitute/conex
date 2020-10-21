@@ -38,7 +38,8 @@ cc_test(
 cc_library(
     name = "conex_lib",
     hdrs = glob([ "*.h" ]),
-    srcs =  glob(["*.cc"]),
+    srcs = glob(["*.cc"]),
+    copts = ["-O3"],
     visibility = ["//visibility:public"],
     deps = [
         "@eigen",
