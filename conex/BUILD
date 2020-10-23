@@ -28,6 +28,13 @@ cc_test(
 )
 
 cc_test(
+    name = "cholesky",
+    srcs = glob(["test/test_chol.cc", "debug_macros.h", "test/util.h", "test/cholesky_decomposition.h", "test/cholesky_decomposition.cc", "test/elimination_ordering.cc", "test/elimination_ordering.h"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "@eigen"],
+)
+
+cc_test(
     name = "division_algebras",
     srcs = glob(["test/test_division_algebras.cc", "jordan_matrix_algebra.h", "jordan_matrix_algebra.cc"]),
     copts = ["-Iexternal/gtest/include -O0"], 
