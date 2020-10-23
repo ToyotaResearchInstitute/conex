@@ -16,6 +16,7 @@ class CliqueMatrix {
     clique_index = 0;
     start_of_next_clique = clique_start.at(1);
     end_of_current_clique = num_cols.at(0);
+    size_ = num_cols.at(0);
   }
 
   auto colA() {
@@ -32,7 +33,14 @@ class CliqueMatrix {
 
   void Increment() {
     i++;
+    size_-- ;
     if (i == start_of_next_clique) {
+      if (i < n_) {
+        size_ = num_cols_.at(clique_index);
+      } else {
+        size_ = 0;
+      }
+
       clique_index++;
       if (clique_index < static_cast<int>(clique_start_.size())) {
         end_of_current_clique = clique_start_.at(clique_index) + num_cols_.at(clique_index);
@@ -48,12 +56,13 @@ class CliqueMatrix {
 
  private:
   int size(int i) {
-    return end_of_current_clique-1-i;
+    return size_ - 1; 
   }
 
   Matrix* ptr_;
   Matrix* r_;
   int n_;
+  int size_ = 0;
   int i = 0;
   int start_of_next_clique;
   int clique_index = 0;
