@@ -15,8 +15,7 @@ class CliqueMatrix {
     num_cols_(num_cols)  {
     clique_index = 0;
     start_of_next_clique = clique_start.at(1);
-    end_of_current_clique = num_cols.at(0);
-    size_ = num_cols.at(0);
+    size_ = num_rows.at(0);
   }
 
   auto colA() {
@@ -36,15 +35,12 @@ class CliqueMatrix {
     size_-- ;
     if (i == start_of_next_clique) {
       if (i < n_) {
-        size_ = num_cols_.at(clique_index);
+        size_ = num_rows_.at(clique_index);
       } else {
         size_ = 0;
       }
 
       clique_index++;
-      if (clique_index < static_cast<int>(clique_start_.size())) {
-        end_of_current_clique = clique_start_.at(clique_index) + num_cols_.at(clique_index);
-      }
 
       if (clique_index < static_cast<int>(clique_start_.size())-1) {
         start_of_next_clique = clique_start_.at(clique_index+1);
@@ -66,7 +62,6 @@ class CliqueMatrix {
   int i = 0;
   int start_of_next_clique;
   int clique_index = 0;
-  int end_of_current_clique = 0;
   std::vector<int> clique_start_;
   std::vector<int> num_cols_;
   std::vector<int> num_rows_;
