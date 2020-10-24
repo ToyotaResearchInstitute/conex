@@ -122,12 +122,8 @@ TEST(Cholesky, TestArrow) {
   std::vector<int> cliquestart{0, 2, 4};
   std::vector<int> rows{3, 3, 3};
   std::vector<int> cols{3, 3, 3};
-  vector<vector<int>> root{ {5, 6}, {5, 6}, {} };
+  vector<vector<int>> root{ {5, 6}, {}, {} };
 
-  // (x1, x2)  - v1 v1, v1 v2
-  // (x2, x3)    v2 v1  v2 v2
-  //  indices - indices * indices()
-  //  (simpl) -
 
   Matrix temp = A;
   Matrix R(n, n);
@@ -204,7 +200,7 @@ TEST(Cholesky, TestDecomp1) {
   cliques.push_back({0, 1, 2, 7});
   Mcliques.push_back(Ones(cliques.back().size()));
 
-  cliques.push_back({2, 3, 4,  7, 8});
+  cliques.push_back({2, 3, 4, 7, 8});
   Mcliques.push_back(Ones(cliques.back().size()));
 
   cliques.push_back({4, 5, 6, 7, 8});
@@ -215,7 +211,7 @@ TEST(Cholesky, TestDecomp1) {
 
   std::vector<int> cliquestart{0, 2, 4};
   std::vector<int> size{3, 3, 5};
-  std::vector<std::vector<int>> root_nodes{{7}, {7, 8},  {}};
+  std::vector<std::vector<int>> root_nodes{{7}, {8},  {}};
   Matrix R(n, n);
   R.setZero();
   A = A + Matrix::Identity(n, n) * 100;
@@ -233,13 +229,11 @@ TEST(Cholesky, TestDecomp1) {
 }
 
 // end, [6, 7, 8]
+// end,   
 // end,  
-
-
-
 
 // Elimination tree  vs Clique Tree.
 //  1)
 //  2)
 //
-  // Elim tree storage: f(i) -> parent of i
+// Elim tree storage: f(i) -> parent of i

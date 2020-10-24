@@ -64,7 +64,6 @@ class CliqueMatrix {
     return ptr_->block(root_.at(clique_index).at(k), root_.at(clique_index).at(kk), 1, 1);
   }
 
-
   auto blockAz(int k) {
     return ptr_->block(root_.at(clique_index).at(k), root_.at(clique_index).at(k), 1, 1);
   }
@@ -93,7 +92,26 @@ class CliqueMatrix {
       } else {
         start_of_next_clique = n_;
       }
+      if (clique_index < root_.size()) {
+        std::vector<int> temp;
+        for (auto e :  root_.at(clique_index-1)) {
+          if (e > start_of_next_clique) {
+            temp.push_back(e);
+          }
+        }
+        for (auto e :  root_.at(clique_index)) {
+          temp.push_back(e);
+        }
+
+        root_.at(clique_index) = temp;
+      }
+ //     DUMP(root_.at(clique_index));
+      if (i > 0) {
+//        assert(0);
+      }
+
     }
+
   }
 
  private:
@@ -110,11 +128,10 @@ class CliqueMatrix {
   int clique_index = 0;
   std::vector<int> clique_start_;
   std::vector<int> num_rows_;
-  const std::vector<std::vector<int>> root_;
+  std::vector<std::vector<int>> root_;
 };
 
 }
-
 
 class Node {
   Eigen::MatrixXd M;
