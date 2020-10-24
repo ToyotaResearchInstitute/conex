@@ -98,14 +98,9 @@ typename T::Matrix Geodesic(const typename T::Matrix& w,
 
 template<typename T>
 double NormInfWeighted(const typename T::Matrix& w, 
-                            const typename T::Matrix& s) {
-
-  // |Q(w^{1/2}) s - e|_{\inf}
-
-  // Computes |Q(w^{1/2}) s|_{\inf}
-
-  // int iter = T::Rank() * T::Rank();
-  int iter = 2 * T::Rank();
+                       const typename T::Matrix& s) {
+  
+  int iter = T::Rank() * T::Rank();
   Eigen::MatrixXd M(T::dim, iter);
   auto y = T::Identity();
 

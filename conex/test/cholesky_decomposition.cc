@@ -2,6 +2,21 @@
 
 namespace {
 
+
+// Given an ordering, we m
+// (1, 2, 3)
+//     2, 3)
+//     *
+//     *
+
+// Elimination Tree
+//    Var 1 -  (2, 3, 4, 5)
+//    Var 2 -  (3, 4, 5)
+//
+//    (1, 2)
+//    (3, 4)
+//
+
 class CliqueMatrix {
   using Matrix = Eigen::MatrixXd;
 
@@ -9,10 +24,10 @@ class CliqueMatrix {
   explicit CliqueMatrix(Matrix* x, Matrix* r, 
                         std::vector<int> clique_start,
                         std::vector<int> num_rows,
-                        std::vector<std::vector<int>> cross) : ptr_(x), r_(r), n_(x->rows()),
+                        std::vector<std::vector<int>> root) : ptr_(x), r_(r), n_(x->rows()),
     clique_start_(clique_start),
     num_rows_(num_rows),
-    cross_(cross) {
+    root_(root) {
     clique_index = 0;
     start_of_next_clique = clique_start.at(1);
     size_ = num_rows.at(0);
@@ -28,10 +43,13 @@ class CliqueMatrix {
     return ptr_->block(i+1, i, size(i), 1);
   }
   int num_root_nodes() {
-    return cross_.at(clique_index).size();
+    if (root_.size() == 0) {
+      return 0;
+    }
+    return root_.at(clique_index).size();
   }
   auto colAz(int k) {
-    return ptr_->block(cross_.at(clique_index).at(k), i, 1, 1);
+    return ptr_->block(root_.at(clique_index).at(k), i, 1, 1);
   }
 
   auto blockA() {
@@ -39,16 +57,16 @@ class CliqueMatrix {
   }
 
   auto offDiagA(int k) {
-    return ptr_->block(cross_.at(clique_index).at(k), i+1, 1, size(i));
+    return ptr_->block(root_.at(clique_index).at(k), i+1, 1, size(i));
   }
 
   auto offDiag(int k, int kk) {
-    return ptr_->block(cross_.at(clique_index).at(k), cross_.at(clique_index).at(kk), 1, 1);
+    return ptr_->block(root_.at(clique_index).at(k), root_.at(clique_index).at(kk), 1, 1);
   }
 
 
   auto blockAz(int k) {
-    return ptr_->block(cross_.at(clique_index).at(k), cross_.at(clique_index).at(k), 1, 1);
+    return ptr_->block(root_.at(clique_index).at(k), root_.at(clique_index).at(k), 1, 1);
   }
 
   auto colR() {
@@ -56,7 +74,7 @@ class CliqueMatrix {
   }
 
   auto colRz(int k) {
-    return r_->block(cross_.at(clique_index).at(k), i, 1, 1);
+    return r_->block(root_.at(clique_index).at(k), i, 1, 1);
   }
 
   void Increment() {
@@ -64,15 +82,11 @@ class CliqueMatrix {
     size_-- ;
     if (i == start_of_next_clique) {
       clique_index++;
-      DUMP("HEHE!");
-      DUMP(start_of_next_clique);
       if (i < n_) {
         size_ = num_rows_.at(clique_index);
       } else {
         size_ = 0;
       }
-      DUMP(size_);
-
 
       if (clique_index < static_cast<int>(clique_start_.size())-1) {
         start_of_next_clique = clique_start_.at(clique_index+1);
@@ -96,7 +110,7 @@ class CliqueMatrix {
   int clique_index = 0;
   std::vector<int> clique_start_;
   std::vector<int> num_rows_;
-  const std::vector<std::vector<int>> cross_;
+  const std::vector<std::vector<int>> root_;
 };
 
 }
@@ -137,7 +151,6 @@ void SparseCholeskyDecomposition(const MatrixXd& A,
 
   int n = A.rows();
   Matrix temp = A;
-  DUMP(temp);
   R.setZero();
 
   CliqueMatrix Adec(&temp, &R, start, num_rows, root_nodes);
@@ -149,25 +162,23 @@ void SparseCholeskyDecomposition(const MatrixXd& A,
 
     if (i < n-1) {
       auto&& col = Adec.colA(); 
-      Adec.colR() = 1/R(i, i)*col;
+      Adec.colR() = 1/R(i, i) * col;
       Adec.blockA() -= 1/temp(i, i) * col * col.transpose();
 
-    for (int k = 0; k <  Adec.num_root_nodes(); k++) {
-      auto&& col = Adec.colA(); 
-      Adec.colRz(k) = 1/R(i, i) * Adec.colAz(k);
+      for (int k = 0; k <  Adec.num_root_nodes(); k++) {
+        auto&& col = Adec.colA(); 
+        Adec.colRz(k) = 1/R(i, i) * Adec.colAz(k);
 
-      Adec.blockAz(k) -= 1/temp(i, i) * Adec.colAz(k) * Adec.colAz(k).transpose();
-      Adec.offDiagA(k) -= 1/temp(i, i) *  Adec.colAz(k) * col.transpose();
-    }
-
-    for (int k = 0; k <  Adec.num_root_nodes(); k++) {
-      for (int kk = k+1; kk <  Adec.num_root_nodes(); kk++) {
-        // Adec.offDiag(k, kk) -= 1.0/temp(i, i) *  Adec.colAz(k) * Adec.colAz(kk).transpose();
-        Adec.offDiag(kk, k) -= 1.0/temp(i, i) *  Adec.colAz(kk) * Adec.colAz(k).transpose();
+        Adec.blockAz(k) -= 1/temp(i, i) * Adec.colAz(k) * Adec.colAz(k).transpose();
+        Adec.offDiagA(k) -= 1/temp(i, i) * Adec.colAz(k) * col.transpose();
       }
-    }
 
-
+      // These are scalar operations.
+      for (int k = 0; k <  Adec.num_root_nodes(); k++) {
+        for (int kk = k+1; kk <  Adec.num_root_nodes(); kk++) {
+          Adec.offDiag(kk, k) -= 1.0/temp(i, i) *  Adec.colAz(kk) * Adec.colAz(k).transpose();
+        }
+      }
     }
 
     Adec.Increment();

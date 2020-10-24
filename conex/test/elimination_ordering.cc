@@ -12,12 +12,23 @@
 #include <vector>
 #include <iostream>
 
-#include "conex/test/util.h"
 
 namespace conex {
 
+template <typename T>
+inline T Submatrix(const T& X, const std::vector<int>& indices) {
+  T S(indices.size(), indices.size());
+  for (unsigned int i = 0; i < indices.size(); i++) {
+    for (unsigned int j = 0; j < indices.size(); j++) {
+      int i_pos = indices.at(i);
+      int j_pos = indices.at(j);
+      S(i, j) = X(i_pos, j_pos);
+    }
+  }
+  return S;
+}
+
 using Order = Eigen::Matrix<int, -1, 1>;
-using conex::common::Submatrix;
 class MaximumCardinalitySearch {
  public:
   explicit MaximumCardinalitySearch(const Matrix& A) : A_(A), N_(A_.rows()), W_(N_), not_eliminated(N_) {
