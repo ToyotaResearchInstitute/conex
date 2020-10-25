@@ -1,8 +1,11 @@
 import unittest
 from conexapi import *
 import numpy as np
-from myutils import *
 import scipy.linalg as la
+
+def randsym(d):
+    A = np.matrix(np.random.randn(d, d)); 
+    return np.matrix(0.5*np.add(A, A.transpose()))
 
 def CheckErrors(sol):
     eps = 1e-5
@@ -15,7 +18,7 @@ def log(name, val):
 def randominstance():
     n = 3
     m = 2
-    A = np.array(randn(n, m), order='F').astype(real)
+#    A = np.array(randn(n, m), order='F').astype(real)
     A = np.array(np.ones((n, m)), order='F').astype(real)
     A[0, 1] = 3
     A[1, 0] = 4
@@ -130,7 +133,7 @@ def DualInfeas():
     A[0:m, :] = eye(m)
     A[m:n, :] = eye(m)
 
-    c = np.squeeze(np.array(ones(n, 1)))
+    c = np.squeeze(np.ones((n, 1)))
 
     prog.AddDenseLinearConstraint(A, c)
     b = np.ones(prog.m)
@@ -146,7 +149,7 @@ def DualFailsSlater():
     m = 2;
     n = m
     A = eye(m)
-    c = np.squeeze(np.array(ones(n, 1)))
+    c = np.squeeze(np.ones((n, 1)))
 
     prog.AddDenseLinearConstraint(A, c)
     b = np.ones(prog.m)
@@ -165,7 +168,7 @@ def PrimalInfeas():
     A[0:m, :] = eye(m)
     A[m:n, :] = -eye(m)
 
-    c = -np.squeeze(np.array(ones(n, 1)))
+    c = -np.squeeze(np.ones((n, 1)))
 
     prog.AddDenseLinearConstraint(A, c)
     b = np.ones(prog.m)

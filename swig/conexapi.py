@@ -1,7 +1,13 @@
 import conex
-from myutils import *
+import numpy as np
+import scipy.linalg as la
 
 real = 'double'
+def zeros(n, m):
+    return np.matrix(np.zeros((n, m)))
+
+def eye(n):
+    return np.matrix(np.eye(n, n))
 
 
 class Errors:
@@ -31,7 +37,7 @@ class LMIOperator:
         if self.transposed:
             y = zeros(self.m, 1)
             for i in range(0, self.m):
-                y[i] = trace(self.matrices[:, :, i]  * np.matrix(x))
+                y[i] = np.trace(self.matrices[:, :, i]  * np.matrix(x))
             return y
         else:
             y = self.matrices[:, :, 0]  * 0 
