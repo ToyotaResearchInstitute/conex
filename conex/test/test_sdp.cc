@@ -88,6 +88,8 @@ int TestSDP() {
   return 0;
 }
 
+
+
 TEST(SDP, DiagonalSDP) {
   for (int i = 0; i < 1; i++) {
     TestDiagonalSDP();
