@@ -1,13 +1,8 @@
-COPTS=-O0 -fPIC -g -std=c++17 -fno-omit-frame-pointer -static-libstdc++
+#COPTS=-O0 -fPIC -g -std=c++17 -fno-omit-frame-pointer -static-libstdc++
+COPTS=-O0 -fPIC -g -std=c++17 -fno-omit-frame-pointer 
 EIGEN=$(EIGEN_DIR)
 CONEX="../"
 
-
-#quadratic_sublevel_set.o: 
-#	$(CXX) -c -std=c++17 $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/quadratic_sublevel_set.cc 
-
-#soc_constraint.o: 
-#	$(CXX) -c -std=c++17 $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/soc_constraint.cc 
 
 cone_program.o: 
 	$(CXX) -c -std=c++17 $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/cone_program.cc 
