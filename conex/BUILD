@@ -41,12 +41,11 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
-
 cc_library(
     name = "conex_lib",
     hdrs = glob([ "*.h" ]),
     srcs = glob(["*.cc"]),
-    copts = ["-O3"],
+    copts = ["-O3", "-static-libstdc++"],
     visibility = ["//visibility:public"],
     deps = [
         "@eigen",

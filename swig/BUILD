@@ -7,7 +7,6 @@ cc_binary(
   linkstatic = 1,
 )
 
-
 cc_library(
     name = "api",
     hdrs = [ "conex.h" ],
