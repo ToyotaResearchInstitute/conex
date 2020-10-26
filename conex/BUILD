@@ -40,6 +40,13 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
+cc_test(
+    name = "divergence",
+    srcs = glob(["test/test_divergence.cc"]),
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "conex_lib"],
+)
+
 cc_library(
     name = "conex_lib",
     hdrs = glob([ "*.h" ]),
