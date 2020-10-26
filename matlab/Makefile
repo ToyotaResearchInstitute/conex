@@ -1,4 +1,4 @@
-COPTS=-O0  -fPIC -g -std=c++17 -fno-omit-frame-pointer 
+COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer 
 EIGEN=$(EIGEN_DIR)
 CONEX=../
 
