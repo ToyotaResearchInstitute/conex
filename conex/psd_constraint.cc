@@ -19,7 +19,7 @@ void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* SW
     (*SW) *= scale;
   }
   expSW = SW->exp();
-  W = W * expSW; 
+  W = W * expSW;
   *SW = W.transpose();
   W = (W + (*SW)) * 0.5;
 }
@@ -52,7 +52,7 @@ void ComputeStats(PsdConstraint* o, const StepOptions& opt, const Ref& y) {
   //o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
   //SW = minus_s*W;
 
-  //double scale = 1;  
+  //double scale = 1;
 
   //double norminf = NormInf(SW);
 
@@ -77,8 +77,8 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
     SW = minus_s*W;
     o->AffineUpdate(opt.e_weight, &SW);
     return;
-  } 
-  
+  }
+
   o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
   SW = minus_s*W;
 
@@ -108,7 +108,7 @@ void SetIdentity(PsdConstraint* o) {
 
 /*
     for (int i = 0; i < 10; i++) {
-      double norminf = max(std::fabs(gw_eig.first * inv_sqrt_mu - 1), 
+      double norminf = max(std::fabs(gw_eig.first * inv_sqrt_mu - 1),
                            std::fabs(gw_eig.second * inv_sqrt_mu - 1));
       if (norminf <= .9) {
         DUMP(norminf);
@@ -128,7 +128,7 @@ void SetIdentity(PsdConstraint* o) {
 // max(a x - 1, b y - 1)
 // Goal: rescale max(a x - 1, b y - 1) = k.
 //
-//     max(a/k x - 1, b/y - 1) 
+//     max(a/k x - 1, b/y - 1)
 void MinMu(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   using conex::jordan_algebra::SpectralRadius;
   auto* workspace = &o->workspace_;

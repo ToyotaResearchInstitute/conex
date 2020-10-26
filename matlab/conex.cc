@@ -1,6 +1,7 @@
 #include "conex.h"
 
 #include <iostream>
+#include <vector>
 #include <memory>
 
 #include <Eigen/Dense>
@@ -22,13 +23,6 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, Real* y, int yr) {
   SolverConfiguration c;
   return Solve(blinear, prog, c, y);
 }
-
-
-int ConexSolve2(void* prog_ptr) {
-  using InputMatrix = Eigen::Map<const DenseMatrix>;
-  std::cout << "SOLVING!!";
-}
-
 
 void ConexGetDualVariable(void* prog_ptr, int i, Real* x, int xr,  int xc) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
@@ -58,7 +52,7 @@ void ConexDeleteConeProgram(ConexConeProgram prog) {
   delete reinterpret_cast<Program*>(prog);
 }
 
-int ConexAddDenseLMIConstraint(void* prog, 
+int ConexAddDenseLMIConstraint(void* prog,
   const double* A, int Ar, int Ac, int m,
   const double* c, int cr, int cc) {
   assert(Ar == Ac);
@@ -79,12 +73,12 @@ int ConexAddDenseLMIConstraint(void* prog,
 
   DenseLMIConstraint T3{n,  &Avect, &Cmap};
   auto& program = *reinterpret_cast<Program*>(prog);
-  int constraint_id = program.constraints.size(); 
+  int constraint_id = program.constraints.size();
   program.constraints.push_back(T3);
-  return constraint_id; 
+  return constraint_id;
 }
 
-int ConexAddDenseLinearConstraint(ConexConeProgram fred, 
+int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   const double* A, int Ar, int Ac,
   const double* c, int cr) {
   assert(Ar == cr);
@@ -95,9 +89,9 @@ int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   LinearConstraint T3{n, m, A, c};
   auto& program = *reinterpret_cast<Program*>(fred);
 
-  int constraint_id = program.constraints.size(); 
+  int constraint_id = program.constraints.size();
   program.constraints.push_back(T3);
-  return constraint_id; 
+  return constraint_id;
 }
 
 
@@ -110,7 +104,7 @@ ConexSolverConfiguration ConexDefaultOptions() {
   c.dinf_limit = config.dinf_limit;
   c.final_centering_steps = config.final_centering_steps;
   c.convergence_rate_threshold = config.convergence_rate_threshold;
-  c.divergence_threshold = config.divergence_threshold; 
+  c.divergence_threshold = config.divergence_threshold;
   return c;
 }
 

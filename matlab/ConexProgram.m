@@ -18,8 +18,8 @@ classdef ConexProgram
     function AddLinearInequality(self, A, c)
       num_var = size(A, 2);
       num_constraint = size(A, 1);
-      Aptr = libpointer('doublePtr', A(:));
-      Cptr = libpointer('doublePtr', c);
+      Aptr = libpointer('doublePtr', full(A(:)));
+      Cptr = libpointer('doublePtr', full(c));
       calllib('libconex', 'ConexAddDenseLinearConstraint', self.p, Aptr,  ...
       num_constraint, num_var, Cptr, num_constraint);
     end
@@ -37,8 +37,8 @@ classdef ConexProgram
       end
       m = size(A, 2) / n;
 
-      Aptr = libpointer('doublePtr', A(:));
-      Cptr = libpointer('doublePtr', c);
+      Aptr = libpointer('doublePtr', full(A(:)));
+      Cptr = libpointer('doublePtr', full(c));
       calllib('libconex', 'ConexAddDenseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n);
     end
 
@@ -47,7 +47,7 @@ classdef ConexProgram
           error('Cost must be a vector.')
         end
         num_var = length(b);
-        bptr = libpointer('doublePtr', b);
+        bptr = libpointer('doublePtr', full(b));
         yptr = libpointer('doublePtr', zeros(num_var, 1));
         status = calllib('libconex', 'ConexSolve', self.p, bptr, length(b), yptr, num_var);
         y = yptr.Value;

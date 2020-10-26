@@ -12,26 +12,25 @@ typedef struct {
   double dinf_limit;
   int final_centering_steps;
   double convergence_rate_threshold;
-  double divergence_threshold; 
+  double divergence_threshold;
 } ConexSolverConfiguration;
 
 void* ConexCreateConeProgram();
 void ConexDeleteConeProgram(void*);
 
-int ConexAddDenseLinearConstraint(void* prog, 
+int ConexAddDenseLinearConstraint(void* prog,
   const double* A, int Ar, int Ac,
   const double* c, int cr);
 
-// 
+//
 //  Parameters Aarrayr, Aarrayc, cr, cc all equal the
-//  order n of LMI. 
-// TODO(FrankPermenter): update this. 
-int ConexAddDenseLMIConstraint(void* prog, 
+//  order n of LMI.
+// TODO(FrankPermenter): update this.
+int ConexAddDenseLMIConstraint(void* prog,
   const double* Aarray, int Aarrayr, int Aarrayc, int m,
   const double* cmat, int cr, int cc);
 
 int ConexSolve(void* prog, const double*b, int br, double* y, int yr);
-int ConexSolve2(void* prog);
 
 void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 

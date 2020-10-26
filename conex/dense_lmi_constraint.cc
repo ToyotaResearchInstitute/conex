@@ -1,4 +1,4 @@
-#include "dense_lmi_constraint.h"
+#include "conex/dense_lmi_constraint.h"
 
 /*
 DenseLMIConstraint::DenseLMIConstraint(int n, std::vector<StorageType>* constraint_matrices,
@@ -32,9 +32,9 @@ double DenseLMIConstraint::EvalDualObjective(const Ref& W) {
 void DenseLMIConstraint::MultByA(const Ref& x, Ref* Y) {
   const auto& constraint_matrices = constraint_matrices_;
   int i = 0;
-  // TODO: Remove this setZero.
+  // TODO(FrankPermenter): Remove this setZero.
   Y->setZero();
-  for (const auto& matrix : constraint_matrices ) {
+  for (const auto& matrix : constraint_matrices) {
     (*Y) += x(i) * matrix;
     i++;
   }

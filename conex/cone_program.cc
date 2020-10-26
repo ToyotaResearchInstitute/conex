@@ -1,7 +1,10 @@
 #include "conex/cone_program.h"
+
+#include <vector>
+
 #include "conex/newton_step.h"
 
-inline void CalcMinMu(double lambda_max, double, MuSelectionParameters* p) { 
+inline void CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
   const double kMaxNormInfD = p->limit;
   p->inv_sqrt_mu = (1.0 + kMaxNormInfD)  / (lambda_max + 1e-12);
   if (p->inv_sqrt_mu < 1e-3) {
@@ -27,7 +30,7 @@ void TakeStep(std::vector<T>* c, const StepOptions& opt, const Ref& y, StepInfo*
     if (info_i.norminfd > info->norminfd) {
       info->norminfd = info_i.norminfd;
     }
-    info->normsqrd += info_i.normsqrd; 
+    info->normsqrd += info_i.normsqrd;
   }
 }
 
@@ -57,7 +60,7 @@ void ConstructSchurComplementSystem(std::vector<T>* c, bool initialize, SchurCom
 }
 
 
-bool Solve(const DenseMatrix& b, Program& prog,  
+bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config,
            double* primal_variable) {
 
@@ -114,7 +117,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
     bool init = true;
     ConstructSchurComplementSystem(&constraints, init, &sys);
 
-    Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G); 
+    Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
     if (llt.info() != Eigen::Success) {
       PRINTSTATUS("LLT FAILURE.");
       return false;
@@ -123,10 +126,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
     //  S11 S12  b1
     //            b
-    // 
+    //
     //  t = inv(S11) (b1 - S12 x)
     //  (S22 - S12 inv(S11) S12 x) = b - S12 inv(S11) * b1
-    if ((opt.inv_sqrt_mu < inv_sqrt_mu_max ) || (!error_converging)) {
+    if ((opt.inv_sqrt_mu < inv_sqrt_mu_max) || (!error_converging)) {
       double inv_sqrt_mu_last = opt.inv_sqrt_mu;
       mu_param.inv_sqrt_mu = inv_sqrt_mu_max;
       mu_param.limit = config.dinf_limit;
@@ -141,7 +144,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
       // double divub = normsqrd/1-config.dinf_limit;
       // double divlb = normsqrd/(1+config.dinf_limit);
-      //LOG(normsqrd);
+      // LOG(normsqrd);
 
 
       if (inv_sqrt_mu_last > opt.inv_sqrt_mu) {
@@ -161,7 +164,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       } else {
         error_converging = true;
       }
-    } 
+    }
 
     double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
 
@@ -194,24 +197,23 @@ bool Solve(const DenseMatrix& b, Program& prog,
     bool iter_refine = false;
     if (iter_refine) {
       ConstructSchurComplementSystem(&constraints, true, &sys);
-      Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G); 
+      Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
       DenseMatrix L = llt.matrixL();
       DenseMatrix bres = opt.inv_sqrt_mu*b - 1 * sys.AW;
       y2  = bres*0;
       for (int i = 0; i < 1; i++) {
         y2 += llt.solve(bres - L*L.transpose()*y2);
-        DUMP(bres - L*L.transpose()*y2);
       }
     } else {
       ConstructSchurComplementSystem(&constraints, true, &sys);
-      Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G); 
+      Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
       DenseMatrix bres = opt.inv_sqrt_mu*b  - 1 * sys.AW;
       y2 = llt.solve(bres);
     }
 
     opt.affine = true;
     opt.e_weight = 0;
-    opt.c_weight = 0; 
+    opt.c_weight = 0;
     Ref y2map(y2.data(), y2.rows(), y2.cols());
     TakeStep(&constraints, opt, y2map, &info);
   }
