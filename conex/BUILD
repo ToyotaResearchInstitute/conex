@@ -5,7 +5,6 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
-
 cc_test(
     name = "hermitian",
     srcs = glob(["test/test_util.h", "test/test_util.cc", "test/test_hermitian.cc"]),
@@ -45,10 +44,7 @@ cc_library(
     name = "conex_lib",
     hdrs = glob([ "*.h" ]),
     srcs = glob(["*.cc"]),
-    copts = ["-O3", "-static-libstdc++"],
+    copts = ["-O3"],
     visibility = ["//visibility:public"],
-    deps = [
-        "@eigen",
-    ],
+    deps = [ "@eigen" ],
 )
-
