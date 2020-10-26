@@ -27,6 +27,7 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfigurat
   c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
   c.dinf_limit = config->dinf_limit;
   c.final_centering_steps = config->final_centering_steps;
+  c.max_iterations = config->max_iterations;
   c.convergence_rate_threshold = config->convergence_rate_threshold;
   c.divergence_threshold = config->divergence_threshold;
 
@@ -114,6 +115,7 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
   c->dinf_limit = config.dinf_limit;
   c->final_centering_steps = config.final_centering_steps;
+  c->max_iterations = config.max_iterations;
   c->convergence_rate_threshold = config.convergence_rate_threshold;
   c->divergence_threshold = config.divergence_threshold;
 }

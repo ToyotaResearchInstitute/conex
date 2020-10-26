@@ -28,11 +28,9 @@ conex.o: conex.h conex.cc
 libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o
 	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o
 
-
 .PHONY: clean
 
 clean:
 	rm -f *.so
 	rm -f *.o
 	rm -f *.out
-

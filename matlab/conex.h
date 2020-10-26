@@ -11,6 +11,7 @@ typedef struct {
   double inv_sqrt_mu_max;
   double dinf_limit;
   int final_centering_steps;
+  int max_iterations;
   double convergence_rate_threshold;
   double divergence_threshold;
 } ConexSolverConfiguration;

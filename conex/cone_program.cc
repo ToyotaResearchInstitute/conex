@@ -12,7 +12,6 @@ inline void CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
   }
 }
 
-
 template<typename T>
 void SetIdentity(std::vector<T>* c) {
   for (auto& ci : *c)  {
@@ -124,11 +123,6 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
-    //  S11 S12  b1
-    //            b
-    //
-    //  t = inv(S11) (b1 - S12 x)
-    //  (S22 - S12 inv(S11) S12 x) = b - S12 inv(S11) * b1
     if ((opt.inv_sqrt_mu < inv_sqrt_mu_max) || (!error_converging)) {
       double inv_sqrt_mu_last = opt.inv_sqrt_mu;
       mu_param.inv_sqrt_mu = inv_sqrt_mu_max;
@@ -136,20 +130,23 @@ bool Solve(const DenseMatrix& b, Program& prog,
       y = sys.AQc - b;
       llt.solveInPlace(y);
       MinMu(&constraints,  y, &mu_param);
-
+      
       CalcMinMu(mu_param.gw_lambda_max, mu_param.gw_lambda_min, &mu_param);
       opt.inv_sqrt_mu = mu_param.inv_sqrt_mu;
       double normsqrd = mu_param.inv_sqrt_mu * mu_param.inv_sqrt_mu *  mu_param.gw_norm_squared +
                      -2*mu_param.inv_sqrt_mu * mu_param.gw_trace  + rankK;
 
-      // double divub = normsqrd/1-config.dinf_limit;
+      double divub = normsqrd/(1-config.dinf_limit);
       // double divlb = normsqrd/(1+config.dinf_limit);
-      // LOG(normsqrd);
+      LOG(divub);
 
 
       if (inv_sqrt_mu_last > opt.inv_sqrt_mu) {
         opt.inv_sqrt_mu += 0.5*(opt.inv_sqrt_mu + inv_sqrt_mu_last);
-        if (i > 10) {
+
+        // Trigger final centering steps if we have been doing this for too
+        // long.
+        if (i > config.max_iterations - config.final_centering_steps) {
           inv_sqrt_mu_max = opt.inv_sqrt_mu;
         }
       }
@@ -164,7 +161,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       } else {
         error_converging = true;
       }
-    }
+    } 
 
     double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
 

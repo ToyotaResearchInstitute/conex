@@ -10,6 +10,7 @@ struct SolverConfiguration {
   double inv_sqrt_mu_max = 1000;
   double dinf_limit = .95;
   int final_centering_steps = 5;
+  int max_iterations = 25;
   double convergence_rate_threshold = .5;
   double divergence_threshold = 100; 
 };
