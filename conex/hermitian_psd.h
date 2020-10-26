@@ -66,9 +66,10 @@ class HermitianPsdConstraint {
     o->ComputeNegativeSlack(1, y, &minus_s);
    
     p->gw_lambda_max = NormInfWeighted<T>(o->W, minus_s);
-    // WsWs = Ws*Ws;
-    // p->gw_norm_squared += WsWs.trace();
-    // p->gw_trace = -Ws.trace();
+
+    // <e, Q(w^{1/2}) s)
+    p->gw_trace -= T().TraceInnerProduct(o->W, minus_s);
+    p->gw_norm_squared += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
   }
 
   friend void TakeStep(HermitianPsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
@@ -123,13 +124,7 @@ class HermitianPsdConstraint {
 };
 
 
-
-
 using RealLMIConstraint = HermitianPsdConstraint<Real>;
 using ComplexLMIConstraint = HermitianPsdConstraint<Complex>;
 using QuaternicLMIConstraint = HermitianPsdConstraint<Quaternions>;
 using OctonicLMIConstraint = HermitianPsdConstraint<Octonions>;
-
-
-
-

@@ -10,12 +10,12 @@ TEST(MuSelection, DivergenceBound) {
   int n = 3;
   MatrixXd gw = Eigen::VectorXd::Random(n, 1).array().abs();
 
-  double gw_norm = gw.norm();
+  double gw_norm_squared = gw.squaredNorm();
   double gw_norm_inf = gw.maxCoeff();
   double gw_trace = gw.sum();
   double hub_desired = 1;
-  double k = DivergenceUpperBoundInverse(hub_desired, gw_norm, gw_norm_inf, gw_trace, n);
-  double hub = DivergenceBound(k, gw_norm, gw_norm_inf, gw_trace, n);
+  double k = DivergenceUpperBoundInverse(hub_desired, gw_norm_squared, gw_norm_inf, gw_trace, n);
+  double hub = DivergenceUpperBound(k, gw_norm_squared, gw_norm_inf, gw_trace, n);
 
   EXPECT_TRUE(k >= 0);
   EXPECT_TRUE(2 - k * gw_norm_inf >= 0);

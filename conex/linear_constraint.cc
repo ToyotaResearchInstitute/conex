@@ -39,7 +39,7 @@ void MinMu(LinearConstraint* o,  const Ref& y, MuSelectionParameters* p) {
     p->gw_lambda_min = lamda_min;
   }
   p->gw_norm_squared += Ws.squaredNorm(); 
-  p->gw_trace = -Ws.sum();
+  p->gw_trace += -Ws.sum();
 }
 
 void LinearConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s) {

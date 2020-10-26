@@ -233,8 +233,8 @@ void MinMu(QuadraticConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   if (p->gw_lambda_min > lamda_min) {
     p->gw_lambda_min = lamda_min;
   }
-  p->gw_norm_squared += Ws.squaredNorm(); 
-  p->gw_trace = -Ws.sum();
+  p->gw_norm_squared += std::pow(lamda_max, 2) + std::pow(lamda_min, 2);
+  p->gw_trace += (lamda_max + lamda_min);
 }
 
 

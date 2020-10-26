@@ -26,7 +26,6 @@ std::vector<MatrixXd> ToMat(const std::vector<Real::Matrix>& x) {
   return y;
 }
 
-
 int CompareRealHermitianWithLMI() {
   using T = Real;
   using Matrix = typename T::Matrix;
@@ -55,8 +54,6 @@ int CompareRealHermitianWithLMI() {
   bool solved_2 = Solve(b, prog2, config, y2.data());
   EXPECT_TRUE((y2 - y).norm() < 1e-5);
 
-
-
   return solved_1 && solved_2;
 }
 
@@ -64,7 +61,7 @@ template<typename T>
 int DoSolve() {
   using Matrix = typename T::Matrix;
   SolverConfiguration config;
-  config.inv_sqrt_mu_max = std::sqrt(1.0/7e-2);
+  config.inv_sqrt_mu_max = 1000; // std::sqrt(1.0/7e-2);
   config.final_centering_steps = 10;
 
   int m = 2;

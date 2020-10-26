@@ -3,13 +3,15 @@
 #include <vector>
 
 #include "conex/newton_step.h"
+#include "conex/divergence.h"
 
-inline void CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
+double CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
   const double kMaxNormInfD = p->limit;
-  p->inv_sqrt_mu = (1.0 + kMaxNormInfD)  / (lambda_max + 1e-12);
-  if (p->inv_sqrt_mu < 1e-3) {
-    p->inv_sqrt_mu = 1e-3;
+  double inv_sqrt_mu = (1.0 + kMaxNormInfD)  / (lambda_max + 1e-12);
+  if (inv_sqrt_mu < 1e-3) {
+    inv_sqrt_mu = 1e-3;
   }
+  return inv_sqrt_mu;
 }
 
 template<typename T>
@@ -35,6 +37,8 @@ void TakeStep(std::vector<T>* c, const StepOptions& opt, const Ref& y, StepInfo*
 
 template<typename T>
 void MinMu(std::vector<T>* c, const Ref&y, MuSelectionParameters* p) {
+  p->gw_norm_squared = 0;
+  p->gw_lambda_max = -1000;
   for (auto& ci : *c)  {
     MinMu(&ci,  y, p);
   }
@@ -123,33 +127,31 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
+    double div_ub  = 0;
     if ((opt.inv_sqrt_mu < inv_sqrt_mu_max) || (!error_converging)) {
-      double inv_sqrt_mu_last = opt.inv_sqrt_mu;
-      mu_param.inv_sqrt_mu = inv_sqrt_mu_max;
       mu_param.limit = config.dinf_limit;
       y = sys.AQc - b;
       llt.solveInPlace(y);
       MinMu(&constraints,  y, &mu_param);
       
-      CalcMinMu(mu_param.gw_lambda_max, mu_param.gw_lambda_min, &mu_param);
-      opt.inv_sqrt_mu = mu_param.inv_sqrt_mu;
-      double normsqrd = mu_param.inv_sqrt_mu * mu_param.inv_sqrt_mu *  mu_param.gw_norm_squared +
-                     -2*mu_param.inv_sqrt_mu * mu_param.gw_trace  + rankK;
+      // CalcMinMu(mu_param.gw_lambda_max, mu_param.gw_lambda_min, &mu_param);
+      double divergence_upper_bound = 1;
+      opt.inv_sqrt_mu = DivergenceUpperBoundInverse(divergence_upper_bound * rankK,
+                                                    mu_param.gw_norm_squared,
+                                                    mu_param.gw_lambda_max,
+                                                    mu_param.gw_trace,
+                                                    rankK);
 
-      double divub = normsqrd/(1-config.dinf_limit);
-      // double divlb = normsqrd/(1+config.dinf_limit);
-      LOG(divub);
 
+      double normsqrd = opt.inv_sqrt_mu * opt.inv_sqrt_mu *  mu_param.gw_norm_squared +
+                     -2*opt.inv_sqrt_mu * mu_param.gw_trace  + rankK;
 
-      if (inv_sqrt_mu_last > opt.inv_sqrt_mu) {
-        opt.inv_sqrt_mu += 0.5*(opt.inv_sqrt_mu + inv_sqrt_mu_last);
+      div_ub = normsqrd/(2 - opt.inv_sqrt_mu * mu_param.gw_lambda_max); 
 
-        // Trigger final centering steps if we have been doing this for too
-        // long.
-        if (i > config.max_iterations - config.final_centering_steps) {
-          inv_sqrt_mu_max = opt.inv_sqrt_mu;
-        }
+      if (i > config.max_iterations - config.final_centering_steps) {
+        inv_sqrt_mu_max = opt.inv_sqrt_mu;
       }
+      
       max_iter = i + config.final_centering_steps;
 
       if (normsqrd > config.divergence_threshold * rankK) {
@@ -180,6 +182,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       std::cout << "i: " << i << ", ";
     }
     REPORT(mu);
+    REPORT(div_ub);
     REPORT(d_2);
     REPORT(d_inf);
 

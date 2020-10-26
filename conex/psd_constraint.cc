@@ -151,7 +151,7 @@ void MinMu(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   }
   WsWs = Ws*Ws;
   p->gw_norm_squared += WsWs.trace();
-  p->gw_trace = -Ws.trace();
+  p->gw_trace += -Ws.trace();
 }
 
 

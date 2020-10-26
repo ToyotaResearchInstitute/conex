@@ -7,7 +7,6 @@ using DenseMatrix = Eigen::MatrixXd;
 using Ref = Eigen::Map<DenseMatrix, Eigen::Aligned>;
 
 struct MuSelectionParameters {
-  double inv_sqrt_mu = 0;
   double limit = 0;
   double gw_norm_squared = 0;
   double gw_trace = 0;

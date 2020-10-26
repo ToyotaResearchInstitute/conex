@@ -26,6 +26,7 @@ void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, const Ref
   double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
 
   double scale = 1;
+  // TODO(Add scaling)
   // if (norminf * norminf > 2.0) {
   //   scale = 2.0/(norminf * norminf);
   //   minus_s = T::ScalarMult(minus_s, scale);
@@ -34,7 +35,7 @@ void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, const Ref
   auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
   o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
   info->norminfd = norminf;
-  info->normsqrd = -66;
+  info->normsqrd += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
 }
 
 void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
@@ -46,6 +47,7 @@ void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, cons
   double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
 
   double scale = 1;
+  // TODO(Add scaling)
   // if (norminf * norminf > 2.0) {
   //   scale = 2.0/(norminf * norminf);
   //   minus_s = T::ScalarMult(minus_s, scale);
@@ -54,7 +56,7 @@ void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, cons
   auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
   o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
   info->norminfd = norminf;
-  info->normsqrd = -66;
+  info->normsqrd += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
 }
 
 void TakeStep(HermitianPsdConstraint<Complex>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
@@ -66,6 +68,7 @@ void TakeStep(HermitianPsdConstraint<Complex>* o, const StepOptions& opt, const 
   double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
 
   double scale = 1;
+  // TODO(Add scaling)
   // if (norminf * norminf > 2.0) {
   //   scale = 2.0/(norminf * norminf);
   //   minus_s = T::ScalarMult(minus_s, scale);
@@ -74,7 +77,7 @@ void TakeStep(HermitianPsdConstraint<Complex>* o, const StepOptions& opt, const 
   auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
   o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
   info->norminfd = norminf;
-  info->normsqrd = -66;
+  info->normsqrd += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
 }
 
 void TakeStep(HermitianPsdConstraint<Quaternions>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
@@ -86,6 +89,7 @@ void TakeStep(HermitianPsdConstraint<Quaternions>* o, const StepOptions& opt, co
   double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
 
   double scale = 1;
+  // TODO(Add scaling)
   // if (norminf * norminf > 2.0) {
   //   scale = 2.0/(norminf * norminf);
   //   minus_s = T::ScalarMult(minus_s, scale);
@@ -94,5 +98,5 @@ void TakeStep(HermitianPsdConstraint<Quaternions>* o, const StepOptions& opt, co
   auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
   o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
   info->norminfd = norminf;
-  info->normsqrd = -66;
+  info->normsqrd += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
 }

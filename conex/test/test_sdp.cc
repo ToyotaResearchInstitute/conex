@@ -28,25 +28,25 @@ int TestDiagonalSDP() {
     constraints2.push_back(Alinear.col(i).asDiagonal());
   }
 
-  DenseLMIConstraint T2{n, &constraints2, &affine2};
-  LinearConstraint T3{n, &Alinear, &Clinear};
+  DenseLMIConstraint LMI{n, &constraints2, &affine2};
+  LinearConstraint Linear{n, &Alinear, &Clinear};
 
   Program prog;
-  prog.constraints.push_back(T2);
+  prog.constraints.push_back(LMI);
   auto b = GetFeasibleObjective(m, prog.constraints);
   DenseMatrix y1(m, 1);
   Solve(b, prog, config, y1.data());
 
   Program prog2;
-  prog2.constraints.push_back(T3);
+  prog2.constraints.push_back(Linear);
   DenseMatrix y2(m, 1);
   Solve(b, prog2, config, y2.data());
 
   Program prog3;
   DenseMatrix y3(m, 1);
-  prog2.constraints.push_back(T3);
-  prog2.constraints.push_back(T2);
-  Solve(b, prog2, config, y3.data());
+  prog3.constraints.push_back(Linear);
+  prog3.constraints.push_back(Linear);
+  Solve(b, prog3, config, y3.data());
 
   EXPECT_TRUE((y2 - y1).norm() < 1e-6);
   EXPECT_TRUE((y3 - y1).norm() < 1e-4);
@@ -60,11 +60,11 @@ int TestSDP() {
   auto constraints2 = GetRandomDenseMatrices(n, m);
 
   DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
-  DenseLMIConstraint T2{n, &constraints2, &affine2};
+  DenseLMIConstraint LMI{n, &constraints2, &affine2};
 
   Program prog;
   DenseMatrix y(m, 1);
-  prog.constraints.push_back(T2);
+  prog.constraints.push_back(LMI);
 
 
   auto b = GetFeasibleObjective(m, prog.constraints);

@@ -214,7 +214,7 @@ void MinMu(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p) {
     p->gw_lambda_min = lamda_min;
   }
   p->gw_norm_squared += Ws.squaredNorm(); 
-  p->gw_trace = -Ws.sum();
+  p->gw_trace += -Ws.sum();
 }
 
 
