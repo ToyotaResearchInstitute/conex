@@ -2,6 +2,8 @@ COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer
 EIGEN=$(EIGEN_DIR)
 CONEX=../
 
+all: libconex.so
+
 cone_program.o: ../conex/cone_program.cc  
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/cone_program.cc 
 
@@ -26,7 +28,6 @@ conex.o: conex.h conex.cc
 libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o
 	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o
 
-all: libconex.so
 
 .PHONY: clean
 

@@ -11,16 +11,27 @@
 #include "conex/dense_lmi_constraint.h"
 #include "conex/constraint.h"
 
+// TODO(FrankPermenter): check for null pointers.
+
 using DenseMatrix = Eigen::MatrixXd;
 using ConexConeProgram = void*;
-int ConexSolve(void* prog_ptr, const Real*b, int br, Real* y, int yr) {
+int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfiguration*
+               config, Real* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);
   DenseMatrix blinear = bmap;
 
+  SolverConfiguration c;
+  c.prepare_dual_variables = config->prepare_dual_variables;
+  c.max_iter = config->max_iter;
+  c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
+  c.dinf_limit = config->dinf_limit;
+  c.final_centering_steps = config->final_centering_steps;
+  c.convergence_rate_threshold = config->convergence_rate_threshold;
+  c.divergence_threshold = config->divergence_threshold;
+
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
 
-  SolverConfiguration c;
   return Solve(blinear, prog, c, y);
 }
 
@@ -29,7 +40,6 @@ void ConexGetDualVariable(void* prog_ptr, int i, Real* x, int xr,  int xc) {
   assert(prog.constraints.at(i).dual_variable_size() == xr * xc);
 
   using InputMatrix = Eigen::Map<DenseMatrix>;
-  double sqrt_inv_mu = prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
 
   prog.constraints.at(i).get_dual_variable(x);
 
@@ -38,7 +48,6 @@ void ConexGetDualVariable(void* prog_ptr, int i, Real* x, int xr,  int xc) {
 }
 
 int ConexGetDualVariableSize(void* prog_ptr, int i) {
-  using InputMatrix = Eigen::Map<DenseMatrix>;
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
   return prog.constraints.at(i).dual_variable_size();
 }
@@ -94,18 +103,19 @@ int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   return constraint_id;
 }
 
-
-ConexSolverConfiguration ConexDefaultOptions() {
-  ConexSolverConfiguration c;
+void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
+  if (c == NULL) {
+    std::cerr << "Received null pointer.";
+    return;
+  }
   SolverConfiguration config;
-  c.prepare_dual_variables = config.prepare_dual_variables;
-  c.max_iter = config.max_iter;
-  c.inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  c.dinf_limit = config.dinf_limit;
-  c.final_centering_steps = config.final_centering_steps;
-  c.convergence_rate_threshold = config.convergence_rate_threshold;
-  c.divergence_threshold = config.divergence_threshold;
-  return c;
+  c->prepare_dual_variables = config.prepare_dual_variables;
+  c->max_iter = config.max_iter;
+  c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
+  c->dinf_limit = config.dinf_limit;
+  c->final_centering_steps = config.final_centering_steps;
+  c->convergence_rate_threshold = config.convergence_rate_threshold;
+  c->divergence_threshold = config.divergence_threshold;
 }
 
 

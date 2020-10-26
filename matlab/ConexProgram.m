@@ -2,13 +2,26 @@ classdef ConexProgram
   properties(Access=private)
     p
   end
+  properties(Access=public)
+    options 
+  end
   
   methods
+
     function self = ConexProgram(self)
       if ~libisloaded('libconex')
         loadlibrary libconex.so conex.h
       end
       self.p = calllib('libconex','ConexCreateConeProgram');
+      self.options = libstruct('ConexSolverConfiguration');
+      % Force matlab to allocate memory for options
+      self.options.dinf_limit = 1;
+
+      calllib('libconex','ConexSetDefaultOptions', self.options);
+    end
+
+    function options = ConexOptions(self)
+      y = libstruct('c_struct', sm)
     end
 
     function delete(self)
@@ -49,7 +62,7 @@ classdef ConexProgram
         num_var = length(b);
         bptr = libpointer('doublePtr', full(b));
         yptr = libpointer('doublePtr', zeros(num_var, 1));
-        status = calllib('libconex', 'ConexSolve', self.p, bptr, length(b), yptr, num_var);
+        status = calllib('libconex', 'ConexSolve', self.p, bptr, length(b), self.options, yptr, num_var);
         y = yptr.Value;
     end
 
@@ -76,7 +89,7 @@ classdef ConexProgram
 
 
         yptr = libpointer('doublePtr', zeros(num_var, 1));
-        solved = calllib('libconex', 'ConexSolve', p, bptr, length(b), yptr, num_var);
+        solved = calllib('libconex', 'ConexSolve', p, bptr, length(b), self.options, yptr, num_var);
       catch
         calllib('libconex','ConexDeleteConeProgram', p);
       end

@@ -30,11 +30,12 @@ int ConexAddDenseLMIConstraint(void* prog,
   const double* Aarray, int Aarrayr, int Aarrayc, int m,
   const double* cmat, int cr, int cc);
 
-int ConexSolve(void* prog, const double*b, int br, double* y, int yr);
+int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguration* config, 
+                double* y, int yr);
 
 void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
-ConexSolverConfiguration ConexDefaultOptions();
+void ConexSetDefaultOptions(ConexSolverConfiguration* config);
 
 #ifdef __cplusplus
 } // extern "C"
