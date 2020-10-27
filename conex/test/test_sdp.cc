@@ -28,7 +28,7 @@ int TestDiagonalSDP() {
     constraints2.push_back(Alinear.col(i).asDiagonal());
   }
 
-  DenseLMIConstraint LMI{n, &constraints2, &affine2};
+  DenseLMIConstraint LMI{n, constraints2, affine2};
   LinearConstraint Linear{n, &Alinear, &Clinear};
 
   Program prog;
@@ -60,7 +60,7 @@ int TestSDP() {
   auto constraints2 = GetRandomDenseMatrices(n, m);
 
   DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
-  DenseLMIConstraint LMI{n, &constraints2, &affine2};
+  DenseLMIConstraint LMI{n, constraints2, affine2};
 
   Program prog;
   DenseMatrix y(m, 1);

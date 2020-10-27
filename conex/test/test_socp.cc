@@ -31,7 +31,7 @@ int DoMain() {
     Ai.topRightCorner(1, n) = Wsqrt.col(i-1).transpose();
     A.push_back(Ai);
   }
-  DenseLMIConstraint T2{n + 1, &A, &C};
+  DenseLMIConstraint T2{n + 1, A, C};
 
   Eigen::MatrixXd b(n, 1);
 

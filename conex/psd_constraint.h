@@ -84,7 +84,6 @@ class PsdConstraint {
   WorkspaceDensePSD* workspace() { return &workspace_; }
   friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
   friend void ComputeStats(PsdConstraint* o, const StepOptions& opt, const Ref& y);
-
   friend void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p);
 
  protected:
