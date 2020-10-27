@@ -24,7 +24,7 @@ class Constraint {
     o->model->do_take_step(opt, y, info);
   }
 
-  friend void MinMu(Constraint* o, const Ref& y, MuSelectionParameters* p) {
+  friend void GetMuSelectionParameters(Constraint* o, const Ref& y, MuSelectionParameters* p) {
     o->model->do_min_mu(y, p);
   }
 
@@ -70,7 +70,7 @@ class Constraint {
     }
 
     void do_min_mu(const Ref& y, MuSelectionParameters* p) override {
-      MinMu(&data, y, p);
+      GetMuSelectionParameters(&data, y, p);
     }
 
     int do_rank() override {

@@ -52,7 +52,7 @@ class LinearConstraint {
   friend int Rank(const LinearConstraint& o) { return o.workspace_.n_; };
   friend void SetIdentity(LinearConstraint* o);
   friend void TakeStep(LinearConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* data);
-  friend void MinMu(LinearConstraint* o,  const Ref& y, MuSelectionParameters* p);
+  friend void GetMuSelectionParameters(LinearConstraint* o,  const Ref& y, MuSelectionParameters* p);
   friend void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize, 
                                              SchurComplementSystem* sys);
 

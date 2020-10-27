@@ -36,11 +36,11 @@ void TakeStep(std::vector<T>* c, const StepOptions& opt, const Ref& y, StepInfo*
 }
 
 template<typename T>
-void MinMu(std::vector<T>* c, const Ref&y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(std::vector<T>* c, const Ref&y, MuSelectionParameters* p) {
   p->gw_norm_squared = 0;
   p->gw_lambda_max = -1000;
   for (auto& ci : *c)  {
-    MinMu(&ci,  y, p);
+    GetMuSelectionParameters(&ci,  y, p);
   }
 }
 
@@ -129,7 +129,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
     if ((opt.inv_sqrt_mu < inv_sqrt_mu_max))  {
       y = sys.AQc - b;
       llt.solveInPlace(y);
-      MinMu(&constraints,  y, &mu_param);
+      GetMuSelectionParameters(&constraints,  y, &mu_param);
 
       double divergence_upper_bound = config.divergence_upper_bound;
       opt.inv_sqrt_mu = DivergenceUpperBoundInverse(divergence_upper_bound * rankK,
@@ -217,7 +217,6 @@ bool Solve(const DenseMatrix& b, Program& prog,
   PRINTSTATUS("Solved.");
   return solved;
 }
-
 
 DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints) {
   std::vector<Workspace> workspaces;

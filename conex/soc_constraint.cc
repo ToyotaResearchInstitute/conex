@@ -190,7 +190,7 @@ void SOCConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* 
 }
 
 // Combine this with TakeStep
-void MinMu(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;

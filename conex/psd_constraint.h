@@ -85,7 +85,7 @@ class PsdConstraint {
   friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
   friend void ComputeStats(PsdConstraint* o, const StepOptions& opt, const Ref& y);
 
-  friend void MinMu(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p);
+  friend void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p);
 
  protected:
   PsdConstraint(int n, int m) : workspace_(n), num_dual_constraints_{m} {}

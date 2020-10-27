@@ -129,7 +129,7 @@ void SetIdentity(PsdConstraint* o) {
 // Goal: rescale max(a x - 1, b y - 1) = k.
 //
 //     max(a/k x - 1, b/y - 1)
-void MinMu(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   using conex::jordan_algebra::SpectralRadius;
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;

@@ -210,7 +210,7 @@ void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
 }
 
 // Combine this with TakeStep
-void MinMu(QuadraticConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(QuadraticConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;

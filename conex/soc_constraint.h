@@ -18,7 +18,7 @@ class SOCConstraint {
   friend int Rank(const SOCConstraint& o) { return 2; };
   friend void SetIdentity(SOCConstraint* o) { o->workspace_.W0 = 1;  o->workspace_.W1.setZero(); }
   friend void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* data);
-  friend void MinMu(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p);
+  friend void GetMuSelectionParameters(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p);
   friend void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize, 
                                              SchurComplementSystem* sys);
  private:

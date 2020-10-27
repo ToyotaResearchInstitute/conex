@@ -22,7 +22,7 @@ void TakeStep(LinearConstraint* o, const StepOptions& opt, const Ref& y, StepInf
   }
 }
 
-void MinMu(LinearConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(LinearConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;

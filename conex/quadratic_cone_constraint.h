@@ -20,7 +20,7 @@ class QuadraticConstraint {
   friend int Rank(const QuadraticConstraint& o) { return 2; };
   friend void SetIdentity(QuadraticConstraint* o) { o->workspace_.W0 = 1;  o->workspace_.W1.setZero(); }
   friend void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* data);
-  friend void MinMu(QuadraticConstraint* o,  const Ref& y, MuSelectionParameters* p);
+  friend void GetMuSelectionParameters(QuadraticConstraint* o,  const Ref& y, MuSelectionParameters* p);
   friend void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize, 
                                              SchurComplementSystem* sys);
  private:

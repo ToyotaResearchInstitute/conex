@@ -59,7 +59,7 @@ class HermitianPsdConstraint {
     assert(0);
   }
 
-  friend void MinMu(HermitianPsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+  friend void GetMuSelectionParameters(HermitianPsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
    // using T = Real;
     using conex::jordan_algebra::SpectralRadius;
     typename T::Matrix minus_s;
