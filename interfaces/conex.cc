@@ -56,7 +56,6 @@ void* ConexCreateConeProgram() {
 }
 
 void ConexDeleteConeProgram(ConexConeProgram prog) {
-  std::cout << "Deleting";
   delete reinterpret_cast<Program*>(prog);
 }
 
@@ -69,7 +68,7 @@ int ConexAddDenseLMIConstraint(void* prog,
 
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   auto offset = A;
-  std::vector<InputMatrix> Avect;
+  std::vector<DenseMatrix> Avect;
   for (int i = 0; i < m; i++) {
     InputMatrix Amap(offset, Ar, Ac);
     Avect.push_back(Amap);
@@ -79,7 +78,7 @@ int ConexAddDenseLMIConstraint(void* prog,
 
   int n = cc;
 
-  DenseLMIConstraint T3{n,  &Avect, &Cmap};
+  DenseLMIConstraint T3{n,  Avect, Cmap};
   auto& program = *reinterpret_cast<Program*>(prog);
   int constraint_id = program.constraints.size();
   program.constraints.push_back(T3);

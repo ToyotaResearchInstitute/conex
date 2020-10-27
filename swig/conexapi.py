@@ -80,7 +80,7 @@ class Conex:
             b = b.transpose()
 
         sol.y = np.ones((self.m)).astype(real)
-        config = self.wrapper.ConexDefaultOptions();
+        config = self.wrapper.ConexSolverConfiguration()
         config.inv_sqrt_mu_max = 25000
         config.max_iterations = 100
         config.final_centering_steps = 3

@@ -17,11 +17,15 @@ typedef struct {
 void* ConexCreateConeProgram();
 void ConexDeleteConeProgram(void*);
 
-int ConexAddDenseLinearConstraint(void* prog, 
+int ConexAddDenseLinearConstraint(void* prog,
   const double* A, int Ar, int Ac,
   const double* c, int cr);
 
-int ConexAddDenseLMIConstraint(void* prog, 
+//
+//  Parameters Aarrayr, Aarrayc, cr, cc all equal the
+//  order n of LMI.
+// TODO(FrankPermenter): update this.
+int ConexAddDenseLMIConstraint(void* prog,
   const double* Aarray, int Aarrayr, int Aarrayc, int m,
   const double* cmat, int cr, int cc);
 
@@ -30,7 +34,7 @@ int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguratio
 
 void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
-ConexSolverConfiguration ConexDefaultOptions();
+void ConexSetDefaultOptions(ConexSolverConfiguration* config);
 
 #ifdef __cplusplus
 } // extern "C"

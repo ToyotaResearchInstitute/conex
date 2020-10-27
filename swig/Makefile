@@ -1,14 +1,15 @@
+
 all: _conex.so
 
-libconex.so:  conex.h conex.cc
-	bazel build :libconex.so
-	cp ../bazel-bin/swig/libconex.so .
-	#cp ~/research/conex/swig/libconex.so libconex.so
+libconex.so:  ../interfaces/conex.h ../interfaces/conex.cc
+	#bazel build :libconex.so
+	#cp ../bazel-bin/swig/libconex.so .
+	cp ../interfaces/libconex.so libconex.so
 
-conex.py: conex.h conex.cc
+conex.py: ../interfaces/conex.h ../interfaces/conex.cc
 	python setup.py build
 
-build: conex.h conex.cc
+build: ../interfaces/conex.h ../interfaces/conex.cc
 	python setup.py build
 
 _conex.so: libconex.so conex.py build

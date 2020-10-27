@@ -1,4 +1,5 @@
-function run_tests()
+function run_tests(path_to_conex_library)
+  addpath(path_to_conex_library)
   LPTests();
   SDPTests();
 
