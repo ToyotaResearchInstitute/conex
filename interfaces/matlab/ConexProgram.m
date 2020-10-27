@@ -6,6 +6,21 @@ classdef ConexProgram
     options 
   end
   
+ methods(Static)
+    function [m, n] = VerifyLMIData(A, c)
+      if size(c, 2) ~= size(c, 1)
+        error('Affine term c must be square matrix.')
+      end
+      n = size(c, 1);
+      if mod(size(A, 2), n) ~= 0
+        error('LMI matrices have incompatible dimension')
+      end
+      if size(A, 1) ~= n
+        error('LMI matrices have incompatible dimension')
+      end
+      m = size(A, 2) / n;
+    end
+ end
   methods
 
     function self = ConexProgram(self)
@@ -37,22 +52,29 @@ classdef ConexProgram
       num_constraint, num_var, Cptr, num_constraint);
     end
 
-    function AddLinearMatrixInequality(self, A, c)
-      if size(c, 2) ~= size(c, 1)
-        error('Affine term c must be square matrix.')
+    function AddLinearMatrixInequality(self, A, c, variables)
+      if nargin < 4
+        self.AddDenseLinearMatrixInequality(A, c)
+      else
+        self.AddSparseLinearMatrixInequality(A, c, variables)
       end
-      n = size(c, 1);
-      if mod(size(A, 2), n) ~= 0
-        error('LMI matrices have incompatible dimension')
-      end
-      if size(A, 1) ~= n
-        error('LMI matrices have incompatible dimension')
-      end
-      m = size(A, 2) / n;
+    end
+
+    function AddDenseLinearMatrixInequality(self, A, c)
+      [m, n] = ConexProgram.VerifyLMIData(A, c);
 
       Aptr = libpointer('doublePtr', full(A(:)));
       Cptr = libpointer('doublePtr', full(c));
       calllib('libconex', 'ConexAddDenseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n);
+    end
+
+    function AddSparseLinearMatrixInequality(self, A, c, vars)
+      [m, n] = ConexProgram.VerifyLMIData(A, c);
+
+      Aptr = libpointer('doublePtr', full(A(:)));
+      Cptr = libpointer('doublePtr', full(c));
+      varPtr = libpointer('longPtr', full(vars));
+      calllib('libconex', 'ConexAddSparseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n, varPtr, m);
     end
 
     function [y, status] = Maximize(self, b)
@@ -97,4 +119,5 @@ classdef ConexProgram
       calllib('libconex','ConexDeleteConeProgram', p);
     end
  end
+
 end
