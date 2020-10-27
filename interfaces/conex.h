@@ -39,6 +39,8 @@ int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguratio
 
 void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
+int ConexGetDualVariableSize(void* prog_ptr, int i);
+
 void ConexSetDefaultOptions(ConexSolverConfiguration* config);
 
 #ifdef __cplusplus

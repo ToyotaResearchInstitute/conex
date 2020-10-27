@@ -15,7 +15,7 @@ function LPTests()
   b = A' * ones(num_constraint, 1);
 
   p.AddLinearInequality(A, c);
-  [y, status] = p.Maximize(b);
+  [y, x, status] = p.Maximize(b);
   if ~status
     error('Test failed: expected feasible solution found')
   end
@@ -30,7 +30,7 @@ function LPTests()
   c = [1, 1, -2, 1]';
 
   p.AddLinearInequality(A, c);
-  [y, status] = p.Maximize(b);
+  [y, x, status] = p.Maximize(b);
   if status
     error('Test failed: expected infeasibility')
   end
@@ -50,7 +50,7 @@ function SDPTests()
   b = [1, 1]; 
 
   p.AddLinearMatrixInequality(A, c);
-  [y, status] = p.Maximize(b);
+  [y, x, status] = p.Maximize(b);
   if ~status
     error('Test failed: expected feasible solution found')
   end
@@ -77,7 +77,7 @@ function SparseTests()
 
   p.AddLinearMatrixInequality(A, c, [0, 1]);
   p.AddLinearMatrixInequality(A, c, [1, 2]);
-  [y, status] = p.Maximize(b);
+  [y, x, status] = p.Maximize(b);
   if ~status
     error('Test failed: expected feasible solution found')
   end
@@ -90,4 +90,13 @@ function SparseTests()
   if min(eig(slack2)) < 0
       error('Test failed: slack not psd.')
   end
+
+  b1 = zeros(3, 1);
+  b2 = zeros(3, 1);
+  b1(1:2) = reshape(A, n*n, 2)'  * x{1};
+  b2(2:3) = reshape(A, n*n, 2)'  * x{2};
+  if (norm(b1 + b2 - b(:)) > 1e-12)
+      error('Test failed: dual constraints violated.')
+  end
+  
 
