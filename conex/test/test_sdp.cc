@@ -100,3 +100,70 @@ TEST(SDP, RandomSDP) {
   for (int i = 0; i < 1; i++) {
     TestSDP(); }
 }
+
+
+
+
+TEST(SDP, SparseAndDenseAgree) {
+  SolverConfiguration config;
+
+  std::vector<int> variables_1{0, 2, 4, 6, 7, 8};
+  std::vector<int> variables_2{1, 3, 5};
+
+  int n1 = 5;
+  int m1 = variables_1.size();
+
+  int n2 = 5;
+  int m2 = variables_2.size();
+
+  int m = m1 + m2;
+
+  vector<DenseMatrix> constraints_1 = GetRandomDenseMatrices(n1, m);
+  vector<DenseMatrix> constraints_2 = GetRandomDenseMatrices(n2, m);
+  vector<DenseMatrix> sparse_constraints_1;
+  vector<DenseMatrix> sparse_constraints_2;
+
+  for (const auto i : variables_1) {
+    sparse_constraints_1.push_back(constraints_1.at(i));
+    constraints_2.at(i).setZero();
+  }
+
+  for (const auto i : variables_2) {
+    sparse_constraints_2.push_back(constraints_2.at(i));
+    constraints_1.at(i).setZero();
+  }
+
+  DenseMatrix affine_1 = Eigen::MatrixXd::Identity(n1, n1);
+  DenseMatrix affine_2 = Eigen::MatrixXd::Identity(n2, n2);
+  DenseLMIConstraint LMI1{n1, constraints_1, affine_1};
+  DenseLMIConstraint LMI2{n2, constraints_2, affine_2};
+
+  Program prog;
+  prog.constraints.push_back(LMI1);
+  prog.constraints.push_back(LMI2);
+
+  auto b = GetFeasibleObjective(m, prog.constraints);
+
+  DenseMatrix y(m1 + m2, 1);
+  int success = Solve(b, prog, config, y.data());
+  EXPECT_EQ(success, 1);
+
+  SparseLMIConstraint sparse_LMI1{sparse_constraints_1, affine_1, variables_1};
+  SparseLMIConstraint sparse_LMI2{sparse_constraints_2, affine_2, variables_2};
+
+  Program sparse_prog;
+  sparse_prog.constraints.push_back(sparse_LMI1);
+  sparse_prog.constraints.push_back(sparse_LMI2);
+
+
+  DenseMatrix y_sparse(m1 + m2, 1);
+  success = Solve(b, sparse_prog, config, y_sparse.data());
+  EXPECT_EQ(success, 1);
+
+  EXPECT_NEAR((y - y_sparse).norm(), 0, 1e-8);
+
+}
+
+
+
+

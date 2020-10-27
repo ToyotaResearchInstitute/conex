@@ -15,7 +15,7 @@ DenseMatrix RandomSym(int n);
 DenseMatrix RandomLinear(int n);
 vector<SparseMatrixTuple> Partition(DenseMatrix& m);
 vector<SparseMatrixTuple> GetRandomTuples(int n, int m);
-vector<DenseMatrix> GetRandomDenseMatrices(int n, int m);
+vector<DenseMatrix> GetRandomDenseMatrices(int order, int num_matrices);
 DenseMatrix QuadRep(const DenseMatrix& X, const DenseMatrix& Y);
 double NormFro(const DenseMatrix& x);
 double min(double x, double y);

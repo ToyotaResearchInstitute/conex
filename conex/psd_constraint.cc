@@ -79,29 +79,6 @@ void SetIdentity(PsdConstraint* o) {
   o->workspace_.W.diagonal().setConstant(1);
 }
 
-/*
-    for (int i = 0; i < 10; i++) {
-      double norminf = max(std::fabs(gw_eig.first * inv_sqrt_mu - 1),
-                           std::fabs(gw_eig.second * inv_sqrt_mu - 1));
-      if (norminf <= .9) {
-        DUMP(norminf);
-        break;
-      } else {
-        double inv_sqrt_mu_p = 1.9 / gw_eig.first;
-        double inv_sqrt_mu_d = .1 / gw_eig.second;
-        if (inv_sqrt_mu_p < inv_sqrt_mu_d) {
-          inv_sqrt_mu = inv_sqrt_mu_p;
-        } else {
-          inv_sqrt_mu = inv_sqrt_mu_d;
-        }
-      }
-    }
-*/
-
-// max(a x - 1, b y - 1)
-// Goal: rescale max(a x - 1, b y - 1) = k.
-//
-//     max(a/k x - 1, b/y - 1)
 void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
   using conex::jordan_algebra::SpectralRadius;
   auto* workspace = &o->workspace_;
@@ -126,9 +103,3 @@ void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParame
   p->gw_norm_squared += WsWs.trace();
   p->gw_trace += -Ws.trace();
 }
-
-
-
-
-
-
