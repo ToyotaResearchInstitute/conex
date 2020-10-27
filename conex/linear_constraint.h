@@ -59,6 +59,7 @@ class LinearConstraint {
   void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s);
   void GeodesicUpdate(const Ref& S, StepInfo* data);
   void AffineUpdate(const Ref& S);
+  int number_of_variables() { return constraint_matrix_.cols(); }
 
   WorkspaceLinear workspace_;
   const DenseMatrix constraint_matrix_;

@@ -85,6 +85,36 @@ int ConexAddDenseLMIConstraint(void* prog,
   return constraint_id;
 }
 
+int ConexAddSparseLMIConstraint(void* prog,
+  const double* A, int Ar, int Ac, int num_vars,
+  const double* c, int cr, int cc,
+  const long *vars, int vars_rows) {
+  assert(Ar == Ac);
+  assert(Ar == cr);
+  assert(cc == cr);
+  assert(vars_rows == num_vars);
+
+  // TODO(FrankPermenter): Remove these copies.
+  using InputMatrix = Eigen::Map<const DenseMatrix>;
+  auto offset = A;
+  std::vector<DenseMatrix> Avect;
+  std::vector<int> variables(num_vars);
+  for (int i = 0; i < num_vars; i++) {
+    InputMatrix Amap(offset, Ar, Ac);
+    Avect.push_back(Amap);
+    offset += Ar * Ac;
+    variables.at(i) = *(vars + i);
+  }
+  InputMatrix Cmap(c, cr, cc);
+
+
+  SparseLMIConstraint T3{Avect, Cmap, variables};
+  auto& program = *reinterpret_cast<Program*>(prog);
+  int constraint_id = program.constraints.size();
+  program.constraints.push_back(T3);
+  return constraint_id;
+}
+
 int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   const double* A, int Ar, int Ac,
   const double* c, int cr) {
@@ -100,7 +130,6 @@ int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   program.constraints.push_back(T3);
   return constraint_id;
 }
-
 void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   if (c == NULL) {
     std::cerr << "Received null pointer.";

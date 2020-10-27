@@ -35,8 +35,8 @@ def TestRandomInstance():
     A1, b, c1 = randominstance()
     A2, b, c2 = randominstance()
     m = A1.shape[1]
-    prog.AddDenseLinearConstraint(A1, c1)
-    prog.AddDenseLinearConstraint(A2, c2)
+    prog.AddLinearInequality(A1, c1)
+    prog.AddLinearInequality(A2, c2)
 
     n = 4
     Amat = np.ones((n, n, m))
@@ -47,11 +47,35 @@ def TestRandomInstance():
     Amat[:, :, m - 1] = np.eye(n) * 0
     Amat[0, 0, m - 1] = 1
 
-    prog.addlmi(Amat, cmat)
+    prog.AddDenseLinearMatrixInequality(Amat, cmat)
+
 
     sol = prog.solve(b)
     return CheckErrors(sol.err)
-    
+
+def TestSparseInstance():
+    num_vars = 3
+    prog = Conex(num_vars)
+
+    n = 4
+    m1 = 2
+    m2 = 2 
+    Amat = np.ones((n, n, m1))
+    cmat = np.eye(n, n)
+    for i in range(0, m1):
+        Amat[:, :, i] = randsym(n)
+
+    prog.AddSparseLinearMatrixInequality(Amat, cmat, np.arange(0, m1))
+
+    Amat = np.ones((n, n, m2))
+    for i in range(0, m2):
+        Amat[:, :, i] = randsym(n)
+
+    prog.AddSparseLinearMatrixInequality(Amat, cmat, np.arange(1,  m2 + 1))
+
+    sol = prog.solve(np.ones((prog.m, 1)))
+    return sol.status == 1
+
 def TestLMI():
     prog = Conex()
 
@@ -82,7 +106,7 @@ def TestLMI():
     Amat[:, :, m - 1] = np.eye(n) * 0
     Amat[0, 0, m - 1] = 1
 
-    prog.addlmi(Amat, cmat)
+    prog.AddDenseLinearMatrixInequality(Amat, cmat)
 
     b = prog.A[0].transpose().__mul__(np.eye(n))
     sol = prog.solve(b)
@@ -100,7 +124,7 @@ def TestBothInfeasLP():
     A[1] = 0;
     A[2] = 0;
 
-    prog.AddDenseLinearConstraint(A, -c)
+    prog.AddLinearInequality(A, -c)
     b = np.ones(prog.m)
 
     prog.solve(-b)
@@ -117,7 +141,7 @@ def TestBlowUp():
     A[1] = 1;
     #y <= 1
 
-    prog.AddDenseLinearConstraint(A, c)
+    prog.AddLinearInequality(A, c)
     b = np.ones(prog.m)
     b[0] = 0
 
@@ -135,7 +159,7 @@ def DualInfeas():
 
     c = np.squeeze(np.ones((n, 1)))
 
-    prog.AddDenseLinearConstraint(A, c)
+    prog.AddLinearInequality(A, c)
     b = np.ones(prog.m)
 
     b[0] = 0
@@ -151,7 +175,7 @@ def DualFailsSlater():
     A = eye(m)
     c = np.squeeze(np.ones((n, 1)))
 
-    prog.AddDenseLinearConstraint(A, c)
+    prog.AddLinearInequality(A, c)
     b = np.ones(prog.m)
 
     b[0] = 1
@@ -170,7 +194,7 @@ def PrimalInfeas():
 
     c = -np.squeeze(np.ones((n, 1)))
 
-    prog.AddDenseLinearConstraint(A, c)
+    prog.AddLinearInequality(A, c)
     b = np.ones(prog.m)
 
     b[0] = 1
@@ -189,6 +213,7 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(DualInfeas())
     def test5(self):
         self.assertTrue(PrimalInfeas())
-
+    def test6(self):
+        self.assertTrue(TestSparseInstance())
 if __name__ == '__main__':
     unittest.main()

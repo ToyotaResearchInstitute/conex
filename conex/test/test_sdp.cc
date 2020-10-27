@@ -101,14 +101,11 @@ TEST(SDP, RandomSDP) {
     TestSDP(); }
 }
 
-
-
-
 TEST(SDP, SparseAndDenseAgree) {
   SolverConfiguration config;
 
-  std::vector<int> variables_1{0, 2, 4, 6, 7, 8};
-  std::vector<int> variables_2{1, 3, 5};
+  std::vector<int> variables_2{0, 2, 4, 6, 7, 8};
+  std::vector<int> variables_1{1, 3, 5};
 
   int n1 = 5;
   int m1 = variables_1.size();
@@ -161,7 +158,6 @@ TEST(SDP, SparseAndDenseAgree) {
   EXPECT_EQ(success, 1);
 
   EXPECT_NEAR((y - y_sparse).norm(), 0, 1e-8);
-
 }
 
 

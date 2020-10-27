@@ -43,7 +43,7 @@ void GetMuSelectionParameters(LinearConstraint* o,  const Ref& y, MuSelectionPar
 }
 
 void LinearConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s) {
-  minus_s->noalias() = (constraint_matrix_)*y;
+  minus_s->noalias() = (constraint_matrix_)*y.topRows(number_of_variables());
   minus_s->noalias() -= (constraint_affine_) * inv_sqrt_mu;
 }
 
@@ -97,22 +97,24 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
 
   auto& WA = o->workspace_.weighted_constraints;
   auto& WC = o->workspace_.temp_1;
+  int m = o->number_of_variables();
 
   WA = W.asDiagonal()*(o->constraint_matrix_);
   WC = W.cwiseProduct(o->constraint_affine_);
 
   if (initialize) {
-    (*G).noalias() = WA.transpose()*WA;
-    sys->AW.noalias() = o->constraint_matrix_.transpose() * W;
-    sys->AQc.noalias() = WA.transpose() * WC; 
-    sys->QwCNorm = (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
-    sys->QwCTrace = (W.cwiseProduct(o->constraint_affine_)).sum();
+    if (G->rows() != m) {
+      G->setZero();
+      sys->AW.setZero();
+      sys->AQc.setZero();
+    }
+    (*G).topLeftCorner(m, m).noalias() = WA.transpose()*WA;
+    sys->AW.topRows(m).noalias() = o->constraint_matrix_.transpose() * W;
+    sys->AQc.topRows(m).noalias() = WA.transpose() * WC; 
   } else {
-    (*G).noalias() += WA.transpose() * WA; 
-    sys->AW.noalias() += o->constraint_matrix_.transpose() * W;
-    sys->AQc.noalias() += WA.transpose() * WC; 
-    sys->QwCNorm += (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
-    sys->QwCTrace += (W.cwiseProduct(o->constraint_affine_)).sum();
+    (*G).topLeftCorner(m, m).noalias() += WA.transpose()*WA;
+    sys->AW.topRows(m).noalias() += o->constraint_matrix_.transpose() * W;
+    sys->AQc.topRows(m).noalias() += WA.transpose() * WC; 
   }
 }
 

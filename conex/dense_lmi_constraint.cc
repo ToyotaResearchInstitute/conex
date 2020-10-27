@@ -1,5 +1,6 @@
 #include "conex/dense_lmi_constraint.h"
 
+
 void MatrixLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
   MultByA(y, s);
   (*s) -= k * (constraint_affine_);

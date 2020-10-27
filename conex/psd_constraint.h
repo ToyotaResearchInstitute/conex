@@ -52,6 +52,7 @@ void ConstructSchurComplementSystem(T* o,
   auto& W = workspace->W; auto& AW = workspace->temp_1;
   auto& WAW = workspace->temp_2;
   int m = o->num_dual_constraints_;  
+
   if (initialize) {
     sys->G.setZero();
     sys->AW.setZero(); 
@@ -76,6 +77,7 @@ class PsdConstraint {
   WorkspaceDensePSD* workspace() { return &workspace_; }
   friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
   friend void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p);
+  int number_of_variables() { return num_dual_constraints_; }
 
  protected:
   PsdConstraint(int n, int m) : workspace_(n), num_dual_constraints_{m} {}

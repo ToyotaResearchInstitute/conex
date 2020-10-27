@@ -165,6 +165,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
     llt.solveInPlace(y);
     opt.e_weight = 1;
     opt.c_weight = opt.inv_sqrt_mu;
+
     TakeStep(&constraints, opt, y, &info);
 
     const double d_2 = std::fabs(std::sqrt(info.normsqrd));

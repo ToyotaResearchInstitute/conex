@@ -69,6 +69,7 @@ class HermitianPsdConstraint {
     p->gw_norm_squared += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
   }
 
+  int number_of_variables() { return constraint_matrices_.size(); }
   friend void TakeStep(HermitianPsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
 
   friend void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initialize, SchurComplementSystem* sys) {

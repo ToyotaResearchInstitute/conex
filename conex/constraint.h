@@ -44,6 +44,10 @@ class Constraint {
     return model->do_dual_variable_size();
   }
 
+  int number_of_variables() {
+    return model->do_number_of_variables();
+  }
+
  private:
   struct Concept {
     virtual void do_schur_complement(bool initialize, SchurComplementSystem* sys) = 0;
@@ -53,6 +57,7 @@ class Constraint {
     virtual void do_take_step(const StepOptions& opt, const Ref& y, StepInfo* info) = 0;
     virtual void do_get_dual_variable(double*) = 0;
     virtual int do_dual_variable_size() = 0;
+    virtual int do_number_of_variables() = 0;
     virtual int do_rank() = 0;
     virtual ~Concept()  = default;
   };
@@ -75,6 +80,10 @@ class Constraint {
 
     int do_rank() override {
       return Rank(data);
+    }
+
+    int do_number_of_variables() override {
+      return data.number_of_variables();
     }
 
     Workspace do_get_workspace() override {

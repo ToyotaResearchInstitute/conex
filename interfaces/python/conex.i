@@ -18,6 +18,7 @@
 %apply (double* IN_ARRAY1, int DIM1) {(const double* c, int cr)}
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double* y, int yr)}
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double* x, int xr)}
+%apply (long* INPLACE_ARRAY1, int DIM1) {(const long* vars, int vars_c)}
 %apply (double* INPLACE_FARRAY2, int DIM1, int DIM2) {(double* x, int xr, int xc)}
 
 %include "../conex.h"

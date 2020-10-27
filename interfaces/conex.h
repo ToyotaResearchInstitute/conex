@@ -21,13 +21,18 @@ int ConexAddDenseLinearConstraint(void* prog,
   const double* A, int Ar, int Ac,
   const double* c, int cr);
 
-//
+
 //  Parameters Aarrayr, Aarrayc, cr, cc all equal the
 //  order n of LMI.
 // TODO(FrankPermenter): update this.
 int ConexAddDenseLMIConstraint(void* prog,
   const double* Aarray, int Aarrayr, int Aarrayc, int m,
   const double* cmat, int cr, int cc);
+
+int ConexAddSparseLMIConstraint(void* prog,
+  const double* Aarray, int Aarrayr, int Aarrayc, int m,
+  const double* cmat, int cr, int cc,
+  const long* vars, int vars_c);
 
 int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguration* config, 
                 double* y, int yr);
