@@ -2,7 +2,7 @@
 
 %{
     #define SWIG_FILE_WITH_INIT
-    #include "conex.h"
+    #include "../conex.h"
 %}
 
 %include "numpy.i"
@@ -20,4 +20,4 @@
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double* x, int xr)}
 %apply (double* INPLACE_FARRAY2, int DIM1, int DIM2) {(double* x, int xr, int xc)}
 
-%include "conex.h"
+%include "../conex.h"

@@ -23,7 +23,6 @@ class Solution:
     s = []
     status = []
 
-
 class LMIOperator:
     matrices = []
     transposed = False
