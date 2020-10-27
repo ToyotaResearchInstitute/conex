@@ -55,9 +55,6 @@ class HermitianPsdConstraint {
   WorkspaceDenseHermitian* workspace() { return &workspace_; }
   friend void SetIdentity(HermitianPsdConstraint* o) { o->W = T::Identity(); }
   friend int Rank(const HermitianPsdConstraint& o) { return T::Rank(); };
-  friend void ComputeStats(HermitianPsdConstraint* o, const StepOptions& opt, const Ref& y) {
-    assert(0);
-  }
 
   friend void GetMuSelectionParameters(HermitianPsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
    // using T = Real;

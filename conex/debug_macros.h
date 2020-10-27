@@ -33,8 +33,8 @@ inline std::ostream& operator<<(std::ostream& os, const std::array<T, size>& P) 
 }
 
 template<typename T>
-Eigen::MatrixXi Sparsity(const T& x) {
-  Eigen::MatrixXi y(x.rows(), x.cols());
+Eigen::MatrixXd Sparsity(const T& x) {
+  Eigen::MatrixXd y(x.rows(), x.cols());
   for (int i = 0; i < x.rows(); i++) {
     for (int j = 0; j < x.cols(); j++) {
       if (std::fabs(x(i, j)) > 1e-9) {

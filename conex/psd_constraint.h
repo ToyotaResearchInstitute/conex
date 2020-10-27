@@ -83,7 +83,6 @@ class PsdConstraint {
   friend int Rank(const PsdConstraint& o) { return o.workspace_.n_; };
   WorkspaceDensePSD* workspace() { return &workspace_; }
   friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
-  friend void ComputeStats(PsdConstraint* o, const StepOptions& opt, const Ref& y);
   friend void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p);
 
  protected:
@@ -97,5 +96,4 @@ class PsdConstraint {
   virtual double EvalDualObjective(const Ref& W) = 0;
   virtual void ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) = 0;
   virtual void ComputeNegativeSlack(double k, const Ref& y, Ref* s) = 0;
-
 };

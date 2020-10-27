@@ -7,7 +7,6 @@
 
 using conex::jordan_algebra::NormInf;
 
-
 // Applies update  W^{1/2}( exp ( e + W^{1/2} S W^{1/2} ) W^{1/2}
 void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* SW) {
   auto& workspace = workspace_;
@@ -38,32 +37,6 @@ void PsdConstraint::AffineUpdate(double w_e, Ref* SW) {
     W += WSW;
   }
 }
-
-
-void ComputeStats(PsdConstraint* o, const StepOptions& opt, const Ref& y) {
-  assert(0);
-  //auto& workspace = o->workspace_;
-  //auto& minus_s = workspace.temp_1;
-  //auto& W = workspace.W;
-  //auto& SW = workspace.temp_1;
-  //auto& SWSW = workspace.temp_2;
-  //auto& expSW = workspace.temp_2;
-
-  //o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
-  //SW = minus_s*W;
-
-  //double scale = 1;
-
-  //double norminf = NormInf(SW);
-
-  //SWSW = SW*SW;
-  //double norm2 = SWSW.trace();
-
-  //if (norminf > 2.0) {
-  //  scale = 2.0/norminf;
-  //}
-}
-
 
 void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
   auto& workspace = o->workspace_;
