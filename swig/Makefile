@@ -1,3 +1,5 @@
+all: _conex.so
+
 libconex.so:  conex.h conex.cc
 	bazel build :libconex.so
 	cp ../bazel-bin/swig/libconex.so .
@@ -12,7 +14,6 @@ build: conex.h conex.cc
 _conex.so: libconex.so conex.py build
 	cp build/lib.linux-x86_64-2.7/*.so .
 
-all: _conex.so
 
 .PHONY: clean
 

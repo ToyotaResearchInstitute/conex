@@ -16,13 +16,9 @@ namespace {
 //      solve ((a*x^2 + b*x + c)/(2-x*d) -k, x)
 double SolveRationalEquation(double a, double b, double c, double d, double k) {
   double under_radical = b*b - 4 * a * c + 8 * a * k + 2 * b * d * k + std::pow(d* k, 2);
-  double x1 = -(b + d*k + std::sqrt(under_radical))/(2 * a);
+//  double x1 = -(b + d*k + std::sqrt(under_radical))/(2 * a);
   double x2 = -(b + d*k - std::sqrt(under_radical))/(2 * a);
-  if (d*x2 > 0) {
-    return x2;
-  } else {
-    return x1;
-  }
+  return x2;
 }
 }
 

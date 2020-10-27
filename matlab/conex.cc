@@ -23,13 +23,11 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfigurat
 
   SolverConfiguration c;
   c.prepare_dual_variables = config->prepare_dual_variables;
-  c.max_iter = config->max_iter;
-  c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
-  c.dinf_limit = config->dinf_limit;
-  c.final_centering_steps = config->final_centering_steps;
   c.max_iterations = config->max_iterations;
-  c.convergence_rate_threshold = config->convergence_rate_threshold;
-  c.divergence_threshold = config->divergence_threshold;
+  c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
+  c.divergence_upper_bound = config->divergence_upper_bound;
+  c.final_centering_steps = config->final_centering_steps;
+  c.infeasibility_threshold = config->infeasibility_threshold;
 
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
 
@@ -111,13 +109,11 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   }
   SolverConfiguration config;
   c->prepare_dual_variables = config.prepare_dual_variables;
-  c->max_iter = config.max_iter;
-  c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  c->dinf_limit = config.dinf_limit;
-  c->final_centering_steps = config.final_centering_steps;
   c->max_iterations = config.max_iterations;
-  c->convergence_rate_threshold = config.convergence_rate_threshold;
-  c->divergence_threshold = config.divergence_threshold;
+  c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
+  c->divergence_upper_bound = config.divergence_upper_bound;
+  c->final_centering_steps = config.final_centering_steps;
+  c->infeasibility_threshold = config.infeasibility_threshold;
 }
 
 

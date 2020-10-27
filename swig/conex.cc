@@ -23,12 +23,11 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfigurat
 
   SolverConfiguration c;
   c.prepare_dual_variables = config->prepare_dual_variables;
-  c.max_iter = config->max_iter;
+  c.max_iterations = config->max_iterations;
   c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
-  c.dinf_limit = config->dinf_limit;
+  c.divergence_upper_bound = config->divergence_upper_bound;
   c.final_centering_steps = config->final_centering_steps;
-  c.convergence_rate_threshold = config->convergence_rate_threshold;
-  c.divergence_threshold = config->divergence_threshold;
+  c.infeasibility_threshold = config->infeasibility_threshold;
 
   return Solve(blinear, prog, c, y);
 }
@@ -38,7 +37,6 @@ void ConexGetDualVariable(void* prog_ptr, int i, Real* x, int xr,  int xc) {
   assert(prog.constraints.at(i).dual_variable_size() == xr * xc);
 
   using InputMatrix = Eigen::Map<DenseMatrix>;
-  double sqrt_inv_mu = prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
 
   prog.constraints.at(i).get_dual_variable(x);
 
@@ -47,7 +45,6 @@ void ConexGetDualVariable(void* prog_ptr, int i, Real* x, int xr,  int xc) {
 }
 
 int ConexGetDualVariableSize(void* prog_ptr, int i) {
-  using InputMatrix = Eigen::Map<DenseMatrix>;
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
   return prog.constraints.at(i).dual_variable_size();
 }
@@ -102,17 +99,15 @@ int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   return constraint_id;
 }
 
-
 ConexSolverConfiguration ConexDefaultOptions() {
   ConexSolverConfiguration c;
   SolverConfiguration config;
   c.prepare_dual_variables = config.prepare_dual_variables;
-  c.max_iter = config.max_iter;
+  c.max_iterations = config.max_iterations;
   c.inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  c.dinf_limit = config.dinf_limit;
+  c.divergence_upper_bound = config.divergence_upper_bound;
   c.final_centering_steps = config.final_centering_steps;
-  c.convergence_rate_threshold = config.convergence_rate_threshold;
-  c.divergence_threshold = config.divergence_threshold;
+  c.infeasibility_threshold = config.infeasibility_threshold;
   return c;
 }
 

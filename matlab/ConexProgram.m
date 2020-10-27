@@ -15,7 +15,7 @@ classdef ConexProgram
       self.p = calllib('libconex','ConexCreateConeProgram');
       self.options = libstruct('ConexSolverConfiguration');
       % Force matlab to allocate memory for options
-      self.options.dinf_limit = 1;
+      self.options.divergence_upper_bound = 1;
 
       calllib('libconex','ConexSetDefaultOptions', self.options);
     end

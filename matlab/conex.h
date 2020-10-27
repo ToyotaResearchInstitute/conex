@@ -7,13 +7,11 @@ extern "C"
 typedef double Real;
 typedef struct {
   int prepare_dual_variables;
-  int max_iter;
-  double inv_sqrt_mu_max;
-  double dinf_limit;
-  int final_centering_steps;
   int max_iterations;
-  double convergence_rate_threshold;
-  double divergence_threshold;
+  double inv_sqrt_mu_max;
+  double divergence_upper_bound;
+  int final_centering_steps;
+  double infeasibility_threshold; 
 } ConexSolverConfiguration;
 
 void* ConexCreateConeProgram();

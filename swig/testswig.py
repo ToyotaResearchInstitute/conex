@@ -189,14 +189,6 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(DualInfeas())
     def test5(self):
         self.assertTrue(PrimalInfeas())
-    def test5(self):
-        self.assertTrue(PrimalInfeas())
-
-#TestBothInfeasLP()
-#DualFailsSlater()
-#DualInfeas()
-#PrimalInfeas()
-#TestRandomInstance()
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,6 +10,9 @@ cone_program.o: ../conex/cone_program.cc
 linear_constraint.o: 
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/linear_constraint.cc 
 
+divergence.o: 
+	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/divergence.cc
+
 dense_lmi_constraint.o: ../conex/dense_lmi_constraint.cc  
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/dense_lmi_constraint.cc 
 
@@ -25,8 +28,8 @@ matrix_exponential.o: matrix_exponential.cc matrix_exponential.h
 conex.o: conex.h conex.cc
 	g++ -c $(COPTS)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
 
-libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o
-	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o
+libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o
+	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o
 
 .PHONY: clean
 

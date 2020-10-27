@@ -62,7 +62,6 @@ void ConstructSchurComplementSystem(std::vector<T>* c, bool initialize, SchurCom
   }
 }
 
-
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config,
            double* primal_variable) {
@@ -107,13 +106,13 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
   int rankK = Rank(constraints);
 
-  bool error_converging = false;
+  double div_ub  = 0;
 
   for (int i = 0; i < max_iter; i++) {
     MuSelectionParameters mu_param;
 
     iter_cnt++;
-    if (iter_cnt > config.max_iter) {
+    if (iter_cnt > config.max_iterations) {
       break;
     }
 
@@ -127,15 +126,12 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
-    double div_ub  = 0;
-    if ((opt.inv_sqrt_mu < inv_sqrt_mu_max) || (!error_converging)) {
-      mu_param.limit = config.dinf_limit;
+    if ((opt.inv_sqrt_mu < inv_sqrt_mu_max))  {
       y = sys.AQc - b;
       llt.solveInPlace(y);
       MinMu(&constraints,  y, &mu_param);
-      
-      // CalcMinMu(mu_param.gw_lambda_max, mu_param.gw_lambda_min, &mu_param);
-      double divergence_upper_bound = 1;
+
+      double divergence_upper_bound = config.divergence_upper_bound;
       opt.inv_sqrt_mu = DivergenceUpperBoundInverse(divergence_upper_bound * rankK,
                                                     mu_param.gw_norm_squared,
                                                     mu_param.gw_lambda_max,
@@ -146,26 +142,24 @@ bool Solve(const DenseMatrix& b, Program& prog,
       double normsqrd = opt.inv_sqrt_mu * opt.inv_sqrt_mu *  mu_param.gw_norm_squared +
                      -2*opt.inv_sqrt_mu * mu_param.gw_trace  + rankK;
 
-      div_ub = normsqrd/(2 - opt.inv_sqrt_mu * mu_param.gw_lambda_max); 
+      div_ub = normsqrd/(2 - opt.inv_sqrt_mu * mu_param.gw_lambda_max);
 
       if (i > config.max_iterations - config.final_centering_steps) {
         inv_sqrt_mu_max = opt.inv_sqrt_mu;
       }
-      
-      max_iter = i + config.final_centering_steps;
 
-      if (normsqrd > config.divergence_threshold * rankK) {
-        if (i > 3) {
-          solved = 0;
-          PRINTSTATUS("Infeasible Or Unbounded.");
-          return solved;
-        }
-      } else {
-        error_converging = true;
-      }
-    } 
+      max_iter = i + config.final_centering_steps;
+    }
 
     double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
+
+    if (mu > config.infeasibility_threshold) {
+      if (i > 3) {
+        solved = 0;
+        PRINTSTATUS("Infeasible Or Unbounded.");
+        return solved;
+      }
+    } 
 
     y = opt.inv_sqrt_mu*(b + sys.AQc) - 2 * sys.AW;
     llt.solveInPlace(y);

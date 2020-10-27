@@ -7,7 +7,6 @@
 #include "workspace.h"
 #include "newton_step.h"
 
-
 class Constraint {
  public:
   template <typename T>

@@ -82,11 +82,11 @@ class Conex:
         sol.y = np.ones((self.m)).astype(real)
         config = self.wrapper.ConexDefaultOptions();
         config.inv_sqrt_mu_max = 25000
-        config.max_iter = 100
+        config.max_iterations = 100
         config.final_centering_steps = 3
         config.prepare_dual_variables = 1
-        config.divergence_threshold = 10
-        config.dinf_limit = .6
+        config.infeasibility_threshold = 1e8
+        config.divergence_upper_bound = 1
         sol.status = self.wrapper.ConexSolve(self.a, np.squeeze(np.array(b)), config, sol.y)
         if sol.status:
             sol.x, sol.s, sol.err = self.get_slacks_and_dual_vars(np.matrix(sol.y).transpose(), b)

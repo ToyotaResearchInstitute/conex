@@ -6,15 +6,12 @@
 
 struct SolverConfiguration {
   int prepare_dual_variables = 0;
-  int max_iter = 100;
   double inv_sqrt_mu_max = 1000;
-  double dinf_limit = .95;
+  double divergence_upper_bound = 1;
   int final_centering_steps = 5;
   int max_iterations = 25;
-  double convergence_rate_threshold = .5;
-  double divergence_threshold = 100; 
+  double infeasibility_threshold = 1e5; 
 };
-
 
 class Program {
  public:
