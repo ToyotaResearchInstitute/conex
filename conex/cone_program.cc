@@ -168,7 +168,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
     TakeStep(&constraints, opt, y, &info);
 
-    const double d_2 = std::fabs(std::sqrt(info.normsqrd));
+    const double d_2 = std::sqrt(std::fabs(info.normsqrd));
     const double d_inf = std::fabs(info.norminfd);
 
     if (i < 10) {
