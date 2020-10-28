@@ -98,35 +98,5 @@ classdef ConexProgram < handle
         y = yptr.Value;
     end
 
-    function solved = Solve(self, A, b, c)
-      if (size(b, 1) ~= size(A, 2))
-        error('Invalid input dimensions.')
-      end
-
-      if (size(c, 1) ~= size(A, 1))
-        error('Invalid input dimensions.')
-      end
-
-      try
-        p = calllib('libconex', 'ConexCreateConeProgram');
-        num_var = size(A, 2);
-        num_constraint = size(A, 1);
-
-        b = A' * ones(num_constraint, 1);
-
-        Aptr = libpointer('doublePtr', A(:));
-        Cptr = libpointer('doublePtr', c);
-        bptr = libpointer('doublePtr', b);
-        calllib('libconex', 'ConexAddDenseLinearConstraint', p, Aptr, num_constraint, num_var, Cptr, num_constraint);
-
-
-        yptr = libpointer('doublePtr', zeros(num_var, 1));
-        solved = calllib('libconex', 'ConexSolve', p, bptr, length(b), self.options, yptr, num_var);
-      catch
-        calllib('libconex', 'ConexDeleteConeProgram', p);
-      end
-
-      calllib('libconex', 'ConexDeleteConeProgram', p);
-    end
  end
 end
