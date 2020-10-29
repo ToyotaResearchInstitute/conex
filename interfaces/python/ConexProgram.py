@@ -79,15 +79,7 @@ class Conex:
         self.c.append(np.matrix(c))
         self.num_constraints = self.num_constraints + 1
 
-    def solve(self, b): 
-        if len(b) != self.m:
-            raise NameError("Cost vector dimension does not match number of variables.")
-        sol = Solution()
-        b = np.matrix(b)
-        if b.shape[1] > b.shape[0]:
-            b = b.transpose()
-
-        sol.y = np.ones((self.m)).astype(real)
+    def DefaultConfig(self):
         config = self.wrapper.ConexSolverConfiguration()
         config.inv_sqrt_mu_max = 25000
         config.max_iterations = 100
@@ -95,6 +87,21 @@ class Conex:
         config.prepare_dual_variables = 1
         config.infeasibility_threshold = 1e8
         config.divergence_upper_bound = 1
+        return config
+
+    def Maximize(self, b, config = []): 
+        if len(b) != self.m:
+            raise NameError("Cost vector dimension does not match number of variables.")
+
+        if not config:
+            config = self.DefaultConfig();
+
+        sol = Solution()
+        b = np.matrix(b)
+        if b.shape[1] > b.shape[0]:
+            b = b.transpose()
+
+        sol.y = np.ones((self.m)).astype(real)
         sol.status = self.wrapper.ConexSolve(self.a, np.squeeze(np.array(b)), config, sol.y)
         if sol.status:
             sol.x, sol.s, sol.err = self.get_slacks_and_dual_vars(np.matrix(sol.y).transpose(), b)

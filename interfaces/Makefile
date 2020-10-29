@@ -10,7 +10,7 @@ cone_program.o: ../conex/cone_program.cc
 linear_constraint.o: ../conex/linear_constraint.cc  
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/linear_constraint.cc 
 
-divergence.o: 
+divergence.o: ../conex/divergence.cc 
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/divergence.cc
 
 dense_lmi_constraint.o: ../conex/dense_lmi_constraint.cc  ../conex/psd_constraint.h 
@@ -21,9 +21,6 @@ psd_constraint.o: ../conex/psd_constraint.cc ../conex/psd_constraint.h
 
 eigen_decomp.o: ../conex/eigen_decomp.cc 
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/eigen_decomp.cc
-
-matrix_exponential.o: matrix_exponential.cc matrix_exponential.h 
-	$(CXX) -c  $(COPTS) -I $(EIGEN)  ../conex/matrix_exponential.cc
 
 conex.o: conex.h conex.cc
 	g++ -c $(COPTS)  -I${EIGEN_DIR} -I $(CONEX) conex.cc

@@ -50,7 +50,7 @@ def TestRandomInstance():
     prog.AddDenseLinearMatrixInequality(Amat, cmat)
 
 
-    sol = prog.solve(b)
+    sol = prog.Maximize(b)
     return CheckErrors(sol.err)
 
 def TestSparseInstance():
@@ -73,7 +73,7 @@ def TestSparseInstance():
 
     prog.AddSparseLinearMatrixInequality(Amat, cmat, np.arange(1,  m2 + 1))
 
-    sol = prog.solve(np.ones((prog.m, 1)))
+    sol = prog.Maximize(np.ones((prog.m, 1)))
     return sol.status == 1
 
 def TestLMI():
@@ -109,7 +109,7 @@ def TestLMI():
     prog.AddDenseLinearMatrixInequality(Amat, cmat)
 
     b = prog.A[0].transpose().__mul__(np.eye(n))
-    sol = prog.solve(b)
+    sol = prog.Maximize(b)
     return CheckErrors(sol.err) and sol.status
 
 def TestBothInfeasLP():
@@ -127,7 +127,7 @@ def TestBothInfeasLP():
     prog.AddLinearInequality(A, -c)
     b = np.ones(prog.m)
 
-    prog.solve(-b)
+    prog.Maximize(-b)
 
 def TestBlowUp():
     prog = Conex()
@@ -145,7 +145,7 @@ def TestBlowUp():
     b = np.ones(prog.m)
     b[0] = 0
 
-    y = prog.solve(b)
+    y = prog.Maximize(b)
     print y
 
 def DualInfeas():
@@ -164,7 +164,7 @@ def DualInfeas():
 
     b[0] = 0
     b[1] = -1
-    sol = prog.solve(b)
+    sol = prog.Maximize(b)
     return sol.status == 0 
 
 def DualFailsSlater():
@@ -180,7 +180,7 @@ def DualFailsSlater():
 
     b[0] = 1
     b[1] = 0
-    sol = prog.solve(b)
+    sol = prog.Maximize(b)
     return CheckErrors(sol.err) and sol.status
 
 def PrimalInfeas():
@@ -199,8 +199,9 @@ def PrimalInfeas():
 
     b[0] = 1
     b[1] = 1
-    sol = prog.solve(b)
+    sol = prog.Maximize(b)
     return sol.status == 0 
+
 
 class UnitTests(unittest.TestCase):
     def test1(self):
