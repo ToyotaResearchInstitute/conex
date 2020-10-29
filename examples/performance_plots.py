@@ -47,19 +47,25 @@ def random_symmetric_matrix(n):
 
 def CenteringConfig():
     config = Conex().DefaultConfiguration()
-    config.max_iterations = 30
-    config.divergence_upper_bound = .01
-    config.final_centering_steps = 30
+    config.minimum_mu = 1
+    config.maximum_mu = 1
+    config.inv_sqrt_mu_max = 1
+    config.max_iterations = 50
+    config.divergence_upper_bound = 1
+    config.final_centering_steps = 50
     config.centering_tolerance = 30
-    #config.mu_max = 1
-    #config.mu_min = 1
     return config
 
 def Centering():
     num_variables = 10
     n = 40
     config = CenteringConfig()
-    SolveRandomSDP(num_variables, n, config)
+    w0 = np.eye(n, n)
+    v = np.random.randn(n, 1) * 2
+    for i in range(0, n):
+        w0[i, i] = np.exp(v[i])
+
+    SolveRandomSDP(num_variables, n, config, w0)
 
 def SolveRandomSDP(num_variables, n, config, w0 = []):
     prog = Conex()
@@ -67,7 +73,7 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     for i in range(0, num_variables):
         A[:, :, i] = random_symmetric_matrix(n)
 
-    if (not w0):
+    if len(w0) == 0:
         w0 = np.eye(n, n)
 
     c = w0

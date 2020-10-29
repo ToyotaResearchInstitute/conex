@@ -27,6 +27,8 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfigurat
   c.divergence_upper_bound = config->divergence_upper_bound;
   c.final_centering_steps = config->final_centering_steps;
   c.infeasibility_threshold = config->infeasibility_threshold;
+  c.minimum_mu = config->minimum_mu;
+  c.maximum_mu = config->maximum_mu;
 
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
 
@@ -139,11 +141,12 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   c->prepare_dual_variables = config.prepare_dual_variables;
   c->max_iterations = config.max_iterations;
   c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
+  c->maximum_mu = config.maximum_mu; 
+  c->minimum_mu = config.minimum_mu;
   c->divergence_upper_bound = config.divergence_upper_bound;
   c->final_centering_steps = config.final_centering_steps;
   c->infeasibility_threshold = config.infeasibility_threshold;
 }
-
 
 void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num_circular) {
   if ((prog == NULL) || (stats == NULL)) {
@@ -171,4 +174,3 @@ void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num
                             program.stats.sqrt_inv_mu[iter_num]); 
   stats->iteration_number = iter_num;
 }
-

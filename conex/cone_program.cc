@@ -94,6 +94,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
   Ref y(ydata.data(), m, 1);
 
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
+  double inv_sqrt_mu_min = std::sqrt(1.0/(1e-15 + config.maximum_mu));
   int max_iter = 1;
   int iter_cnt = 0;
 
@@ -131,6 +132,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       llt.solveInPlace(y);
       GetMuSelectionParameters(&constraints,  y, &mu_param);
 
+
       double divergence_upper_bound = config.divergence_upper_bound;
       opt.inv_sqrt_mu = DivergenceUpperBoundInverse(divergence_upper_bound * rankK,
                                                     mu_param.gw_norm_squared,
@@ -138,6 +140,12 @@ bool Solve(const DenseMatrix& b, Program& prog,
                                                     mu_param.gw_trace,
                                                     rankK);
 
+      if (opt.inv_sqrt_mu > inv_sqrt_mu_max) {
+        opt.inv_sqrt_mu = inv_sqrt_mu_max;
+      }
+      if (opt.inv_sqrt_mu < inv_sqrt_mu_min) {
+        opt.inv_sqrt_mu = inv_sqrt_mu_min;
+      }
 
       double normsqrd = opt.inv_sqrt_mu * opt.inv_sqrt_mu *  mu_param.gw_norm_squared +
                      -2*opt.inv_sqrt_mu * mu_param.gw_trace  + rankK;
@@ -218,6 +226,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
   PRINTSTATUS("Solved.");
   return solved;
 }
+
 
 DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints) {
   std::vector<Workspace> workspaces;

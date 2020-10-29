@@ -1,5 +1,5 @@
 #include "matrix_exponential.h"
-#include "test_util.h"
+#include "debug_macros.h"
 #include <cmath>
 #include <complex>
 using RealScalar = double;
@@ -245,7 +245,7 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings)
 
 void matrix_exp_compute(const Ref& arg, Ref &result) // natively supported scalar type
 {
-  using MatrixType = DenseMatrix;
+  using MatrixType = Ref;
   MatrixType U, V;
   int squarings;
   run(arg, U, V, squarings); // Pade approximant is (U+V) / (-U+V)

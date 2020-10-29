@@ -6,7 +6,10 @@
 
 struct SolverConfiguration {
   int prepare_dual_variables = 0;
+  //TODO(FrankPermenter): Remove inv_sqrt_mu_max
   double inv_sqrt_mu_max = 1000;
+  double minimum_mu = 1e-12;
+  double maximum_mu = 1e4;
   double divergence_upper_bound = 1;
   int final_centering_steps = 5;
   int max_iterations = 25;

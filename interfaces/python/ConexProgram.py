@@ -104,6 +104,7 @@ class Conex:
 
     def DefaultConfiguration(self):
         config = self.wrapper.ConexSolverConfiguration()
+        self.wrapper.ConexSetDefaultOptions(config);
         config.inv_sqrt_mu_max = 25000
         config.max_iterations = 100
         config.final_centering_steps = 3

@@ -9,6 +9,8 @@ typedef struct {
   int prepare_dual_variables;
   int max_iterations;
   double inv_sqrt_mu_max;
+  double minimum_mu;
+  double maximum_mu;
   double divergence_upper_bound;
   int final_centering_steps;
   double infeasibility_threshold; 
@@ -52,6 +54,7 @@ void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
 int ConexGetDualVariableSize(void* prog_ptr, int i);
 
+// TODO(FrankPermenter): Rename Options to Configuration
 void ConexSetDefaultOptions(ConexSolverConfiguration* config);
 
 void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num);
