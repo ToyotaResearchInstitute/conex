@@ -12,7 +12,18 @@ typedef struct {
   double divergence_upper_bound;
   int final_centering_steps;
   double infeasibility_threshold; 
+  int collect_statistics;
 } ConexSolverConfiguration;
+
+typedef struct {
+  double mu;
+  int iteration_number;
+} ConexIterationStats;
+
+typedef struct {
+  int iterations;
+} ConexSolutionStats;
+
 
 void* ConexCreateConeProgram();
 void ConexDeleteConeProgram(void*);
@@ -42,6 +53,8 @@ void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
 int ConexGetDualVariableSize(void* prog_ptr, int i);
 
 void ConexSetDefaultOptions(ConexSolverConfiguration* config);
+
+void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num);
 
 #ifdef __cplusplus
 } // extern "C"

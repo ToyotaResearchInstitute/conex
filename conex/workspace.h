@@ -61,7 +61,7 @@ class Workspace {
   struct Model final : Concept {
     Model(T* t) : data(t) {}
     void do_print() override {
-      print(*data); 
+      print(*data);
     }
 
     void do_initialize(double* ptr) override {
@@ -85,6 +85,7 @@ struct WorkspaceStats {
   friend void Initialize(WorkspaceStats* o, double* y) {
     o->sqrt_inv_mu = y;
     o->norm_inf_d = y + max_iter;
+    o->initialized = true;
   }
 
   friend int SizeOf(const WorkspaceStats& o) {
@@ -93,14 +94,17 @@ struct WorkspaceStats {
 
   friend void print(const WorkspaceStats& o) {
     for (int i = 0; i < max_iter; i++) {
-      std::cout << "sqrt_inv_mu, norm_inf_d"  << o.sqrt_inv_mu[i] << "," 
+      std::cout << "sqrt_inv_mu, norm_inf_d"  << o.sqrt_inv_mu[i] << ", "
                                               << o.norm_inf_d[i] << "\n";
     }
   }
 
+  bool IsInitialized() { return initialized; }
+
   double* sqrt_inv_mu;
   double* norm_inf_d;
   int num_iter;
+  bool initialized = false;
 };
 
 

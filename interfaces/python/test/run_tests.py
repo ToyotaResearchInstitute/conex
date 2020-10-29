@@ -203,6 +203,42 @@ def PrimalInfeas():
     return sol.status == 0 
 
 
+
+def VerifyMuIsNonIncreasing():
+    prog = Conex()
+
+    m = 2;
+    n = 2*m
+    A = zeros(n, m)
+    A[0:m, :] = eye(m)
+    A[m:n, :] = eye(m)
+
+    c = -np.squeeze(np.ones((n, 1)))
+
+    prog.AddLinearInequality(A, c)
+    b = np.ones(prog.m)
+
+    b[0] = 1
+    b[1] = 1
+
+    config = prog.DefaultConfiguration()
+    config.max_iterations = 6
+    sol = prog.Maximize(b, config)
+
+    stats = prog.GetIterationNumberStats(-1)
+    last_iteration_number = stats.iteration_number;
+    
+    if last_iteration_number + 1 > config.max_iterations:
+        return False
+
+    stats = prog.GetIterationStats()
+    for i, stat in enumerate(stats):
+        if i > 0:
+            if stats[i].mu > stats[i - 1].mu:
+                return False
+
+    return True
+
 class UnitTests(unittest.TestCase):
     def test1(self):
         self.assertTrue(TestLMI())
@@ -216,5 +252,7 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(PrimalInfeas())
     def test6(self):
         self.assertTrue(TestSparseInstance())
+    def test7(self):
+        self.assertTrue(VerifyMuIsNonIncreasing());
 if __name__ == '__main__':
     unittest.main()

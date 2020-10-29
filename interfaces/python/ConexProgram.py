@@ -68,8 +68,22 @@ class Conex:
 
     def __del__(self): 
         self.wrapper.ConexDeleteConeProgram(self.a);
-        #print self.a
-        #conex.destroy(self.a);
+
+    def GetIterationStats(self):
+        stats = self.GetIterationNumberStats(-1)
+        last_iteration_number = stats.iteration_number;
+
+        stat_array = []
+        for i in range(0, last_iteration_number + 1):
+            stats = self.GetIterationNumberStats(i)
+            stat_array.append(stats)
+
+        return stat_array
+
+    def GetIterationNumberStats(self, num):
+        stats = self.wrapper.ConexIterationStats()
+        self.wrapper.ConexGetIterationStats(self.a, stats, num)
+        return stats
 
     def AddLinearInequality(self, A, c): 
         const_id = self.wrapper.ConexAddDenseLinearConstraint(self.a, A, c)
@@ -79,7 +93,16 @@ class Conex:
         self.c.append(np.matrix(c))
         self.num_constraints = self.num_constraints + 1
 
-    def DefaultConfig(self):
+    def AddLinearInequality(self, A, c): 
+        const_id = self.wrapper.ConexAddDenseLinearConstraint(self.a, A, c)
+        self.m = A.shape[1]
+        self.n = A.shape[0]
+        self.A.append(np.matrix(A))
+        self.c.append(np.matrix(c))
+        self.num_constraints = self.num_constraints + 1
+
+
+    def DefaultConfiguration(self):
         config = self.wrapper.ConexSolverConfiguration()
         config.inv_sqrt_mu_max = 25000
         config.max_iterations = 100
@@ -94,7 +117,7 @@ class Conex:
             raise NameError("Cost vector dimension does not match number of variables.")
 
         if not config:
-            config = self.DefaultConfig();
+            config = self.DefaultConfiguration();
 
         sol = Solution()
         b = np.matrix(b)

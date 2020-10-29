@@ -14,7 +14,6 @@
 // TODO(FrankPermenter): check for null pointers.
 
 using DenseMatrix = Eigen::MatrixXd;
-using ConexConeProgram = void*;
 int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfiguration*
                config, Real* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
@@ -55,7 +54,7 @@ void* ConexCreateConeProgram() {
   return reinterpret_cast<void*>(new Program);
 }
 
-void ConexDeleteConeProgram(ConexConeProgram prog) {
+void ConexDeleteConeProgram(void* prog) {
   delete reinterpret_cast<Program*>(prog);
 }
 
@@ -115,7 +114,7 @@ int ConexAddSparseLMIConstraint(void* prog,
   return constraint_id;
 }
 
-int ConexAddDenseLinearConstraint(ConexConeProgram fred,
+int ConexAddDenseLinearConstraint(void* prog,
   const double* A, int Ar, int Ac,
   const double* c, int cr) {
   assert(Ar == cr);
@@ -124,12 +123,13 @@ int ConexAddDenseLinearConstraint(ConexConeProgram fred,
   int m = Ac;
 
   LinearConstraint T3{n, m, A, c};
-  auto& program = *reinterpret_cast<Program*>(fred);
+  auto& program = *reinterpret_cast<Program*>(prog);
 
   int constraint_id = program.constraints.size();
   program.constraints.push_back(T3);
   return constraint_id;
 }
+
 void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   if (c == NULL) {
     std::cerr << "Received null pointer.";
@@ -145,4 +145,30 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
 }
 
 
+void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num_circular) {
+  if ((prog == NULL) || (stats == NULL)) {
+    std::cerr << "Received null pointer.";
+    return;
+  }
+
+  auto& program = *reinterpret_cast<Program*>(prog);
+
+  if (!program.stats.IsInitialized()) {
+    std::cerr << "No statistics available.";
+    return;
+  }
+
+  int iter_num = iter_num_circular;
+  if (iter_num_circular < 0) {
+    iter_num = program.stats.num_iter + iter_num_circular;
+  }
+
+  if ((program.stats.num_iter <= iter_num) || (iter_num < 0)) {
+    std::cerr << "Specified iteration is out of bounds.";
+    return;
+  }
+  stats->mu = 1.0/(program.stats.sqrt_inv_mu[iter_num] *
+                            program.stats.sqrt_inv_mu[iter_num]); 
+  stats->iteration_number = iter_num;
+}
 
