@@ -1,5 +1,5 @@
 import unittest
-from conexapi import *
+from ConexProgram import *
 import numpy as np
 import scipy.linalg as la
 

@@ -8,7 +8,6 @@ def zeros(n, m):
 def eye(n):
     return np.matrix(np.eye(n, n))
 
-
 class Errors:
     Ax_minus_b = 0
     x_dot_s = 0
