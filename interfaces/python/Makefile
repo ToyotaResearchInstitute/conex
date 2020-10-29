@@ -1,12 +1,15 @@
 all: _conex.so
 
+numpy.i:
+	python dependencies/get_numpy_interface.py
+
 libconex.so:  ../conex.h ../conex.cc ../libconex.so
 	cp ../libconex.so libconex.so
 
-conex.py: ../conex.h ../conex.cc
+conex.py: ../conex.h ../conex.cc numpy.i
 	python setup.py build
 
-build: ../conex.h ../conex.cc
+build: ../conex.h ../conex.cc numpy.i
 	python setup.py build
 
 _conex.so: libconex.so conex.py build
@@ -21,3 +24,4 @@ clean:
 	rm -rf build
 	rm -f conex.py
 	rm -f conex.pyc
+	rm -f numpy.i
