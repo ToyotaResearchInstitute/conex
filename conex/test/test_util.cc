@@ -54,7 +54,7 @@ vector<SparseMatrixTuple> GetRandomTuples(int n, int m) {
   }
 
   Eigen::Matrix<double, -1, -1> Mask = Eigen::Matrix<double, -1, -1>::Zero(n, n);
-  while(myVect.size() < static_cast<int>(m)) {
+  while(myVect.size() < static_cast<unsigned int>(m)) {
     Eigen::MatrixXd Mi = Eigen::Matrix<double, -1, -1>::Random(n, n);
     Mask += Symmetrize((Mi*10).array().round().abs());
     myVect = Partition(Mask);

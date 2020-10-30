@@ -14,6 +14,7 @@ typedef struct {
   double divergence_upper_bound;
   int final_centering_steps;
   double infeasibility_threshold; 
+  double initialization_mode;
   int collect_statistics;
 } ConexSolverConfiguration;
 

@@ -1,3 +1,12 @@
+
+cc_library(
+    name = "test_util",
+    srcs = glob(["test/test_util.cc"]),
+    hdrs = glob(["test/test_util.h"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "conex_lib"],
+)
+
 cc_test(
     name = "lp",
     srcs = glob(["test/test_lp.cc"]),
@@ -7,16 +16,16 @@ cc_test(
 
 cc_test(
     name = "hermitian",
-    srcs = glob(["test/test_util.h", "test/test_util.cc", "test/test_hermitian.cc"]),
+    srcs = glob(["test/test_hermitian.cc"]),
     copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib"],
+    deps = ["@gtest//:main", "conex_lib", "test_util"],
 )
 
 cc_test(
     name = "sdp",
-    srcs = glob(["test/test_util.h", "test/test_util.cc", "test/test_sdp.cc"]),
+    srcs = glob(["test/test_sdp.cc"]),
     copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib"],
+    deps = ["@gtest//:main", "conex_lib", "test_util"],
 )
 
 cc_test(
@@ -45,6 +54,14 @@ cc_test(
     srcs = glob(["test/test_divergence.cc"]),
     copts = ["-Iexternal/gtest/include -O0"], 
     deps = ["@gtest//:main", "conex_lib"],
+)
+
+
+cc_test(
+    name = "warmstart",
+    srcs = glob(["test/test_warmstart.cc"]),
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "conex_lib", "test_util"],
 )
 
 cc_library(

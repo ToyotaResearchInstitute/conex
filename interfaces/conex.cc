@@ -29,6 +29,7 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfigurat
   c.infeasibility_threshold = config->infeasibility_threshold;
   c.minimum_mu = config->minimum_mu;
   c.maximum_mu = config->maximum_mu;
+  c.initialization_mode = config->initialization_mode;
 
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
 
@@ -146,6 +147,7 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   c->divergence_upper_bound = config.divergence_upper_bound;
   c->final_centering_steps = config.final_centering_steps;
   c->infeasibility_threshold = config.infeasibility_threshold;
+  c->initialization_mode = config.initialization_mode;
 }
 
 void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num_circular) {

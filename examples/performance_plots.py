@@ -9,8 +9,8 @@ from matplotlib.ticker import MaxNLocator
 def MuUpdateConfig():
     config = Conex().DefaultConfiguration()
     config.max_iterations = 30
-    config.divergence_upper_bound = 10
-    config.final_centering_steps = 1
+    config.divergence_upper_bound = 10 
+    config.final_centering_steps = 1 
     return config
 
 def PlotMuUpdate():
@@ -50,29 +50,55 @@ def CenteringConfig():
     config.minimum_mu = 1
     config.maximum_mu = 1
     config.inv_sqrt_mu_max = 1
-    config.max_iterations = 50
+    config.max_iterations = 1
     config.divergence_upper_bound = 1
-    config.final_centering_steps = 50
+    config.final_centering_steps = 0
     config.centering_tolerance = 30
     return config
 
 def Centering():
+    x = []
     num_variables = 10
     n = 40
     config = CenteringConfig()
     w0 = np.eye(n, n)
-    v = np.random.randn(n, 1) * 2
+    v = np.random.randn(n, 1) * 1.1
     for i in range(0, n):
         w0[i, i] = np.exp(v[i])
 
-    SolveRandomSDP(num_variables, n, config, w0)
+
+    prog = Conex()
+    A = np.ones((n, n, num_variables))
+    for i in range(0, num_variables):
+        A[:, :, i] = random_symmetric_matrix(n)
+    if len(w0) == 0:
+        w0 = np.eye(n, n)
+
+    c = w0
+    constraint_operator = LMIOperator(A)
+    b = constraint_operator.transpose() * la.inv(w0)
+
+    prog.AddDenseLinearMatrixInequality(A, c)
+    config_def = Conex().DefaultConfiguration()
+    config_def.max_iterations = 100
+    config_def.minimum_mu = 1
+    config_def.maximum_mu = 1
+    config_def.inv_sqrt_mu_max = 1
+    solution = prog.Maximize(b, config_def)
+
+    config.initialization_mode = 0
+    config.prepare_dual_variables = 0
+    for i in range(0, 10):
+        solution = prog.Maximize(b, config)
+        x.append(solution.x)
+        config.initialization_mode = 1
+
 
 def SolveRandomSDP(num_variables, n, config, w0 = []):
     prog = Conex()
     A = np.ones((n, n, num_variables))
     for i in range(0, num_variables):
         A[:, :, i] = random_symmetric_matrix(n)
-
     if len(w0) == 0:
         w0 = np.eye(n, n)
 
@@ -81,6 +107,7 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     b = constraint_operator.transpose() * la.inv(w0)
     prog.AddDenseLinearMatrixInequality(A, c)
     solution = prog.Maximize(b, config)
+    config.initialization_mode = 1
     return [stats.mu for stats in prog.GetIterationStats()]
 
 #PlotMuUpdate()

@@ -62,6 +62,22 @@ void ConstructSchurComplementSystem(std::vector<T>* c, bool initialize, SchurCom
   }
 }
 
+void Initialize(Program& prog, const SolverConfiguration& config) {
+
+  if (config.initialization_mode == 0) {
+    prog.InitializeWorkspace();
+  } else {
+    if (!prog.is_initialized) {
+      std::cerr << "Cannot warmstart without coldstart.";
+      assert(0);
+    }
+  }
+
+  if (config.initialization_mode == 0) {
+    SetIdentity(&prog.constraints);
+  }
+  return;
+}
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config,
            double* primal_variable) {
@@ -85,9 +101,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
     return solved;
   }
 
-  prog.InitializeWorkspace();
-
-  SetIdentity(&constraints);
+  Initialize(prog, config);
 
   Eigen::MatrixXd ydata(m, 1);
   Eigen::Map<DenseMatrix> yout(primal_variable, m, 1);
@@ -109,16 +123,19 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
   double div_ub  = 0;
 
-  for (int i = 0; i < max_iter; i++) {
+  int centering_steps = 0;
+
+  for (int i = 0; i < config.max_iterations; i++) {
     MuSelectionParameters mu_param;
 
-    iter_cnt++;
-    if (iter_cnt > config.max_iterations) {
+    bool update_mu = (i == 0) || ((opt.inv_sqrt_mu < inv_sqrt_mu_max) && 
+                                  i < config.max_iterations - config.final_centering_steps);
+
+    if (!update_mu && (centering_steps >= config.final_centering_steps)) {
       break;
     }
 
-    bool init = true;
-    ConstructSchurComplementSystem(&constraints, init, &sys);
+    ConstructSchurComplementSystem(&constraints, true /*init*/, &sys);
 
     Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
     if (llt.info() != Eigen::Success) {
@@ -127,7 +144,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
-    if ((opt.inv_sqrt_mu < inv_sqrt_mu_max))  {
+    if (update_mu) {
       y = sys.AQc - b;
       llt.solveInPlace(y);
       GetMuSelectionParameters(&constraints,  y, &mu_param);
@@ -157,6 +174,8 @@ bool Solve(const DenseMatrix& b, Program& prog,
       }
 
       max_iter = i + config.final_centering_steps;
+    } else {
+      centering_steps++;
     }
 
     double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
@@ -189,8 +208,8 @@ bool Solve(const DenseMatrix& b, Program& prog,
     REPORT(d_2);
     REPORT(d_inf);
 
-    prog.stats.num_iter = iter_cnt;
-    prog.stats.sqrt_inv_mu[iter_cnt - 1] = opt.inv_sqrt_mu;
+    prog.stats.num_iter = i;
+    prog.stats.sqrt_inv_mu[i - 1] = opt.inv_sqrt_mu;
     std::cout << "\n";
   }
 

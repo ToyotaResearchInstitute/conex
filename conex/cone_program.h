@@ -6,6 +6,7 @@
 
 struct SolverConfiguration {
   int prepare_dual_variables = 0;
+  int initialization_mode = 0;
   //TODO(FrankPermenter): Remove inv_sqrt_mu_max
   double inv_sqrt_mu_max = 1000;
   double minimum_mu = 1e-12;
@@ -30,6 +31,7 @@ class Program {
     memory.resize(SizeOf(workspaces));
     Initialize(&workspaces, &memory[0]);
 
+    is_initialized = true;
   }
 
   std::vector<Constraint> constraints;
@@ -38,6 +40,7 @@ class Program {
   WorkspaceStats stats;
   std::vector<Workspace> workspaces;
   Eigen::VectorXd memory; 
+  bool is_initialized = false;
 };
 
 class ConvexProgram {
