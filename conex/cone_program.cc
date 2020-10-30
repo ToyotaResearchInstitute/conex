@@ -22,12 +22,12 @@ void SetIdentity(std::vector<T>* c) {
 }
 
 template<typename T>
-void TakeStep(std::vector<T>* c, const StepOptions& opt, const Ref& y, StepInfo* info) {
+void TakeStep(std::vector<T>* c, const StepOptions& newton_step_parameters, const Ref& y, StepInfo* info) {
   StepInfo info_i;
   info->normsqrd = 0;
   info->norminfd = -1;
   for (auto& ci : *c)  {
-    TakeStep(&ci, opt, y, &info_i);
+    TakeStep(&ci, newton_step_parameters, y, &info_i);
     if (info_i.norminfd > info->norminfd) {
       info->norminfd = info_i.norminfd;
     }
@@ -78,6 +78,34 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
   }
   return;
 }
+double UpdateMu(std::vector<Constraint>& constraints,
+              const Eigen::LLT<Eigen::Ref<DenseMatrix>>& llt, 
+              const SchurComplementSystem& sys,
+              const DenseMatrix& b,
+              const SolverConfiguration& config,
+              int rankK,
+              Ref* temporary_memory)  {
+  MuSelectionParameters mu_param;
+  (*temporary_memory) = sys.AQc - b;
+  llt.solveInPlace(*temporary_memory);
+  GetMuSelectionParameters(&constraints,  *temporary_memory, &mu_param);
+
+  return DivergenceUpperBoundInverse(config.divergence_upper_bound * rankK,
+                                                mu_param.gw_norm_squared,
+                                                mu_param.gw_lambda_max,
+                                                mu_param.gw_trace,
+                                                rankK);
+}
+
+void ApplyLimits(double* x, double lb, double ub) {
+  if (*x > ub) {
+    *x = ub; 
+  }
+
+  if (*x < lb) {
+    *x = lb;
+  }
+}
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config,
            double* primal_variable) {
@@ -109,26 +137,21 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
   double inv_sqrt_mu_min = std::sqrt(1.0/(1e-15 + config.maximum_mu));
-  int max_iter = 1;
-  int iter_cnt = 0;
 
-  StepOptions opt;
-  opt.affine = 0;
-  StepInfo info;
+  StepOptions newton_step_parameters;
+  newton_step_parameters.affine = 0;
   IterationStats stats;
-  opt.inv_sqrt_mu = 0;
-  opt.affine = false;
+  newton_step_parameters.inv_sqrt_mu = 0;
+  newton_step_parameters.affine = false;
 
   int rankK = Rank(constraints);
 
-  double div_ub  = 0;
 
   int centering_steps = 0;
 
   for (int i = 0; i < config.max_iterations; i++) {
-    MuSelectionParameters mu_param;
 
-    bool update_mu = (i == 0) || ((opt.inv_sqrt_mu < inv_sqrt_mu_max) && 
+    bool update_mu = (i == 0) || ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) && 
                                   i < config.max_iterations - config.final_centering_steps);
 
     if (!update_mu && (centering_steps >= config.final_centering_steps)) {
@@ -145,40 +168,15 @@ bool Solve(const DenseMatrix& b, Program& prog,
     }
 
     if (update_mu) {
-      y = sys.AQc - b;
-      llt.solveInPlace(y);
-      GetMuSelectionParameters(&constraints,  y, &mu_param);
-
-
-      double divergence_upper_bound = config.divergence_upper_bound;
-      opt.inv_sqrt_mu = DivergenceUpperBoundInverse(divergence_upper_bound * rankK,
-                                                    mu_param.gw_norm_squared,
-                                                    mu_param.gw_lambda_max,
-                                                    mu_param.gw_trace,
-                                                    rankK);
-
-      if (opt.inv_sqrt_mu > inv_sqrt_mu_max) {
-        opt.inv_sqrt_mu = inv_sqrt_mu_max;
-      }
-      if (opt.inv_sqrt_mu < inv_sqrt_mu_min) {
-        opt.inv_sqrt_mu = inv_sqrt_mu_min;
-      }
-
-      double normsqrd = opt.inv_sqrt_mu * opt.inv_sqrt_mu *  mu_param.gw_norm_squared +
-                     -2*opt.inv_sqrt_mu * mu_param.gw_trace  + rankK;
-
-      div_ub = normsqrd/(2 - opt.inv_sqrt_mu * mu_param.gw_lambda_max);
-
-      if (i > config.max_iterations - config.final_centering_steps) {
-        inv_sqrt_mu_max = opt.inv_sqrt_mu;
-      }
-
-      max_iter = i + config.final_centering_steps;
+      newton_step_parameters.inv_sqrt_mu = UpdateMu(constraints, llt, sys, b, config, rankK,  &y);
+      const double max = config.inv_sqrt_mu_max;
+      const double min = std::sqrt(1.0/(1e-15 + config.maximum_mu));
+      ApplyLimits(&newton_step_parameters.inv_sqrt_mu, min, max);
     } else {
       centering_steps++;
     }
 
-    double mu = 1.0/(opt.inv_sqrt_mu); mu *= mu;
+    double mu = 1.0/(newton_step_parameters.inv_sqrt_mu); mu *= mu;
 
     if (mu > config.infeasibility_threshold) {
       if (i > 3) {
@@ -188,12 +186,13 @@ bool Solve(const DenseMatrix& b, Program& prog,
       }
     } 
 
-    y = opt.inv_sqrt_mu*(b + sys.AQc) - 2 * sys.AW;
+    y = newton_step_parameters.inv_sqrt_mu*(b + sys.AQc) - 2 * sys.AW;
     llt.solveInPlace(y);
-    opt.e_weight = 1;
-    opt.c_weight = opt.inv_sqrt_mu;
+    newton_step_parameters.e_weight = 1;
+    newton_step_parameters.c_weight = newton_step_parameters.inv_sqrt_mu;
 
-    TakeStep(&constraints, opt, y, &info);
+    StepInfo info;
+    TakeStep(&constraints, newton_step_parameters, y, &info);
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
     const double d_inf = std::fabs(info.norminfd);
@@ -204,12 +203,11 @@ bool Solve(const DenseMatrix& b, Program& prog,
       std::cout << "i: " << i << ", ";
     }
     REPORT(mu);
-    REPORT(div_ub);
     REPORT(d_2);
     REPORT(d_inf);
 
     prog.stats.num_iter = i;
-    prog.stats.sqrt_inv_mu[i - 1] = opt.inv_sqrt_mu;
+    prog.stats.sqrt_inv_mu[i - 1] = newton_step_parameters.inv_sqrt_mu;
     std::cout << "\n";
   }
 
@@ -220,7 +218,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       ConstructSchurComplementSystem(&constraints, true, &sys);
       Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
       DenseMatrix L = llt.matrixL();
-      DenseMatrix bres = opt.inv_sqrt_mu*b - 1 * sys.AW;
+      DenseMatrix bres = newton_step_parameters.inv_sqrt_mu*b - 1 * sys.AW;
       y2  = bres*0;
       for (int i = 0; i < 1; i++) {
         y2 += llt.solve(bres - L*L.transpose()*y2);
@@ -228,17 +226,18 @@ bool Solve(const DenseMatrix& b, Program& prog,
     } else {
       ConstructSchurComplementSystem(&constraints, true, &sys);
       Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
-      DenseMatrix bres = opt.inv_sqrt_mu*b  - 1 * sys.AW;
+      DenseMatrix bres = newton_step_parameters.inv_sqrt_mu*b  - 1 * sys.AW;
       y2 = llt.solve(bres);
     }
 
-    opt.affine = true;
-    opt.e_weight = 0;
-    opt.c_weight = 0;
+    newton_step_parameters.affine = true;
+    newton_step_parameters.e_weight = 0;
+    newton_step_parameters.c_weight = 0;
     Ref y2map(y2.data(), y2.rows(), y2.cols());
-    TakeStep(&constraints, opt, y2map, &info);
+    StepInfo info;
+    TakeStep(&constraints, newton_step_parameters, y2map, &info);
   }
-  y /= opt.inv_sqrt_mu;
+  y /= newton_step_parameters.inv_sqrt_mu;
   yout = y;
   solved = 1;
 
