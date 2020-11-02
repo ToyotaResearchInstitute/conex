@@ -17,7 +17,6 @@ inline std::vector<float> Degree(int N, const std::vector<Clique>& x) {
 
   int k = 0;
   for (const auto& xi : x) {
-    int intersected = 0;
     for (const auto& xii : xi) {
       if (degree.at(xii) > 0) {
         simplicial.at(xii) = false;
@@ -41,4 +40,12 @@ void SparseCholeskyDecomposition(const MatrixXd& A,
                   const std::vector<std::vector<int>>& root_nodes,
                   MatrixXd* R);
 
+
+void IntersectionOfSorted(const std::vector<int>& v1, 
+                  const std::vector<int>& v2,
+                  std::vector<int>* v3);
+
+void DifferenceOfSorted(const std::vector<int>& v1, 
+                  const std::vector<int>& v2,
+                  std::vector<int>* v3);
 

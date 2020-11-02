@@ -2,7 +2,7 @@
 cc_library(
     name = "test_util",
     srcs = glob(["test/test_util.cc"]),
-    hdrs = glob(["test/test_util.h"]),
+    hdrs = glob(["test/test_util.h", "debug_macros.h"]),
     copts = ["-Iexternal/gtest/include"], 
     deps = ["@gtest//:main", "conex_lib"],
 )
@@ -35,12 +35,6 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
-cc_test(
-    name = "cholesky",
-    srcs = glob(["test/test_chol.cc", "debug_macros.h", "test/util.h", "test/cholesky_decomposition.h", "test/cholesky_decomposition.cc", "test/elimination_ordering.cc", "test/elimination_ordering.h"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "@eigen"],
-)
 
 cc_test(
     name = "division_algebras",
@@ -56,12 +50,32 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
-
 cc_test(
     name = "warmstart",
     srcs = glob(["test/test_warmstart.cc"]),
     copts = ["-Iexternal/gtest/include -O0"], 
     deps = ["@gtest//:main", "conex_lib", "test_util"],
+)
+
+cc_library(
+    name = "cholesky",
+    srcs = glob(["debug_macros.h", "test/util.h", "cholesky_decomposition.h", "cholesky_decomposition.cc", "elimination_ordering.cc", "elimination_ordering.h"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@eigen"],
+)
+
+cc_test(
+    name = "cholesky_test",
+    srcs = glob(["test/cholesky_test.cc"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "@eigen", "cholesky"],
+)
+
+cc_test(
+    name = "approximate_eigenvalues",
+    srcs = glob(["test/approximate_eigenvalues.cc", "debug_macros.h"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "@eigen", "conex_lib"],
 )
 
 cc_library(

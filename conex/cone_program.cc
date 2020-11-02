@@ -145,8 +145,6 @@ bool Solve(const DenseMatrix& b, Program& prog,
   newton_step_parameters.affine = false;
 
   int rankK = Rank(constraints);
-
-
   int centering_steps = 0;
 
   for (int i = 0; i < config.max_iterations; i++) {

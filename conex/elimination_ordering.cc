@@ -7,11 +7,10 @@
 // Selectively Reduce Acyclic Hypergraphs."
 //
 //
-#include "conex/test/elimination_ordering.h"
+#include "conex/elimination_ordering.h"
 
 #include <vector>
 #include <iostream>
-
 
 namespace conex {
 
@@ -242,8 +241,6 @@ path.push_back(v);
 return path;
 }
 
-
-
 bool IsChordal(const Matrix& G, std::vector<int>* chordless_path) {
   int v = 0;
   auto order = conex::MaximumCardinalitySearch(G).FindOrder(v);
@@ -275,7 +272,6 @@ bool IsChordal(const Matrix& G, std::vector<int>* chordless_path) {
 bool IsChordal(const Matrix& G) {
   return IsChordal(G, NULL);
 }
-
 
 Eigen::PermutationMatrix<-1, -1> EliminationOrdering(const Matrix& G) {
   auto order = conex::MaximumCardinalitySearch(G).FindOrder();

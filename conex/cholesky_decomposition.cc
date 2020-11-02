@@ -1,4 +1,4 @@
-#include "conex/test/cholesky_decomposition.h"
+#include "conex/cholesky_decomposition.h"
 
 namespace {
 
@@ -92,7 +92,7 @@ class CliqueMatrix {
       } else {
         start_of_next_clique = n_;
       }
-      if (clique_index < root_.size()) {
+      if (clique_index < static_cast<int>(root_.size())) {
         std::vector<int> temp;
         for (auto e :  root_.at(clique_index-1)) {
           if (e > start_of_next_clique) {
@@ -201,3 +201,23 @@ void SparseCholeskyDecomposition(const MatrixXd& A,
     Adec.Increment();
   }
 }
+
+void IntersectionOfSorted(const std::vector<int>& v1, 
+                  const std::vector<int>& v2,
+                  std::vector<int>* v3){
+    v3->clear();
+    std::set_intersection(v1.begin(),v1.end(),
+                          v2.begin(),v2.end(),
+                          back_inserter(*v3));
+}
+
+void DifferenceOfSorted(const std::vector<int>& v1, 
+                        const std::vector<int>& v2,
+                  std::vector<int>* v3){
+    v3->clear();
+    std::set_difference(v1.begin(),v1.end(),
+                          v2.begin(),v2.end(),
+                          back_inserter(*v3));
+}
+
+

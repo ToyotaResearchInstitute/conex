@@ -98,7 +98,6 @@ int DoSolve() {
   return 0;
 }
 
-
 TEST(HermitianReal, Random) {
   for (int i = 0; i < 5; i++) {
     EXPECT_TRUE(DoSolve<Real>());

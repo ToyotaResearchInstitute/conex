@@ -39,7 +39,6 @@ struct WorkspaceDensePSD {
   int n_;
 };
 
-
 // To avoid overhead of virtual functions, we 
 // assume that classes that inherit PsdConstraint
 // will add a specialization of this template

@@ -16,7 +16,6 @@ EigenvalueDecomposition eig(const Eigen::MatrixXd& x) {
   return output;
 }
 
-
 Eigen::MatrixXd Log(const Eigen::MatrixXd& X) {
   auto d = eig(X);
   Eigen::MatrixXd Y(X.rows(), X.rows());
