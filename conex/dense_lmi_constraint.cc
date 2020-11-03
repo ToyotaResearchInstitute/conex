@@ -12,14 +12,22 @@ void MatrixLMIConstraint::ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) {
   WAW->noalias() =  W * (*AW);
 }
 
+double TraceInnnerProduct(const Eigen::MatrixXd& X, const Ref& Y) {
+  double val = 0;
+  for (int i = 0; i < X.rows(); i++) {
+    val += X.col(i).dot(Y.col(i));
+  }
+  return val;
+}
+
 double MatrixLMIConstraint::EvalDualConstraint(int j, const Ref& W) {
   const auto& constraint_matrix = constraint_matrices_.at(j);
-  return (constraint_matrix * W).trace();
+  return TraceInnnerProduct(constraint_matrix, W);
 }
 
 double MatrixLMIConstraint::EvalDualObjective(const Ref& W) {
   const auto& constraint_matrix = constraint_affine_;
-  return (constraint_matrix * W).trace();
+  return TraceInnnerProduct(constraint_matrix, W);
 }
 
 void MatrixLMIConstraint::MultByA(const Ref& x, Ref* Y) {
