@@ -2,36 +2,36 @@
 
 #include <cmath>
 #include "eigen_decomp.h"
-// #include "approximate_eigenvalues.h"
+#include "approximate_eigenvalues.h"
 
 #include <unsupported/Eigen/MatrixFunctions>
-
 using conex::jordan_algebra::SpectralRadius;
 using conex::jordan_algebra::SpectrumBounds;
+using Eigen::VectorXd;
 
 // Applies update  W^{1/2}( exp ( e + W^{1/2} S W^{1/2} ) W^{1/2}
-void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* SW) {
+void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* WS) {
   auto& workspace = workspace_;
   auto& W = workspace.W;
-  auto& expSW = workspace.temp_2;
+  auto& expWS = workspace.temp_2;
 
-  SW->diagonal().array() += opt.e_weight;
+  WS->diagonal().array() += opt.e_weight;
   if (scale != 1.0) {
-    (*SW) *= scale;
+    (*WS) *= scale;
   }
-  expSW = SW->exp();
-  W = W * expSW;
-  *SW = W.transpose();
-  W = (W + (*SW)) * 0.5;
+  expWS = WS->exp();
+  W = expWS * W;
+  *WS = W.transpose();
+  W = (W + (*WS)) * 0.5;
 }
 
 // Applies update  W = W + W^{1/2} ( w_e +  W^{1/2} S W^{1/2} ) W^{1/2}
 // which is a linearization of  W^{1/2}( exp ( W^{1/2} S W^{1/2} ) W^{1/2}
 // We assume that SW = Ay.
-void PsdConstraint::AffineUpdate(double w_e, Ref* SW) {
+void PsdConstraint::AffineUpdate(double w_e, Ref* WS) {
   auto& W = workspace_.W;
   auto& WSW = workspace_.temp_2;
-  WSW = W * (*SW);
+  WSW = (*WS) * W;
   if (w_e == 0) {
     W += WSW;
   } else {
@@ -44,26 +44,30 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
   auto& workspace = o->workspace_;
   auto& minus_s = workspace.temp_1;
   auto& W = workspace.W;
-  auto& SW = workspace.temp_1;
-  auto& SWSW = workspace.temp_2;
+  auto& WS = workspace.temp_1;
+  auto& WSWS = workspace.temp_2;
 
   if (opt.affine) {
     o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
-    SW = minus_s*W;
-    o->AffineUpdate(opt.e_weight, &SW);
+    WS = W * minus_s;
+    o->AffineUpdate(opt.e_weight, &WS);
     return;
   }
 
   o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
-  SW = minus_s*W;
+  WS = W * minus_s;
 
   int n = Rank(*o);
-  // The spectral radius of |SW + kI| is the inf-norm of W^{1/2} S W^{1/2} + kI
+  // The spectral radius of |WS + kI| is the inf-norm of W^{1/2} S W^{1/2} + kI
   // given that they have the same eigenvalues.
-  double norminf = SpectralRadius(SW + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
+  double norminf = SpectralRadius(WS + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
 
-  SWSW = SW*SW;
-  double norm2 = SWSW.trace() + 2*SW.trace() + Rank(*o);
+  // VectorXd r = VectorXd::Random(workspace->W.rows());
+  // auto gw_eig = ApproximateEigenvalues(WS, workspace->W,  r, r.rows() / 2, true);
+
+
+  WSWS = WS*WS;
+  double norm2 = WSWS.trace() + 2*WS.trace() + Rank(*o);
   double scale = 1;
   if (norminf * norminf > 2.0) {
     scale = 2.0/(norminf * norminf);
@@ -71,7 +75,7 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
 
   info->norminfd = norminf;
   info->normsqrd = norm2;
-  o->GeodesicUpdate(scale, opt, &SW);
+  o->GeodesicUpdate(scale, opt, &WS);
 }
 
 void SetIdentity(PsdConstraint* o) {
@@ -89,9 +93,15 @@ void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParame
 
   WS.noalias() =  workspace->W * minus_s;
 
+  // VectorXd r = VectorXd::Random(workspace->W.rows());
+  // auto gw_eig = ApproximateEigenvalues(WS, workspace->W,  r, r.rows() / 2, true);
+  // const double lamda_max = -gw_eig.minCoeff();
+  // const double lamda_min = -gw_eig.maxCoeff();
+
   const auto gw_eig = SpectrumBounds(WS);
   const double lamda_max = -gw_eig.second;
   const double lamda_min = -gw_eig.first;
+
   if (p->gw_lambda_max < lamda_max) {
     p->gw_lambda_max = lamda_max;
   }
