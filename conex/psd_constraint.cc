@@ -63,8 +63,9 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
 #if 0
   double norminf = SpectralRadius(WS + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
 #else
-  VectorXd r = VectorXd::Random(workspace.W.rows());
-  auto gw_eig = ApproximateEigenvalues(WS, workspace.W,  r, r.rows() / 2, true);
+  // Heuristic.
+  int index = 0; WS.diagonal().maxCoeff(&index);
+  auto gw_eig = ApproximateEigenvalues(WS, workspace.W,  minus_s.col(index), n / 2, true);
   const double lambda_1 = std::fabs(opt.e_weight+gw_eig.minCoeff());
   const double lambda_2 = std::fabs(opt.e_weight+gw_eig.maxCoeff());
   double norminf = lambda_1;
@@ -103,10 +104,10 @@ void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParame
   WS.noalias() =  workspace->W * minus_s;
 
 #if 1
-  //  r' S * W *  S r 
-  // VectorXd r = minus_s.col(0); 
-  VectorXd r = VectorXd::Random(workspace->W.rows());
-  auto gw_eig = ApproximateEigenvalues(WS, workspace->W,  r, r.rows() / 2, true);
+  int n = Rank(*o);
+  //VectorXd r = minus_s.col(0); 
+  int index = 0; WS.diagonal().maxCoeff(&index);
+  auto gw_eig = ApproximateEigenvalues(WS, workspace->W,  minus_s.col(index), n / 2, true);
   // SWS
   const double lamda_max = -gw_eig.minCoeff();
   const double lamda_min = -gw_eig.maxCoeff();

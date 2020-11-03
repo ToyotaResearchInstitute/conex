@@ -209,7 +209,7 @@ Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W,
   int cnt = 0;
   for (int j = 1; j < num_iter; j++) {
     beta(j - 1) = inner_product(U, U);
-    if (beta(j - 1) < 1e-12) {
+    if (beta(j - 1) < 1e-6) {
       break;
     } else {
       beta(j - 1) = std::sqrt(beta(j - 1));
