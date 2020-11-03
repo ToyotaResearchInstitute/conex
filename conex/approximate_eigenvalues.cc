@@ -46,14 +46,14 @@ class JacobiSolver {
   double PolynomialInnerProduct(const Eigen::MatrixXd& p_v, const Eigen::MatrixXd& q_v) {
     // return (EvalPoly(p_v) * EvalPoly(q_v)).trace();
 
-    //   A = SW is diagonalizable since it is similar to the symmetric matrix W^{1/2} S W^{1/2}.
+    //   A = WS is diagonalizable since it is similar to the symmetric matrix W^{1/2} S W^{1/2}.
     //   Hence, A = M D inv(M), plying that
     //
     //   Hence, p(A) = M p(D) inv(M) 
     //
     //   It follows that 
     //   <p(A)^T r0, q(A) r0> = trace r0^T P(A) q(A) r0 = \trace M p q(D) Minv r0 r0^T >=0
-    return (EvalPoly(p_v).transpose() * W_* r0_).dot(EvalPoly(q_v) * r0_);
+    return (EvalPoly(p_v).transpose() *  r0_).dot(EvalPoly(q_v) * W_ * r0_);
   }
 
   double VectorInnerProduct(const Eigen::MatrixXd& p, const Eigen::MatrixXd& q) {
@@ -79,7 +79,7 @@ class JacobiSolver {
     VectorXd one(n); one.setZero(); one(0) = 1;
     double beta = std::sqrt(PolynomialInnerProduct(one, one));
 
-    v.at(0).resize(n);  v.at(0).setZero();
+    v.at(0).resize(n); v.at(0).setZero();
     v.at(1) = one / beta;
 
     VectorXd vhat(n);
@@ -195,8 +195,8 @@ Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W,
   Eigen::MatrixXd Vprev(n, 2); 
 
 // Execute the three term recurrence (equivalent to Gram-Schmidt):
-  V.col(1) = W * r;
-  V.col(0) = r;
+  V.col(1) = r;
+  V.col(0) = W * r;
   V = V/std::sqrt(inner_product(V, V));
   Vprev = V;
 
@@ -210,7 +210,6 @@ Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W,
   for (int j = 1; j < num_iter; j++) {
     beta(j - 1) = inner_product(U, U);
     if (beta(j - 1) < 1e-12) {
-      DUMP(beta(j - 1));
       break;
     } else {
       beta(j - 1) = std::sqrt(beta(j - 1));
@@ -232,11 +231,25 @@ Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W,
   return x.eigenvalues();
 }
 
-Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& S, const Eigen::MatrixXd& W,
+Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& WS, const Eigen::MatrixXd& W,
                             const Eigen::MatrixXd& r, int num_iterations, bool compressed) {
   if (compressed) {
-    return AsymmetricLanczos(S, W, r, num_iterations); 
+    return AsymmetricLanczos(WS, W, r, num_iterations); 
   } else {
-    return EigenvaluesOfJacobiMatrix(S, W, r, num_iterations); 
+    return EigenvaluesOfJacobiMatrix(WS, W, r, num_iterations); 
+  }
+}
+
+double ApproximateNormInf(const Eigen::MatrixXd& WS, const Eigen::MatrixXd& W, double w) {
+  int n = WS.rows()/2;
+  Eigen::VectorXd r = Eigen::VectorXd::Random(n, 1);
+  Eigen::VectorXd lam = ApproximateEigenvalues(WS, W, r, n/2, true);
+  double from_lam_min = std::fabs(lam.minCoeff() - w);
+  double from_lam_max = std::fabs(lam.maxCoeff() - w);
+
+  if (from_lam_max > from_lam_min) {
+    return from_lam_max;
+  } else {
+    return from_lam_max;
   }
 }

@@ -20,7 +20,7 @@ TEST(Eigenvalues, NonsymmetricFromJacobiIterations) {
   A = A / A.trace();
   
   MatrixXd W = MatrixXd::Random(n, n);  W = W * W.transpose();
-  A = A * W;
+  A = W * A;
 
   VectorXd r0(n);
   r0 << 1, 2, 0, 4;
@@ -94,20 +94,20 @@ TEST(Eigenvalues, Profile) {
     MatrixXd St = S.transpose();
     S = S + St;
     MatrixXd W = MatrixXd::Random(n, n);  W = W * W.transpose();
-    MatrixXd SW = S * W;
+    MatrixXd WS = W * S;
     VectorXd r0 = VectorXd::Random(n);
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    VectorXd eigJ = ApproximateEigenvalues(SW, W, r0, n/2, true); 
+    VectorXd eigJ = ApproximateEigenvalues(WS, W, r0, n/2, true); 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
     t1 = std::chrono::high_resolution_clock::now();
-    VectorXd eigSW = eig(SW).eigenvalues;
+    VectorXd eigWS = eig(WS).eigenvalues;
     t2 = std::chrono::high_resolution_clock::now();
     auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
     EXPECT_TRUE(duration1 < duration2);
-    EXPECT_NEAR(eigSW.maxCoeff() / eigJ.maxCoeff(), 1, 1e-2);
+    EXPECT_NEAR(eigWS.maxCoeff() / eigJ.maxCoeff(), 1, 1e-2);
   }
 }
