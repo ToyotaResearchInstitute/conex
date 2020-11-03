@@ -82,7 +82,8 @@ cc_library(
     name = "conex_lib",
     hdrs = glob([ "*.h" ]),
     srcs = glob(["*.cc"]),
-    copts = ["-O3"],
+    copts = ["-O3", "-DEIGEN_USE_BLAS"],
+    #copts = ["-O3"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen" ],
 )
