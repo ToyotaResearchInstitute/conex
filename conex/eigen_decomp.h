@@ -16,9 +16,10 @@ EigenvalueDecomposition eig(const Eigen::MatrixXd& x);
 Eigen::MatrixXd Sqrt(const Eigen::MatrixXd& X);
 Eigen::MatrixXd Mean(const Eigen::MatrixXd& S, const Eigen::MatrixXd& Z);
 Eigen::MatrixXd ExpMap(const Eigen::MatrixXd& X);
-std::pair<double, double> SpectralRadius(const Eigen::MatrixXd& X);
-double NormInf(const Eigen::MatrixXd& X);
+double SpectralRadius(const Eigen::MatrixXd& X);
 double NormInfPowerMethod(Ref*, Ref*);
+
+std::pair<double, double> SpectrumBounds(const Eigen::MatrixXd& X);
 
 Eigen::VectorXd Roots(const Eigen::VectorXd& x);
 

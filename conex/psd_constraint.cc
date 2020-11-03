@@ -2,10 +2,12 @@
 
 #include <cmath>
 #include "eigen_decomp.h"
+// #include "approximate_eigenvalues.h"
 
 #include <unsupported/Eigen/MatrixFunctions>
 
-using conex::jordan_algebra::NormInf;
+using conex::jordan_algebra::SpectralRadius;
+using conex::jordan_algebra::SpectrumBounds;
 
 // Applies update  W^{1/2}( exp ( e + W^{1/2} S W^{1/2} ) W^{1/2}
 void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* SW) {
@@ -56,7 +58,9 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
   SW = minus_s*W;
 
   int n = Rank(*o);
-  double norminf = NormInf(SW + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
+  // The spectral radius of |SW + kI| is the inf-norm of W^{1/2} S W^{1/2} + kI
+  // given that they have the same eigenvalues.
+  double norminf = SpectralRadius(SW + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
 
   SWSW = SW*SW;
   double norm2 = SWSW.trace() + 2*SW.trace() + Rank(*o);
@@ -64,10 +68,6 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
   if (norminf * norminf > 2.0) {
     scale = 2.0/(norminf * norminf);
   }
-  // if (norminf > 2.0) {
-  //   scale = 2.0/(norminf);
-  // }
-
 
   info->norminfd = norminf;
   info->normsqrd = norm2;
@@ -83,23 +83,22 @@ void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParame
   using conex::jordan_algebra::SpectralRadius;
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
-  auto& WsWs = workspace->temp_1;
-  auto& Ws = workspace->temp_2;
+  auto& WSWS = workspace->temp_1;
+  auto& WS = workspace->temp_2;
   o->ComputeNegativeSlack(1, y, &minus_s);
 
-  Ws.noalias() = workspace->W * minus_s;
+  WS.noalias() =  workspace->W * minus_s;
 
-  const auto gw_eig = SpectralRadius(Ws);
+  const auto gw_eig = SpectrumBounds(WS);
   const double lamda_max = -gw_eig.second;
   const double lamda_min = -gw_eig.first;
-
   if (p->gw_lambda_max < lamda_max) {
     p->gw_lambda_max = lamda_max;
   }
   if (p->gw_lambda_min > lamda_min) {
     p->gw_lambda_min = lamda_min;
   }
-  WsWs = Ws*Ws;
-  p->gw_norm_squared += WsWs.trace();
-  p->gw_trace += -Ws.trace();
+  WSWS = WS*WS;
+  p->gw_norm_squared += WSWS.trace();
+  p->gw_trace += -WS.trace();
 }

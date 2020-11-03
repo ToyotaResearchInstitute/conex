@@ -52,31 +52,15 @@ Eigen::MatrixXd Mean(const Eigen::MatrixXd& S, const Eigen::MatrixXd& Z) {
   return Zsqrt * Sqrt(Zsqrtinv*S*Zsqrtinv) *Zsqrt;
 }
 
-std::pair<double, double> SpectralRadius(const Eigen::MatrixXd& X) {
+std::pair<double, double> SpectrumBounds(const Eigen::MatrixXd& X) {
   std::pair<double, double> y;
   y.first = eig(X).eigenvalues.maxCoeff();
   y.second = eig(X).eigenvalues.minCoeff();
   return y;
 }
 
-double NormInf(const Eigen::MatrixXd& X) {
-//  Eigen::MatrixXd b = Eigen::MatrixXd::Random(X.cols(), 1);
-//  b.normalize();
-//  DUMP(b);
-//  double lambda = 0;
-//  for (int i = 0; i < 10; i++) {
-//    b = X*b;
-//    double lamb = b.norm();
-//    b.normalize();
-//    DUMP(lamb);
-//  }
-
-   //  L, jL x 
-
-
-
-  auto r = SpectralRadius(X);
-  // return r.first; 
+double SpectralRadius(const Eigen::MatrixXd& X) {
+  auto r = SpectrumBounds(X);
   double n = std::fabs(r.first);
   double n2 = std::fabs(r.second);
   if (n2 > n) {
@@ -86,7 +70,6 @@ double NormInf(const Eigen::MatrixXd& X) {
 }
 
 double NormInfPowerMethod(Ref* X, Ref* temp1) {
-  return NormInf(*X);
   auto temp2 = X;
 
   temp1->noalias() = (*temp2)*(*temp2);
@@ -105,9 +88,6 @@ Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
   c.topRightCorner(x.rows() - 1, x.rows() - 1) = MatrixXd::Identity(x.rows() - 1, x.rows() - 1);
   return eig(c).eigenvalues;
 }
-
-
-
 
 }  // namespace jordan_algebra
 }  // namespace conex
