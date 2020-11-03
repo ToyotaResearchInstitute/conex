@@ -163,9 +163,9 @@ Eigen::VectorXd ApproximateEigenvalues(const MatrixXd& A, const MatrixXd& r0, in
   return x.eigenvalues();
 }
 
-double inner_product(const MatrixXd& V, const MatrixXd& W) {
+double inner_product(const MatrixXd& V, const MatrixXd& U) {
   //return V.col(0).dot(V.col(1));
-  return V.col(0).dot(W.col(1));
+  return V.col(0).dot(U.col(1));
 }
 
 Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W, 
