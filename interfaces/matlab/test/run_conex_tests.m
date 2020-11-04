@@ -4,9 +4,9 @@ function run_tests(path_to_conex_library)
   end
 
   LPTests();
-  %SDPTests();
-  %SparseTests();
-  %SedumiTests();
+  SDPTests();
+  SparseTests();
+  SedumiTests();
 
 function LPTests()
   p = ConexProgram();
@@ -106,7 +106,7 @@ function SparseTests()
   
 function SedumiTests()
   m = 40;
-  n = 40;
+  n = 140;
   K.s = n;
   sym = @(x) x + x';
   vect = @(x) x(:);
