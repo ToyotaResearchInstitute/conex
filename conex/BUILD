@@ -1,4 +1,3 @@
-
 cc_library(
     name = "test_util",
     srcs = glob(["test/test_util.cc"]),
@@ -34,7 +33,6 @@ cc_test(
     copts = ["-Iexternal/gtest/include"], 
     deps = ["@gtest//:main", "conex_lib"],
 )
-
 
 cc_test(
     name = "division_algebras",
@@ -80,10 +78,55 @@ cc_test(
 
 cc_library(
     name = "conex_lib",
-    hdrs = glob([ "*.h" ]),
-    srcs = glob(["*.cc"]),
+    hdrs = ["approximate_eigenvalues.h",
+            "cholesky_decomposition.h",
+            "cone_program.h",
+            "constraint.h",
+            "debug_macros.h",
+            "dense_lmi_constraint.h",
+            "divergence.h",
+            "eigen_decomp.h",
+            "elimination_ordering.h",
+            "hermitian_psd.h",
+            "jordan_matrix_algebra.h",
+            "linear_constraint.h",
+            "memory_utils.h",
+            "newton_step.h",
+            "psd_constraint.h",
+            "quadratic_cone_constraint.h",
+            "soc_constraint.h",
+            "workspace.h",
+            "workspace_soc.h"],
+    srcs = ["approximate_eigenvalues.cc",
+            "cholesky_decomposition.cc",
+            "cone_program.cc",
+            "dense_lmi_constraint.cc",
+            "divergence.cc",
+            "eigen_decomp.cc",
+            "elimination_ordering.cc",
+            "hermitian_psd.cc",
+            "jordan_matrix_algebra.cc",
+            "linear_constraint.cc",
+            "psd_constraint.cc",
+            "quadratic_cone_constraint.cc",
+            "soc_constraint.cc"],
     copts = ["-O3", "-DEIGEN_USE_BLAS"],
-    #copts = ["-O3"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen" ],
+)
+
+cc_test(
+    name = "matrix_exponential_test",
+    srcs = glob(["test/matrix_exponential.cc", "matrix_exponential.h"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "@eigen"],
+)
+
+cc_library(
+    name = "matrix_exponential",
+    hdrs = [ "matrix_exponential.h"],
+    srcs = ["matrix_exponential.cc", "debug_macros.h"],
+    copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen" ],
 )
