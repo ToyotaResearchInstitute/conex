@@ -70,16 +70,42 @@ cc_test(
 )
 
 cc_test(
-    name = "approximate_eigenvalues",
+    name = "approximate_eigenvalues_test",
     srcs = glob(["test/approximate_eigenvalues.cc", "debug_macros.h"]),
     copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "@eigen", "conex_lib"],
+    deps = ["@gtest//:main", "@eigen", "approximate_eigenvalues", "conex_lib"],
 )
 
 cc_library(
+    name = "approximate_eigenvalues",
+    hdrs = [ "approximate_eigenvalues.h"],
+    srcs = ["approximate_eigenvalues.cc"],
+    copts = ["-O3", "-DEIGEN_USE_BLAS"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen" ],
+)
+
+cc_test(
+    name = "matrix_exponential_test",
+    srcs = glob(["test/matrix_exponential_test.cc"]),
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "@eigen", "matrix_exponential"],
+)
+
+cc_library(
+    name = "matrix_exponential",
+    hdrs = [ "matrix_exponential.h"],
+    srcs = ["matrix_exponential.cc", "debug_macros.h"],
+    copts = ["-O3", "-DEIGEN_USE_BLAS"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen" ],
+)
+
+
+
+cc_library(
     name = "conex_lib",
-    hdrs = ["approximate_eigenvalues.h",
-            "cholesky_decomposition.h",
+    hdrs = ["cholesky_decomposition.h",
             "cone_program.h",
             "constraint.h",
             "debug_macros.h",
@@ -97,8 +123,7 @@ cc_library(
             "soc_constraint.h",
             "workspace.h",
             "workspace_soc.h"],
-    srcs = ["approximate_eigenvalues.cc",
-            "cholesky_decomposition.cc",
+    srcs = ["cholesky_decomposition.cc",
             "cone_program.cc",
             "dense_lmi_constraint.cc",
             "divergence.cc",
@@ -112,21 +137,7 @@ cc_library(
             "soc_constraint.cc"],
     copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen" ],
+    deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential" ],
 )
 
-cc_test(
-    name = "matrix_exponential_test",
-    srcs = glob(["test/matrix_exponential.cc", "matrix_exponential.h"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "@eigen"],
-)
 
-cc_library(
-    name = "matrix_exponential",
-    hdrs = [ "matrix_exponential.h"],
-    srcs = ["matrix_exponential.cc", "debug_macros.h"],
-    copts = ["-O3", "-DEIGEN_USE_BLAS"],
-    visibility = ["//visibility:public"],
-    deps = [ "@eigen" ],
-)

@@ -8,7 +8,7 @@
 #include "conex/eigen_decomp.h"
 
 using DenseMatrix = Eigen::MatrixXd;
-
+#if 1
 int TestDiagonalSDP() {
   int n = 20;
   int m = 10;
@@ -53,40 +53,6 @@ int TestDiagonalSDP() {
   return 0;
 }
 
-int TestSDP() {
-  SolverConfiguration config;
-  int n = 15;
-  int m = 13;
-  auto constraints2 = GetRandomDenseMatrices(n, m);
-
-  DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
-  DenseLMIConstraint LMI{n, constraints2, affine2};
-
-  Program prog;
-  DenseMatrix y(m, 1);
-  prog.constraints.push_back(LMI);
-
-
-  auto b = GetFeasibleObjective(m, prog.constraints);
-  Solve(b, prog, config, y.data());
-
-  DenseMatrix x(n, n);
-  prog.constraints.at(0).get_dual_variable(x.data());
-  x.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
-
-  DenseMatrix slack = affine2;
-  DenseMatrix res = b;
-  for (int i = 0; i < m; i++) {
-    slack -= constraints2.at(i) * y(i);
-    res(i) -= (constraints2.at(i) * x).trace();
-  }
-
-  EXPECT_TRUE(conex::jordan_algebra::eig(slack).eigenvalues.minCoeff() > 1e-8);
-  EXPECT_TRUE(res.norm() < 1e-7);
-  EXPECT_TRUE((slack*x).trace() < 1e-4);
-
-  return 0;
-}
 
 
 
@@ -96,10 +62,6 @@ TEST(SDP, DiagonalSDP) {
   }
 }
 
-TEST(SDP, RandomSDP) {
-  for (int i = 0; i < 1; i++) {
-    TestSDP(); }
-}
 
 TEST(SDP, SparseAndDenseAgree) {
   SolverConfiguration config;
@@ -159,7 +121,49 @@ TEST(SDP, SparseAndDenseAgree) {
 
   EXPECT_NEAR((y - y_sparse).norm(), 0, 1e-8);
 }
+#else
 
 
+int TestSDP(int i) {
+  SolverConfiguration config;
+  int n = 150;
+  int m = 13;
+  auto constraints2 = GetRandomDenseMatrices(n, m);
+
+  DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
+  DenseLMIConstraint LMI{n, constraints2, affine2};
+
+  Program prog;
+  DenseMatrix y(m, 1);
+  prog.constraints.push_back(LMI);
 
 
+  auto b = GetFeasibleObjective(m, prog.constraints);
+  DUMP("Calling!");
+  Solve(b, prog, config, y.data());
+  return 0;
+
+  DenseMatrix x(n, n);
+  prog.constraints.at(0).get_dual_variable(x.data());
+  x.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+
+  DenseMatrix slack = affine2;
+  DenseMatrix res = b;
+  for (int i = 0; i < m; i++) {
+    slack -= constraints2.at(i) * y(i);
+    res(i) -= (constraints2.at(i) * x).trace();
+  }
+
+  EXPECT_TRUE(conex::jordan_algebra::eig(slack).eigenvalues.minCoeff() > 1e-8);
+  EXPECT_TRUE(res.norm() < 1e-7);
+  EXPECT_TRUE((slack*x).trace() < 1e-4);
+
+  return 0;
+}
+
+TEST(SDP, ProfileSDP) {
+  for (int i = 0; i < 1; i++) {
+    TestSDP(i); 
+  }
+}
+#endif

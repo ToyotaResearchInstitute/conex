@@ -3,6 +3,7 @@
 #include <cmath>
 #include <complex>
 using RealScalar = double;
+using Eigen::MatrixXd;
 /** \brief Compute the (3,3)-Pad&eacute; approximant to the exponential.
  *
  *  After exit, \f$ (V+U)(V-U)^{-1} \f$ is the Pad&eacute;
@@ -11,7 +12,7 @@ using RealScalar = double;
 template <typename MatA, typename MatU, typename MatV>
 void matrix_exp_pade3(const MatA& A, MatU& U, MatV& V)
 {
-  DUMP("3");
+  // DUMP("3");
   typedef typename MatA::PlainObject MatrixType;
   const RealScalar b[] = {120.L, 60.L, 12.L, 1.L};
   const MatrixType A2 = A * A;
@@ -226,7 +227,7 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings)
   using std::pow;
   const RealScalar l1norm = arg.cwiseAbs().colwise().sum().maxCoeff();
   squarings = 0;
-  if (l1norm < 1.495585217958292e-002) {
+  if (true) { //l1norm < 1.495585217958292e-002) {
     matrix_exp_pade3(arg, U, V);
   } else if (l1norm < 2.539398330063230e-001) {
     matrix_exp_pade5(arg, U, V);
@@ -243,15 +244,14 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings)
   }
 }
 
-void matrix_exp_compute(const Ref& arg, Ref &result) // natively supported scalar type
-{
-  using MatrixType = Ref;
+void MatrixExponential(const Eigen::Ref<const Eigen::MatrixXd>& arg, Ref *result) {
+  using MatrixType = MatrixXd;
   MatrixType U, V;
   int squarings;
   run(arg, U, V, squarings); // Pade approximant is (U+V) / (-U+V)
   MatrixType numer = U + V;
   MatrixType denom = -U + V;
-  result = denom.partialPivLu().solve(numer);
+  *result = denom.partialPivLu().solve(numer);
   for (int i=0; i<squarings; i++)
-    result *= result;   // undo scaling by repeated squaring
+    (*result) *= (*result);   // undo scaling by repeated squaring
 }

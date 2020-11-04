@@ -150,4 +150,4 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     return [stats.mu for stats in prog.GetIterationStats()]
 
 PlotMuUpdate()
-#PlotGeodesicDistance()
+PlotGeodesicDistance()

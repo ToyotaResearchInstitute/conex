@@ -1,10 +1,9 @@
-#include "psd_constraint.h"
-
 #include <cmath>
-#include "eigen_decomp.h"
-#include "approximate_eigenvalues.h"
 
-#include <unsupported/Eigen/MatrixFunctions>
+#include "conex/psd_constraint.h"
+#include "conex/approximate_eigenvalues.h"
+#include "conex/matrix_exponential.h"
+
 using conex::jordan_algebra::SpectralRadius;
 using conex::jordan_algebra::SpectrumBounds;
 using Eigen::VectorXd;
@@ -19,7 +18,8 @@ void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* WS
   if (scale != 1.0) {
     (*WS) *= scale;
   }
-  expWS = WS->exp();
+
+  MatrixExponential(*WS, &expWS);
   W = expWS * W;
   *WS = W.transpose();
   W = (W + (*WS)) * 0.5;

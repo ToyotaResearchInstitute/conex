@@ -1,5 +1,4 @@
 #include "conex/approximate_eigenvalues.h"
-#include "conex/debug_macros.h"
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 

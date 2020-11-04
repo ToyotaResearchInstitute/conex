@@ -22,6 +22,8 @@ psd_constraint.o: ../conex/psd_constraint.cc ../conex/psd_constraint.h
 eigen_decomp.o: ../conex/eigen_decomp.cc 
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/eigen_decomp.cc
 
+matrix_exponential.o: ../conex/matrix_exponential.cc
+	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/matrix_exponential.cc
 
 approximate_eigenvalues.o: ../conex/approximate_eigenvalues.cc
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/approximate_eigenvalues.cc
@@ -29,8 +31,8 @@ approximate_eigenvalues.o: ../conex/approximate_eigenvalues.cc
 conex.o: conex.h conex.cc
 	g++ -c $(COPTS)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
 
-libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o
-	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o
+libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o
+	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o
 
 .PHONY: clean
 
