@@ -69,17 +69,6 @@ double SpectralRadius(const Eigen::MatrixXd& X) {
   return n;
 }
 
-double NormInfPowerMethod(Ref* X, Ref* temp1) {
-  auto temp2 = X;
-
-  temp1->noalias() = (*temp2)*(*temp2);
-  double norm_x_sqr = temp1->trace();
-
-  temp2->noalias() = (*temp1)*(*temp1);
-  double norm_xn_sqr = temp2->trace(); 
-  // x^4 / x^2
-  return sqrt(norm_xn_sqr /  norm_x_sqr);
-}
 
 Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
   Eigen::MatrixXd c(x.rows(), x.rows());

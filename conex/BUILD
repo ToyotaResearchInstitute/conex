@@ -104,6 +104,28 @@ cc_library(
     deps = [ "@eigen", "eigen_decomp" ],
 )
 
+cc_test(
+    name = "jordan_matrix_algebra_test",
+    srcs = ["test/jordan_matrix_algebra_test.cc"],
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "jordan_matrix_algebra", "conex_lib"],
+)
+
+cc_library(
+    name = "vect_jordan_matrix_algebra",
+    hdrs = [ "vect_jordan_matrix_algebra.h"],
+    srcs = ["vect_jordan_matrix_algebra.cc", "debug_macros.h"],
+    copts = ["-O0", "-DEIGEN_USE_BLAS"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen", "eigen_decomp" ],
+)
+
+cc_test(
+    name = "vect_jordan_matrix_algebra_test",
+    srcs = ["test/vect_jordan_matrix_algebra_test.cc"],
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "vect_jordan_matrix_algebra"],
+)
 cc_library(
     name = "eigen_decomp",
     hdrs = [ "eigen_decomp.h"],
@@ -114,12 +136,6 @@ cc_library(
 )
 
 
-cc_test(
-    name = "jordan_matrix_algebra_test",
-    srcs = ["test/division_algebra_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "jordan_matrix_algebra", "conex_lib"],
-)
 
 cc_library(
     name = "conex_lib",
