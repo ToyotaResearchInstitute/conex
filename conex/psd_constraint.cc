@@ -63,7 +63,7 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
 #if 0
   double norminf = SpectralRadius(WS + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
 #else
-  // Heuristic.
+  // Heuristic choice for initial r.
   int index = 0; WS.diagonal().maxCoeff(&index);
   auto gw_eig = ApproximateEigenvalues(WS, workspace.W,  minus_s.col(index), n / 2, true);
   const double lambda_1 = std::fabs(opt.e_weight+gw_eig.minCoeff());
