@@ -34,12 +34,6 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib"],
 )
 
-cc_test(
-    name = "division_algebras",
-    srcs = glob(["test/test_division_algebras.cc", "jordan_matrix_algebra.h", "jordan_matrix_algebra.cc"]),
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "conex_lib"],
-)
 
 cc_test(
     name = "divergence",
@@ -101,7 +95,31 @@ cc_library(
     deps = [ "@eigen" ],
 )
 
+cc_library(
+    name = "jordan_matrix_algebra",
+    hdrs = [ "jordan_matrix_algebra.h"],
+    srcs = ["jordan_matrix_algebra.cc", "debug_macros.h"],
+    copts = ["-O3", "-DEIGEN_USE_BLAS"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen", "eigen_decomp" ],
+)
 
+cc_library(
+    name = "eigen_decomp",
+    hdrs = [ "eigen_decomp.h"],
+    srcs = ["eigen_decomp.cc", "eigen_decomp.h"],
+    copts = ["-O3", "-DEIGEN_USE_BLAS"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen" ],
+)
+
+
+cc_test(
+    name = "jordan_matrix_algebra_test",
+    srcs = ["test/division_algebra_test.cc"],
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "jordan_matrix_algebra", "conex_lib"],
+)
 
 cc_library(
     name = "conex_lib",
@@ -111,10 +129,8 @@ cc_library(
             "debug_macros.h",
             "dense_lmi_constraint.h",
             "divergence.h",
-            "eigen_decomp.h",
             "elimination_ordering.h",
             "hermitian_psd.h",
-            "jordan_matrix_algebra.h",
             "linear_constraint.h",
             "memory_utils.h",
             "newton_step.h",
@@ -127,17 +143,15 @@ cc_library(
             "cone_program.cc",
             "dense_lmi_constraint.cc",
             "divergence.cc",
-            "eigen_decomp.cc",
             "elimination_ordering.cc",
             "hermitian_psd.cc",
-            "jordan_matrix_algebra.cc",
             "linear_constraint.cc",
             "psd_constraint.cc",
             "quadratic_cone_constraint.cc",
             "soc_constraint.cc"],
     copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential" ],
+    deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential", "jordan_matrix_algebra", "eigen_decomp" ],
 )
 
 
