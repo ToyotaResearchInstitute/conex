@@ -119,24 +119,15 @@ Eigen::VectorXd EigenvaluesOfJacobiMatrix(const Eigen::MatrixXd& A,const Eigen::
   return jacobi.Eigenvalues();
 }
 
-
-// Constructs the Jacobi matrix by identifying polynomial v
-// with the matrices [p_v(A) r, p_v(A)^T r]
+// Performs Lanczo iterations, i.e., given symmetric A and vector r, constructs
+// the Jacobi matrix with respect to the inner-product:
+//    
+//   <p, q> =  \langle p(A) r, q(A) r \rangle.
+//          = r' Q p(D) q(D) Q^T r
 //
-// Exploits the following properties:
-//
-// If  v = p_v(A) r and w = p_w(A) r, then, since A = A^T,
-//
-//   |v|^2  =  \langle p_v(A)^T r, p_v(A) r \rangle
-//    v^T w =  \langle p_v(A)^T r, p_w(A) r \rangle
-//
-//                        r' M^T p_v(A) Minv r
-//
-//                          WA = M^T D inv(M)
-//
-// To update v(t) to t*v, we exploit the identity
-//
-//   p_{vt}(A) r = A * v
+//  We identify a polynomial p with the vector v := p(A) r. This way, the 
+//  the inner-product reduces to the usual dot product. We can also 
+//  recursively update v since t * p(t) is identified with (t*p)(A) r = A * p(A) r.
 Eigen::VectorXd ApproximateEigenvalues(const MatrixXd& A, const MatrixXd& r0, int num_iter) {
   int n = A.rows();
   VectorXd alpha(num_iter);
@@ -167,22 +158,21 @@ double inner_product(const MatrixXd& V, const MatrixXd& U) {
   return V.col(0).dot(U.col(1));
 }
 
-Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W, 
+Eigen::VectorXd AsymmetricLanczos(const MatrixXd& WS, const MatrixXd& W, 
                                   const MatrixXd& r, int num_iter) {
-
-  int n = SW.rows();
-// Given SW, W, and r,  computes a sequence V_i of num_iter orthogonal polynomials 
+  int n = WS.rows();
+// Given WS, W, and r,  computes a sequence V_i of num_iter orthogonal polynomials 
 // with respect to the inner-product 
-// <p, q> :=  r^T W p(SW)  q(SW) r> 
+// <p, q> :=  r^T W p(WS)  q(WS) r> 
 //         =  r^T W M p(D) q(D) inv(M) r
 //         =  r^T W^{1/2} Q p(D) q(D) Q^T W{1/2} 
 //
 //  where M =  W^{-1/2} Q  for diagonal D and orthogonal Q since
 //      
-//       SW = W^{-1/2} Q D Q^T W^{1/2}
+//       WS = W^{-1/2} Q D Q^T W^{1/2}
 //
 //  For each iteration, we identify the polynomial p with the
-//  matrix V = [ q(SW)r,  p(SW)^T W r]. 
+//  matrix V = [ q(WS)r,  p(WS)^T W r]. 
   Eigen::MatrixXd V(n, 2); 
 
 //  Diagonal alpha and off diagonal beta of the
@@ -199,8 +189,8 @@ Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W,
   V = V/std::sqrt(inner_product(V, V));
   Vprev = V;
 
-  U.col(0) = SW * V.col(0);
-  U.col(1) = SW.transpose() * V.col(1);
+  U.col(0) = WS * V.col(0);
+  U.col(1) = WS.transpose() * V.col(1);
 
   alpha(0) = inner_product(V, U);
   U = U  - alpha(0) * V;
@@ -216,8 +206,8 @@ Eigen::VectorXd AsymmetricLanczos(const MatrixXd& SW, const MatrixXd& W,
 
     Vprev = V;
     V = U / beta(j - 1);
-    U.col(0) = SW * V.col(0);
-    U.col(1) = SW.transpose() * V.col(1);
+    U.col(0) = WS * V.col(0);
+    U.col(1) = WS.transpose() * V.col(1);
     alpha(j) = inner_product(V, U);
     U = U - alpha(j) * V - beta(j - 1) * Vprev;
     cnt++;
@@ -239,16 +229,3 @@ Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& WS, const Eigen::M
   }
 }
 
-double ApproximateNormInf(const Eigen::MatrixXd& WS, const Eigen::MatrixXd& W, double w) {
-  int n = WS.rows()/2;
-  Eigen::VectorXd r = Eigen::VectorXd::Random(n, 1);
-  Eigen::VectorXd lam = ApproximateEigenvalues(WS, W, r, n/2, true);
-  double from_lam_min = std::fabs(lam.minCoeff() - w);
-  double from_lam_max = std::fabs(lam.maxCoeff() - w);
-
-  if (from_lam_max > from_lam_min) {
-    return from_lam_max;
-  } else {
-    return from_lam_max;
-  }
-}

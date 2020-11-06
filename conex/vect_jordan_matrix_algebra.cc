@@ -196,6 +196,26 @@ Eigen::VectorXd MatrixAlgebra<n>::Eigenvalues(const Matrix& Q) {
   return Roots(MinimalPolynomial<n>(Q));
 }
 
+template<int n>
+typename MatrixAlgebra<n>::Matrix MatrixAlgebra<n>::Orthogonalize(const Matrix& Qn) {
+  using T = MatrixAlgebra<n>;
+  if (n >= 8) {
+    bool is_real_complex_or_quaternion = false;
+    assert(is_real_complex_or_quaternion);
+  }
+  auto Q = Qn;
+  int d = Q.at(0).cols();
+  for (int i = 0; i < d; i++) {
+    double norm = std::sqrt(T::TraceInnerProduct(Q.col(i), Q.col(i)));
+    Q.col(i) = T::ScalarMultiply(Q.col(i), 1.0/norm);
+    for (int j = i + 1; j < d; j++) {
+      auto ip = T::Multiply(T::ConjugateTranspose(Q.col(i)), Q.col(j));
+      ip = T::ScalarMultiply(ip, -1);
+      Q.col(j)  =  T::Add(Q.col(j),  T::Multiply(Q.col(i), ip));
+    }
+  }
+  return Q;
+}
 
 
 

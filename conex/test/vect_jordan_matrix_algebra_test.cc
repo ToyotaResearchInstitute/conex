@@ -135,5 +135,51 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   EXPECT_TRUE((T::Eigenvalues(Q) - sort(eig(Q.at(0)).eigenvalues)).norm() < 1e-8);
 }
 
+template<int n>
+bool DoTestOrthogonal(int d) {
+  double eps = 1e-8;
+  using T = MatrixAlgebra<n>;
+  auto Q = T::Random(d, d);
+
+  Q = T::Orthogonalize(Q);
+
+  auto I = T::ScalarMultiply(T::Identity(d), -1);
+  auto res = T::Add(I,   T::Multiply(Q, T::ConjugateTranspose(Q)));
+  return T::TraceInnerProduct(res, res) < eps;
+}
+
+TEST(JordanMatrixAlgebra, Orthogonal) {
+  EXPECT_TRUE(DoTestOrthogonal<1>(4));
+  EXPECT_TRUE(DoTestOrthogonal<2>(4));
+  EXPECT_TRUE(DoTestOrthogonal<4>(4));
+}
+
+
+template<int n>
+void DoEigenvaluesFromSpectralDecomp(int d) {
+  double eps = 1e-8;
+  using T = MatrixAlgebra<n>;
+  auto Q = T::Random(d, d);
+
+  Q = T::Orthogonalize(Q);
+  HyperComplexMatrix D = T::Zero(d, d);
+  for (int i = 0; i < d; i++) {
+    D.at(0)(i, i) = -d/2 + i;
+  }
+  auto X = T::Multiply(T::Multiply(Q, D), T::ConjugateTranspose(Q));
+
+  VectorXd calc = sort(T::Eigenvalues(X));
+  for (int i = 0; i < d; i++) {
+    EXPECT_NEAR(calc(i), D.at(0)(i, i), eps);
+  }
+}
+
+TEST(JordanMatrixAlgebra, EigenvaluesFromSpectralDecomp) {
+  DoEigenvaluesFromSpectralDecomp<1>(4);
+  DoEigenvaluesFromSpectralDecomp<2>(4);
+  DoEigenvaluesFromSpectralDecomp<4>(4);
+}
+
+
 } // namespace conex
 
