@@ -172,6 +172,12 @@ void DoEigenvaluesFromSpectralDecomp(int d) {
   for (int i = 0; i < d; i++) {
     EXPECT_NEAR(calc(i), D.at(0)(i, i), eps);
   }
+
+  auto r = T::Random(d, 1);
+  calc = sort(T::ApproximateEigenvalues(X, r, d));
+  for (int i = 0; i < d; i++) {
+    EXPECT_NEAR(calc(i), D.at(0)(i, i), eps);
+  }
 }
 
 TEST(JordanMatrixAlgebra, EigenvaluesFromSpectralDecomp) {

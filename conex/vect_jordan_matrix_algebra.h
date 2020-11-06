@@ -26,12 +26,25 @@ class HyperComplexMatrix : public std::vector<Eigen::MatrixXd> {
   };
 
   HyperComplexMatrix(int n): std::vector<Eigen::MatrixXd>(n) {}
+  HyperComplexMatrix(): std::vector<Eigen::MatrixXd>() {}
 
   template<typename T>
   HyperComplexMatrix(const HyperComplexMatrixRef<T>& x) {
     for (unsigned int i = 0; i < x.size(); i++) {
       this->push_back(x.at(i));
     }
+  }
+
+  double norm() const {
+    return std::sqrt(squaredNorm());
+  }
+
+  double squaredNorm() const {
+    double y = this->at(0).squaredNorm();
+    for (unsigned int i = 1; i < size(); i++) {
+      y += this->at(i).squaredNorm();
+    }
+    return y;
   }
 
   HyperComplexMatrixRef<Eigen::MatrixXd> col(int j) {  
@@ -74,8 +87,12 @@ class MatrixAlgebra {
   static Matrix ScalarMultiply(const Matrix& x, double s);
   static Matrix QuadraticRepresentation(const Matrix& x, const Matrix& y);
   static Eigen::VectorXd Eigenvalues(const Matrix& x);
+  static Eigen::VectorXd ApproximateEigenvalues(const HyperComplexMatrix& A, 
+                                       const HyperComplexMatrix& r0, int num_iter);
   static bool IsHermitian(const Matrix& x);
   static bool IsEqual(const Matrix& x, const Matrix& y);
+  static Eigen::VectorXd EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& A, 
+                                          const HyperComplexMatrix& r0,  int iter);
 };
 
 //template<int n = 8>
