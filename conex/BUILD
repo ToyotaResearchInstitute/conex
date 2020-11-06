@@ -74,7 +74,6 @@ cc_library(
     name = "approximate_eigenvalues",
     hdrs = [ "approximate_eigenvalues.h"],
     srcs = ["approximate_eigenvalues.cc"],
-    copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen" ],
 )
@@ -90,7 +89,6 @@ cc_library(
     name = "matrix_exponential",
     hdrs = [ "matrix_exponential.h"],
     srcs = ["matrix_exponential.cc", "debug_macros.h"],
-    copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen" ],
 )
@@ -99,7 +97,6 @@ cc_library(
     name = "jordan_matrix_algebra",
     hdrs = [ "jordan_matrix_algebra.h"],
     srcs = ["jordan_matrix_algebra.cc", "debug_macros.h"],
-    copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen", "eigen_decomp" ],
 )
@@ -115,7 +112,6 @@ cc_library(
     name = "vect_jordan_matrix_algebra",
     hdrs = [ "vect_jordan_matrix_algebra.h"],
     srcs = ["vect_jordan_matrix_algebra.cc", "debug_macros.h"],
-    copts = ["-O0", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen", "eigen_decomp" ],
 )
@@ -130,12 +126,9 @@ cc_library(
     name = "eigen_decomp",
     hdrs = [ "eigen_decomp.h"],
     srcs = ["eigen_decomp.cc", "eigen_decomp.h"],
-    copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen" ],
 )
-
-
 
 cc_library(
     name = "conex_lib",
@@ -165,7 +158,6 @@ cc_library(
             "psd_constraint.cc",
             "quadratic_cone_constraint.cc",
             "soc_constraint.cc"],
-    copts = ["-O3", "-DEIGEN_USE_BLAS"],
     visibility = ["//visibility:public"],
     deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential", "jordan_matrix_algebra", "eigen_decomp" ],
 )

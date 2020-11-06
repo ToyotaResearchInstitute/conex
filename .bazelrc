@@ -1,7 +1,11 @@
 build --cxxopt='-std=c++17'
 build --linkopt="-lblas"
+build --copt="-DEIGEN_USE_BLAS"
+build --copt="-O3"
 
+build:debug --copt="-g"
+build:debug --copt="-O0"
 build:debug -c dbg
 build:debug --javacopt="-g"
-build:debug --copt="-g"
 build:debug --strip="never"
+
