@@ -42,7 +42,6 @@ Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
 }
 }
 
-
 template<int n>
 HyperComplexMatrix MatrixAlgebra<n>::Identity(int d) {
   HyperComplexMatrix Z(n);
@@ -222,7 +221,6 @@ typename MatrixAlgebra<n>::Matrix MatrixAlgebra<n>::Orthogonalize(const Matrix& 
 template<int d>
 Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatrix& A, 
                                        const HyperComplexMatrix& r0, int num_iter) {
-
   using T = MatrixAlgebra<d>;
   assert(T::IsHermitian(A));
   VectorXd alpha(num_iter);
@@ -257,7 +255,6 @@ Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatri
       Eigen::DecompositionOptions::EigenvaluesOnly);
   return x.eigenvalues();
 }
-
 
 template<int d>
 class JacobiSolver {
@@ -335,19 +332,16 @@ class JacobiSolver {
     double alpha = VectorInnerProduct(Avj, v.at(n));
     alpha_v(n - 1) = alpha;
 
-    DUMP(alpha_v);
-    DUMP(beta_v);
     Eigen::SelfAdjointEigenSolver<MatrixXd> x;
         x.computeFromTridiagonal(alpha_v, beta_v,
         Eigen::DecompositionOptions::EigenvaluesOnly);
     return x.eigenvalues();
   }
 
-  std::vector<Matrix> powers_of_A_;
   Matrix r0_;
   int n_;
+  std::vector<Matrix> powers_of_A_;
 };
-
 
 template<int d>
 Eigen::VectorXd MatrixAlgebra<d>::EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& A, 
@@ -355,6 +349,83 @@ Eigen::VectorXd MatrixAlgebra<d>::EigenvaluesOfJacobiMatrix(const HyperComplexMa
   JacobiSolver<d> jacobi(A, r0, n);
   return jacobi.Eigenvalues();
 }
+
+
+template<int d>
+double inner_product(const HyperComplexMatrix& V, const HyperComplexMatrix& U) {
+  using T = MatrixAlgebra<d>;
+  auto temp = T::Multiply(T::ConjugateTranspose(V.col(0)), U.col(1));
+  return temp.at(0)(0, 0);
+}
+
+template<int d>
+Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatrix& WS, const HyperComplexMatrix& W, 
+                                  const HyperComplexMatrix& r, int num_iter) {
+  using T = MatrixAlgebra<d>;
+  int n = WS.at(0).rows();
+// Given WS, W, and r,  computes a sequence V_i of num_iter orthogonal polynomials 
+// with respect to the inner-product 
+// <p, q> :=  r^T W p(WS)  q(WS) r> 
+//         =  r^T W M p(D) q(D) inv(M) r
+//         =  r^T W^{1/2} Q p(D) q(D) Q^T W{1/2} 
+//
+//  where M =  W^{-1/2} Q  for diagonal D and orthogonal Q since
+//      
+//       WS = W^{-1/2} Q D Q^T W^{1/2}
+//
+//  For each iteration, we identify the polynomial p with the
+//  matrix V = [ q(WS)r,  p(WS)^T W r]. 
+  HyperComplexMatrix V = T::Zero(n, 2); 
+
+//  Diagonal alpha and off diagonal beta of the
+//  tridiagonal symmetric Jacobi matrix:
+  VectorXd alpha(num_iter); VectorXd beta(num_iter - 1);
+
+// Temporary variables for the three-term recurrence:
+  HyperComplexMatrix U = T::Zero(n, 2); 
+  HyperComplexMatrix Vprev = T::Zero(n, 2); 
+
+// Execute the three term recurrence (equivalent to Gram-Schmidt):
+  V.col(1) = r;
+  V.col(0) = T::Multiply(W, r);
+  V = T::ScalarMultiply(V, 1.0/std::sqrt(inner_product<d>(V, V)));
+  Vprev = V;
+
+  U.col(0) = T::Multiply(WS, V.col(0));
+  U.col(1) = T::Multiply(T::ConjugateTranspose(WS), V.col(1));
+
+  alpha(0) = inner_product<d>(V, U);
+  U = T::Add(U, T::ScalarMultiply(V, - alpha(0)));
+
+  int cnt = 0;
+  for (int j = 1; j < num_iter; j++) {
+    beta(j - 1) = inner_product<d>(U, U);
+    if (beta(j - 1) < 1e-6) {
+      break;
+    } else {
+      beta(j - 1) = std::sqrt(beta(j - 1));
+    }
+
+    Vprev = V;
+    V = T::ScalarMultiply(U, 1.0/ beta(j - 1));
+    U.col(0) = T::Multiply(WS, V.col(0));
+    U.col(1) = T::Multiply(T::ConjugateTranspose(WS), V.col(1));
+    alpha(j) = inner_product<d>(V, U);
+    U = T::Add(U, T::ScalarMultiply(V, - alpha(j)));
+    U = T::Add(U, T::ScalarMultiply(Vprev, - beta(j - 1)));
+    cnt++;
+  }
+
+  // Return eigenvalues of Jacobi matrix.
+  Eigen::SelfAdjointEigenSolver<MatrixXd> x;
+      x.computeFromTridiagonal(alpha.head(cnt+1), beta.head(cnt),
+      Eigen::DecompositionOptions::EigenvaluesOnly);
+  return x.eigenvalues();
+}
+
+
+
+
 
 
 template class MatrixAlgebra<1>;

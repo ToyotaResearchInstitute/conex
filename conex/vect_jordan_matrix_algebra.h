@@ -93,6 +93,8 @@ class MatrixAlgebra {
   static bool IsEqual(const Matrix& x, const Matrix& y);
   static Eigen::VectorXd EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& A, 
                                           const HyperComplexMatrix& r0,  int iter);
+  static Eigen::VectorXd ApproximateEigenvalues(const HyperComplexMatrix& WS, const HyperComplexMatrix& W, 
+                                     const HyperComplexMatrix& r, int num_iter);
 };
 
 //template<int n = 8>

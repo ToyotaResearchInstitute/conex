@@ -187,5 +187,31 @@ TEST(JordanMatrixAlgebra, EigenvaluesFromSpectralDecomp) {
 }
 
 
+template<int n>
+void DoAsymmetricEigenvaluesTest(int d) {
+  double eps = 1e-8;
+  using T = MatrixAlgebra<n>;
+  auto Wsqrt = T::Random(d, d); Wsqrt = T::Add(Wsqrt, T::ConjugateTranspose(Wsqrt));
+  auto S = T::Random(d, d); S = T::Add(S, T::ConjugateTranspose(S));
+
+  auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt)); 
+
+
+  VectorXd ref = sort(T::Eigenvalues(T::QuadraticRepresentation(Wsqrt, S)));
+  VectorXd calc = sort(T::ApproximateEigenvalues(T::Multiply(W, S), W, T::Random(d, 1), d ));
+  for (int i = 0; i < d; i++) {
+    EXPECT_NEAR(calc(i), ref(i), eps);
+  }
+
+}
+
+TEST(JordanMatrixAlgebra, AsymmetricEigenvaluesTest) {
+  DoAsymmetricEigenvaluesTest<1>(4);
+  DoAsymmetricEigenvaluesTest<2>(4);
+  DoAsymmetricEigenvaluesTest<4>(4);
+}
+
+
+
 } // namespace conex
 
