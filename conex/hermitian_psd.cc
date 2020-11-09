@@ -10,9 +10,8 @@ MatrixXd ToMat(const Real::Matrix& x) {
   }
   return y;
 }
-
-void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
-  using T = Real;
+template<typename T>
+void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
   typename T::Matrix minus_s;
   o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
 
@@ -33,69 +32,7 @@ void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, const Ref
   o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
 }
 
-void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
-  using T = Octonions;
-  typename T::Matrix minus_s;
-  o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
-
-  // TODO: fix this approximation.
-  double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
-
-  info->norminfd = norminf;
-  info->normsqrd = T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s) +
-                   2 * T().TraceInnerProduct(o->W, minus_s) + T().Rank();
-
-  double scale = 1;
-  if (norminf * norminf > 2.0) {
-    scale = 2.0/(norminf * norminf);
-    minus_s = T::ScalarMult(minus_s, scale);
-  }
-
-  auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
-  o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
-}
-
-void TakeStep(HermitianPsdConstraint<Complex>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
-  using T = Complex;
-  typename T::Matrix minus_s;
-  o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
-
-  // TODO: fix this approximation.
-  double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
-
-  info->norminfd = norminf;
-  info->normsqrd = T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s) +
-                   2 * T().TraceInnerProduct(o->W, minus_s) + T().Rank();
-
-  double scale = 1;
-  if (norminf * norminf > 2.0) {
-    scale = 2.0/(norminf * norminf);
-    minus_s = T::ScalarMult(minus_s, scale);
-  }
-
-  auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
-  o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
-}
-
-void TakeStep(HermitianPsdConstraint<Quaternions>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
-  using T = Quaternions;
-
-  typename T::Matrix minus_s;
-  o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
-
-  // TODO: fix this approximation.
-  double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
-
-  info->norminfd = norminf;
-  info->normsqrd = T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s) +
-                   2 * T().TraceInnerProduct(o->W, minus_s) + T().Rank();
-
-  double scale = 1;
-  if (norminf * norminf > 2.0) {
-    scale = 2.0/(norminf * norminf);
-    minus_s = T::ScalarMult(minus_s, scale);
-  }
-
-  auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
-  o->W = T::ScalarMult(exp_sw, std::exp(opt.e_weight * scale));
-}
+template void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, const Ref& y, StepInfo* info);
+template void TakeStep(HermitianPsdConstraint<Complex>* o, const StepOptions& opt, const Ref& y, StepInfo* info);
+template void TakeStep(HermitianPsdConstraint<Quaternions>* o, const StepOptions& opt, const Ref& y, StepInfo* info);
+template void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, const Ref& y, StepInfo* info);

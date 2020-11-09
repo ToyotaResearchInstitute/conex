@@ -70,7 +70,11 @@ class HermitianPsdConstraint {
   }
 
   int number_of_variables() { return constraint_matrices_.size(); }
-  friend void TakeStep(HermitianPsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
+
+  template<typename H>
+  friend void TakeStep(HermitianPsdConstraint<H>* o, const StepOptions& opt, const Ref& y, StepInfo*);
+
+
 
   friend void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initialize, SchurComplementSystem* sys) {
     auto G = &sys->G;
