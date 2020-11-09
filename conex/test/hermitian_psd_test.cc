@@ -6,6 +6,8 @@
 
 #include "conex/cone_program.h"
 
+using JordanTypes = testing::Types<Real, Complex, Quaternions, Octonions>;
+
 using Eigen::MatrixXd;
 
 MatrixXd ToMat(const Real::Matrix& x) {
@@ -55,71 +57,40 @@ int CompareRealHermitianWithLMI() {
 }
 
 template<typename T>
-int DoSolve() {
-  using Matrix = typename T::Matrix;
-  SolverConfiguration config;
-  config.inv_sqrt_mu_max = 1000; // std::sqrt(1.0/7e-2);
-  config.final_centering_steps = 10;
+class TestCases : public testing::Test {
+ public:
+  void DoSolve() {
+    using Matrix = typename T::Matrix;
+    SolverConfiguration config;
+    config.inv_sqrt_mu_max = 1000; // std::sqrt(1.0/7e-2);
+    config.final_centering_steps = 10;
 
-  int m = 2;
-  int rank = 3;
-  std::vector<Matrix> constraint_matrices(m);
-  Matrix constraint_affine = T::Identity(rank);
-  for (int i = 0; i < m; i++) {
-    constraint_matrices.at(i) = T::Random(rank, rank);
-    constraint_matrices.at(i) = T::Add(constraint_matrices.at(i), 
-                                       T::ConjugateTranspose(constraint_matrices.at(i)));
+    int m = 2;
+    int rank = 3;
+    std::vector<Matrix> constraint_matrices(m);
+    Matrix constraint_affine = T::Identity(rank);
+    for (int i = 0; i < m; i++) {
+      constraint_matrices.at(i) = T::Random(rank, rank); constraint_matrices.at(i) = T::Add(constraint_matrices.at(i), T::ConjugateTranspose(constraint_matrices.at(i)));
+    }
+    HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
+
+    Program prog;
+    DenseMatrix y(m, 1);
+    prog.constraints.push_back(T2);
+
+    auto b = GetFeasibleObjective(m, prog.constraints);
+    EXPECT_TRUE(Solve(b, prog, config, y.data()));
   }
-  HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
-
-  Program prog;
-  DenseMatrix y(m, 1);
-  prog.constraints.push_back(T2);
-
-  auto b = GetFeasibleObjective(m, prog.constraints);
-  return Solve(b, prog, config, y.data());
-
-
- // DenseMatrix x(n, n);
- // prog.constraints.at(0).get_dual_variable(x.data());
- // x.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
-
- // Matrix slack = constraint_affine;
- // DenseMatrix res = b;
- // for (int i = 0; i < m; i++) {
- //   slack = T().MatrixAdd(slack, T::ScalarMult(constraint_matrices.at(i), -y(i)));
- //   b(i) -= (constraint_matrices.at(i) * x).trace();
- // }
-
- // EXPECT_TRUE(eigenvalues<T>(slack).minCoeff() > 1e-8);
- // //EXPECT_TRUE(b.norm() < 1e-8);
- // //EXPECT_TRUE((slack*x).trace() < 1e-4);
-
-  return 0;
-}
-
-TEST(HermitianReal, Random) {
-  for (int i = 0; i < 5; i++) {
-    EXPECT_TRUE(DoSolve<Real>());
+  void SolveRandomInstances() {
+    for (int i = 0; i < 1; i++) {
+      DoSolve();
+    }
   }
-}
+};
 
-TEST(HermitianComplex, Random) {
-  for (int i = 0; i < 5; i++) {
-    EXPECT_TRUE(DoSolve<Complex>());
-  }
-}
-
-TEST(HermitianQuanternic, Random) {
-  for (int i = 0; i < 5; i++) {
-    EXPECT_TRUE(DoSolve<Quaternions>());
-  }
-}
-
-TEST(HermitianOcotonic, Random) {
-  for (int i = 0; i < 5; i++) {
-    EXPECT_TRUE(DoSolve<Octonions>());
-  }
+TYPED_TEST_CASE(TestCases, JordanTypes);
+TYPED_TEST(TestCases, SolveRandomInstances) {
+  TestFixture::SolveRandomInstances();
 }
 
 TEST(Hermitian, CompareWithLMI) {
