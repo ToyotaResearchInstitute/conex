@@ -14,8 +14,8 @@ cc_test(
 )
 
 cc_test(
-    name = "hermitian",
-    srcs = glob(["test/test_hermitian.cc"]),
+    name = "hermitian_psd_test",
+    srcs = glob(["test/hermitian_psd_test.cc"]),
     copts = ["-Iexternal/gtest/include"], 
     deps = ["@gtest//:main", "conex_lib", "test_util"],
 )
@@ -33,7 +33,6 @@ cc_test(
     copts = ["-Iexternal/gtest/include"], 
     deps = ["@gtest//:main", "conex_lib"],
 )
-
 
 cc_test(
     name = "divergence",
@@ -143,7 +142,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [ "@eigen", "vect_jordan_matrix_algebra" ],
 )
-
 
 cc_library(
     name = "conex_lib",
