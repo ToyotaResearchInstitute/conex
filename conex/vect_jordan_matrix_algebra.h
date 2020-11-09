@@ -135,11 +135,15 @@ typename T::Matrix Geodesic(const typename T::Matrix& w,
   auto y1 = w; 
   auto y2 = T::QuadraticRepresentation(w, s);
   auto y = T::Add(y1, y2);
-  for (int i = 1; i < 6; i++) {
-    y1 = T::QuadraticRepresentation(w , T::QuadraticRepresentation(s , y1));
-    y2 = T::QuadraticRepresentation(w , T::QuadraticRepresentation(s , y2));
+  for (int i = 1; i < 3; i++) {
+    y1 = T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, y1));
+    y2 = T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, y2));
     y =  T::Add(y, T::Add(T::ScalarMultiply(y1, 1.0/factorial(2*i)), 
                           T::ScalarMultiply(y2, 1.0/factorial(2*i+1))));
+
+    y1 = T::ScalarMultiply(T::Add(y1, T::ConjugateTranspose(y1)), .5);
+    y2 = T::ScalarMultiply(T::Add(y2, T::ConjugateTranspose(y2)), .5);
+    y = T::ScalarMultiply(T::Add(y, T::ConjugateTranspose(y)), .5);
   }
   return y;
 }

@@ -167,12 +167,13 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
     if (update_mu) {
       newton_step_parameters.inv_sqrt_mu = UpdateMu(constraints, llt, sys, b, config, rankK,  &y);
-      const double max = config.inv_sqrt_mu_max;
-      const double min = std::sqrt(1.0/(1e-15 + config.maximum_mu));
-      ApplyLimits(&newton_step_parameters.inv_sqrt_mu, min, max);
     } else {
       centering_steps++;
     }
+
+    const double max = config.inv_sqrt_mu_max;
+    const double min = std::sqrt(1.0/(1e-15 + config.maximum_mu));
+    ApplyLimits(&newton_step_parameters.inv_sqrt_mu, min, max);
 
     double mu = 1.0/(newton_step_parameters.inv_sqrt_mu); mu *= mu;
 

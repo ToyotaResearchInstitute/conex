@@ -116,7 +116,7 @@ void DoEigenvalueTests() {
   EXPECT_TRUE(std::fabs(eigvals.squaredNorm() - normsqr) < 1e-9);
 
   auto I = T::Identity();
-  eigvals = eigenvalues<T>(I);
+  eigvals = sort(eigenvalues<T>(I));
   for (int i = 0; i < eigvals.rows(); i++) {
     EXPECT_NEAR(eigvals(i), 1, 1e-8);
   }

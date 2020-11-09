@@ -21,7 +21,6 @@ std::vector<MatrixXd> ToMat(const std::vector<Real::Matrix>& x) {
   }
   return y;
 }
-
 int CompareRealHermitianWithLMI() {
   using T = Real;
   using Matrix = typename T::Matrix;
@@ -62,8 +61,10 @@ class TestCases : public testing::Test {
   void DoSolve() {
     using Matrix = typename T::Matrix;
     SolverConfiguration config;
-    config.inv_sqrt_mu_max = 1000; // std::sqrt(1.0/7e-2);
-    config.final_centering_steps = 10;
+    
+    config.inv_sqrt_mu_max = 1000;
+    config.final_centering_steps = 4;
+    config.max_iterations = 100;
 
     int m = 2;
     int rank = 3;
@@ -92,7 +93,6 @@ TYPED_TEST_CASE(TestCases, JordanTypes);
 TYPED_TEST(TestCases, SolveRandomInstances) {
   TestFixture::SolveRandomInstances();
 }
-
 TEST(Hermitian, CompareWithLMI) {
   for (int i = 0; i < 2; i++) {
     EXPECT_TRUE(CompareRealHermitianWithLMI());

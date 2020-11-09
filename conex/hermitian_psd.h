@@ -56,50 +56,17 @@ class HermitianPsdConstraint {
   friend void SetIdentity(HermitianPsdConstraint* o) { o->W = T::Identity(o->rank_); }
   friend int Rank(const HermitianPsdConstraint& o) { return o.rank_; };
 
-  friend void GetMuSelectionParameters(HermitianPsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
-   // using T = Real;
-    using conex::jordan_algebra::SpectralRadius;
-    typename T::Matrix minus_s;
-    o->ComputeNegativeSlack(1, y, &minus_s);
-   
-    p->gw_lambda_max = NormInfWeighted<T>(o->W, minus_s);
-
-    // <e, Q(w^{1/2}) s)
-    p->gw_trace -= T::TraceInnerProduct(o->W, minus_s);
-    p->gw_norm_squared += T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);
-  }
+  template<typename H> 
+  friend void GetMuSelectionParameters(HermitianPsdConstraint<H>* o,  const Ref& y,
+                         MuSelectionParameters* p);
 
   int number_of_variables() { return constraint_matrices_.size(); }
 
   template<typename H>
   friend void TakeStep(HermitianPsdConstraint<H>* o, const StepOptions& opt, const Ref& y, StepInfo*);
 
-  friend void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initialize, SchurComplementSystem* sys) {
-    auto G = &sys->G;
-    auto& W = o->W; 
-    int m = o->constraint_matrices_.size();
-    if (initialize) {
-      for (int i = 0; i < m; i++) {
-        typename T::Matrix QA = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
-        for (int j = i; j < m; j++) {
-          (*G)(j, i) = o->EvalDualConstraint(j, QA);
-        }
-
-        sys->AW(i, 0)  = o->EvalDualConstraint(i, W);
-        sys->AQc(i, 0) = o->EvalDualObjective(QA);
-      }
-    } else {
-      for (int i = 0; i < m; i++) {
-        typename T::Matrix QA = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
-        for (int j = i; j < m; j++) {
-          (*G)(j, i) += o->EvalDualConstraint(j, QA);
-        }
-
-        sys->AW(i, 0)  += o->EvalDualConstraint(i, W);
-        sys->AQc(i, 0) += o->EvalDualObjective(QA);
-      }
-    }
-  }
+  template<typename H>
+  friend void ConstructSchurComplementSystem(HermitianPsdConstraint<H>* o, bool initialize, SchurComplementSystem* sys);
 
  private:
   int rank_;
