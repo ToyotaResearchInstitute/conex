@@ -35,6 +35,12 @@ class HyperComplexMatrix : public std::vector<Eigen::MatrixXd> {
     }
   }
 
+  void rescale(double scale) {
+    for (unsigned int i = 0; i < size(); i++) {
+      this->at(i).array() *= scale;
+    }
+  }
+
   double norm() const {
     return std::sqrt(squaredNorm());
   }
@@ -91,8 +97,7 @@ class MatrixAlgebra {
                                        const HyperComplexMatrix& r0, int num_iter);
   static bool IsHermitian(const Matrix& x);
   static bool IsEqual(const Matrix& x, const Matrix& y);
-  static Eigen::VectorXd EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& A, 
-                                          const HyperComplexMatrix& r0,  int iter);
+  static Eigen::VectorXd EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& WS,  const HyperComplexMatrix& W,  int iter);
   static Eigen::VectorXd ApproximateEigenvalues(const HyperComplexMatrix& WS, const HyperComplexMatrix& W, 
                                      const HyperComplexMatrix& r, int num_iter);
 };

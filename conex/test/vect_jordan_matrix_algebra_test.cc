@@ -68,7 +68,6 @@ class TestCases : public testing::Test {
     }
   }
 
-
   void DoEigenvalueTests() {
     double eps = 1e-9;
     using Matrix = typename T::Matrix;
@@ -141,13 +140,51 @@ class TestCases : public testing::Test {
 
     auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt)); 
 
-
     VectorXd ref = sort(T::Eigenvalues(T::QuadraticRepresentation(Wsqrt, S)));
-    VectorXd calc = sort(T::ApproximateEigenvalues(T::Multiply(W, S), W, T::Random(d, 1), d ));
+
+    VectorXd calc;
+    calc = sort(T::EigenvaluesOfJacobiMatrix(T::Multiply(W, S), W, d ));
+    auto calc2 = sort(T::ApproximateEigenvalues(T::Multiply(W, S), W, T::Random(d, 1), d));
+    for (int i = 0; i < d; i++) {
+      EXPECT_NEAR(calc(i), calc2(i), eps);
+    }
+
     for (int i = 0; i < d; i++) {
       EXPECT_NEAR(calc(i), ref(i), eps);
     }
+  }
 
+  void RankOneTest(int d) {
+    assert(d == 3);
+    double eps = 1e-5;
+    auto Wsqrt = T::Random(d, 1);
+
+    if (std::is_same<T, Octonions>::value) {
+      // Lemma 14.90 Spinors and Calibrations By F. Reese Harvey shows
+      // that primitive idempotents of the Albert algebra 
+      // are of the form w w^*, with associator [w_1 w_2 w_3] = 0.
+      // This implies w_i are contained in a quaternion subalgebra.
+      auto WsqrtQ = Quaternions::Random(d, 1); 
+      Wsqrt = T::Zero(d, 1);
+      for (int i = 0; i < 4; i++) {
+        Wsqrt.at(i) = WsqrtQ.at(i);
+      }
+    }  
+
+    Wsqrt = T::ScalarMultiply(Wsqrt, 1.0/Wsqrt.norm());
+    auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt)); 
+
+    // Add noise to make eigenvalues distinct.
+    W.at(0)(0, 0) += 0.00003 * eps;
+    W.at(0)(1, 1) += 0.00001 * eps;
+    W.at(0)(2, 2) += 0.00002 * eps;
+
+    VectorXd ref(d); ref.setZero(); ref(0) = 1; 
+    ref = sort(ref);
+    VectorXd calc = sort(T::Eigenvalues(W));
+    for (int i = 0; i < d; i++) {
+      EXPECT_NEAR(calc(i), ref(i), eps);
+    }
   }
 };
 
@@ -180,14 +217,19 @@ TYPED_TEST(TestCases, DoEigenvaluesFromSpectralDecomp) {
    TestFixture::DoEigenvaluesFromSpectralDecomp(3);
 }
 
+TYPED_TEST(TestCases, RankOneTest) {
+   TestFixture::RankOneTest(3);
+}
+
 TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   using T = Real;
   int n = 3;
   auto Q = T::Random(n, n);
   Q = T::JordanMultiply(Q, Q);
 
-  EXPECT_TRUE((T::Eigenvalues(Q) - sort(eig(Q.at(0)).eigenvalues)).norm() < 1e-8);
+  EXPECT_TRUE((sort(T::Eigenvalues(Q)) - sort(eig(Q.at(0)).eigenvalues)).norm() < 1e-8);
 }
+
 
 } // namespace conex
 

@@ -96,6 +96,9 @@ typename T::Matrix Geodesic(const typename T::Matrix& w,
   return y;
 }
 
+// Finds the largest eigenvalue of Q(w) Q(s) by first finding the coefficients
+// of it's minimal polynomial.  This in turn is the largest eigenvalue of
+// Q(w^{1/2}) Q(s) Q(w^{1/2}) = Q( Q(w^{1/2}) s ).
 template<typename T>
 double NormInfWeighted(const typename T::Matrix& w, 
                        const typename T::Matrix& s) {
@@ -107,7 +110,7 @@ double NormInfWeighted(const typename T::Matrix& w,
   double k = 1;
   for (int i = 0; i < iter; i++) {
     M.col(i) = T().Vect(y);
-    y = T().QuadRep(w , T().QuadRep(s , y));
+    y = T().QuadRep(w, T().QuadRep(s, y));
 
     if (i == 0) {
       k = T().TraceInnerProduct(y, y);
@@ -128,9 +131,6 @@ double NormInfWeighted(const typename T::Matrix& w,
   double z_inf_sqr_cal = conex::jordan_algebra::Roots(c).maxCoeff() * k;
   return std::sqrt(z_inf_sqr_cal);
 }
-
-
-
 
 using Octonions = JordanMatrixAlgebra<8>;
 using Quaternions = JordanMatrixAlgebra<4>;

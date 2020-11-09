@@ -188,7 +188,6 @@ double MatrixAlgebra<n>::TraceInnerProduct(const Matrix& x, const Matrix& y) {
   return ip;
 }
 
-
 template<int n>
 Eigen::VectorXd MatrixAlgebra<n>::Eigenvalues(const Matrix& Q) {
   assert(Q.size() == n);
@@ -215,8 +214,6 @@ typename MatrixAlgebra<n>::Matrix MatrixAlgebra<n>::Orthogonalize(const Matrix& 
   }
   return Q;
 }
-
-
 
 template<int d>
 Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatrix& A, 
@@ -261,8 +258,8 @@ class JacobiSolver {
   using T = MatrixAlgebra<d>;
   using Matrix = typename MatrixAlgebra<d>::Matrix;
  public:
-  JacobiSolver(const Matrix& A,  
-               const Matrix& r0, int n) :  r0_(r0), n_(n), powers_of_A_(n + 1) {
+
+  JacobiSolver(const Matrix& A, const Matrix& W,  int n) :  n_(n), W_(W), powers_of_A_(n + 1), full_(true) {
     int order = A.at(0).rows();
     powers_of_A_.at(0) = T::Identity(order);
     for (int i = 1; i <= n; i++) {
@@ -272,19 +269,9 @@ class JacobiSolver {
 
   // Polynomials p and q are in the monomial basis.
   double PolynomialInnerProduct(const Eigen::MatrixXd& p_v, const Eigen::MatrixXd& q_v) {
-    // return T::TraceInnerProduct(EvalPoly(p_v), EvalPoly(q_v));
-
-    //   A = WS is diagonalizable since it is similar to the symmetric matrix W^{1/2} S W^{1/2}.
-    //   Hence, A = M D inv(M), plying that
-    //
-    //   Hence, p(A) = M p(D) inv(M) 
-    //
-    //   It follows that 
-    //   <p(A)^T r0, q(A) r0> = trace r0^T P(A) q(A) r0 = \trace M p q(D) Minv r0 r0^T >=0
-    auto temp = T::Multiply(EvalPoly(p_v), EvalPoly(q_v));
-    //auto ip = T::Multiply(T::Multiply( T::ConjugateTranspose(r0_),  temp), r0_);
-    auto ip = T::Multiply(T::ConjugateTranspose(r0_), T::Multiply(temp, r0_));
-    return ip.at(0)(0,0);
+    // The trace of terms of the form W (SWS) ... (SWS) W
+    auto temp = T::Multiply(T::Multiply(EvalPoly(p_v), EvalPoly(q_v)),  W_);
+    return temp.at(0).trace();
   }
 
   double VectorInnerProduct(const MatrixXd& p, const MatrixXd& q) {
@@ -313,13 +300,22 @@ class JacobiSolver {
     v.at(0).resize(n); v.at(0).setZero();
     v.at(1) = one / beta;
 
+
     VectorXd vhat(n);
+    int iter = 1;
     for (int j = 1; j < n; j++) {
       VectorXd Avj(n); v.at(j).resize(n);
       Avj(0) = 0; Avj.tail(n - 1) = v.at(j).head(n - 1);
       double alpha = VectorInnerProduct(Avj, v.at(j));
       vhat = Avj - alpha * v.at(j) - beta * v.at(j - 1);
-      beta = std::sqrt(VectorInnerProduct(vhat, vhat));
+      beta = VectorInnerProduct(vhat, vhat);
+      if (beta <= 1e-6) {
+        break;
+      } else {
+        beta = std::sqrt(beta); 
+      }
+      iter = j + 1;
+
       if (j < n) {
         v.at(j + 1) = vhat / beta;
       }
@@ -328,25 +324,34 @@ class JacobiSolver {
     }
 
     VectorXd Avj(n + 1);
-    Avj(0) = 0; Avj.tail(n) = v.at(n);
-    double alpha = VectorInnerProduct(Avj, v.at(n));
-    alpha_v(n - 1) = alpha;
+    Avj(0) = 0; Avj.tail(n) = v.at(iter);
+    double alpha = VectorInnerProduct(Avj, v.at(iter));
+    alpha_v(iter - 1) = alpha;
 
     Eigen::SelfAdjointEigenSolver<MatrixXd> x;
-        x.computeFromTridiagonal(alpha_v, beta_v,
+        x.computeFromTridiagonal(alpha_v.head(iter), beta_v.head(iter),
         Eigen::DecompositionOptions::EigenvaluesOnly);
     return x.eigenvalues();
   }
 
-  Matrix r0_;
+
+
+
+
+
+
   int n_;
+  bool full_ = false;
   std::vector<Matrix> powers_of_A_;
+  Matrix W_;
 };
 
+
 template<int d>
-Eigen::VectorXd MatrixAlgebra<d>::EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& A, 
-                                          const HyperComplexMatrix& r0,  int n) {
-  JacobiSolver<d> jacobi(A, r0, n);
+Eigen::VectorXd MatrixAlgebra<d>::EigenvaluesOfJacobiMatrix(const HyperComplexMatrix& WS, 
+                                                            const HyperComplexMatrix& W,
+                                                            int n) {
+  JacobiSolver<d> jacobi(WS, W, n);
   return jacobi.Eigenvalues();
 }
 
@@ -365,16 +370,16 @@ Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatri
   int n = WS.at(0).rows();
 // Given WS, W, and r,  computes a sequence V_i of num_iter orthogonal polynomials 
 // with respect to the inner-product 
-// <p, q> :=  r^T W p(WS)  q(WS) r> 
-//         =  r^T W M p(D) q(D) inv(M) r
+// <p, q> :=  r^T  p(WS)  q(WS) W r> 
+//         =  r^T M p(D) q(D) inv(M) r
 //         =  r^T W^{1/2} Q p(D) q(D) Q^T W{1/2} 
 //
-//  where M =  W^{-1/2} Q  for diagonal D and orthogonal Q since
+//  where M =  W^{1/2} Q  for diagonal D and orthogonal Q since
 //      
-//       WS = W^{-1/2} Q D Q^T W^{1/2}
+//       WS = W^{1/2} Q D Q^T W^{-1/2}
 //
 //  For each iteration, we identify the polynomial p with the
-//  matrix V = [ q(WS)r,  p(WS)^T W r]. 
+//  matrix V = [ p(WS) W r,  p(WS)^T r]. 
   HyperComplexMatrix V = T::Zero(n, 2); 
 
 //  Diagonal alpha and off diagonal beta of the
@@ -386,8 +391,8 @@ Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatri
   HyperComplexMatrix Vprev = T::Zero(n, 2); 
 
 // Execute the three term recurrence (equivalent to Gram-Schmidt):
-  V.col(1) = r;
   V.col(0) = T::Multiply(W, r);
+  V.col(1) = r;
   V = T::ScalarMultiply(V, 1.0/std::sqrt(inner_product<d>(V, V)));
   Vprev = V;
 
@@ -422,11 +427,6 @@ Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(const HyperComplexMatri
       Eigen::DecompositionOptions::EigenvaluesOnly);
   return x.eigenvalues();
 }
-
-
-
-
-
 
 template class MatrixAlgebra<1>;
 template class MatrixAlgebra<2>;
