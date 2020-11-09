@@ -9,13 +9,7 @@
 using Eigen::MatrixXd;
 
 MatrixXd ToMat(const Real::Matrix& x) {
-  MatrixXd y(3, 3);
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      y(i, j) = x.at(LinIndex(i, j))(0);
-    }
-  }
-  return y;
+  return x.at(0);
 }
 
 std::vector<MatrixXd> ToMat(const std::vector<Real::Matrix>& x) {
@@ -32,10 +26,13 @@ int CompareRealHermitianWithLMI() {
   SolverConfiguration config;
   config.inv_sqrt_mu_max = std::sqrt(1.0/1e-4);
   int m = 2;
+  int rank = 3;
   std::vector<Matrix> constraint_matrices(m);
-  Matrix constraint_affine = T::Identity();
+  Matrix constraint_affine = T::Identity(rank);
   for (int i = 0; i < m; i++) {
-    constraint_matrices.at(i) = T::Random();
+    constraint_matrices.at(i) = T::Random(rank, rank);
+    constraint_matrices.at(i) = T::Add(constraint_matrices.at(i), 
+                                       T::ConjugateTranspose(constraint_matrices.at(i)));
   }
   HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
 
@@ -65,10 +62,13 @@ int DoSolve() {
   config.final_centering_steps = 10;
 
   int m = 2;
+  int rank = 3;
   std::vector<Matrix> constraint_matrices(m);
-  Matrix constraint_affine = T::Identity();
+  Matrix constraint_affine = T::Identity(rank);
   for (int i = 0; i < m; i++) {
-    constraint_matrices.at(i) = T::Random();
+    constraint_matrices.at(i) = T::Random(rank, rank);
+    constraint_matrices.at(i) = T::Add(constraint_matrices.at(i), 
+                                       T::ConjugateTranspose(constraint_matrices.at(i)));
   }
   HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
 

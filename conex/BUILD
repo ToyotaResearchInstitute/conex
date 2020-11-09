@@ -172,7 +172,7 @@ cc_library(
             "quadratic_cone_constraint.cc",
             "soc_constraint.cc"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential", "jordan_matrix_algebra", "eigen_decomp" ],
+    deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential", "vect_jordan_matrix_algebra", "eigen_decomp" ],
 )
 
 

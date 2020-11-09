@@ -1,10 +1,10 @@
 #pragma once
 #include <Eigen/Dense>
 
-#include "workspace.h"
-#include "eigen_decomp.h"
-#include "newton_step.h"
-#include "jordan_matrix_algebra.h"
+#include "conex/workspace.h"
+#include "conex/eigen_decomp.h"
+#include "conex/newton_step.h"
+#include "conex/vect_jordan_matrix_algebra.h"
 
 struct WorkspaceDenseHermitian {
   WorkspaceDenseHermitian(int n) : n_(n) {} 
@@ -46,15 +46,15 @@ class HermitianPsdConstraint {
   using Matrix = typename T::Matrix;
 
   HermitianPsdConstraint(int n, const std::vector<Matrix>& a, const Matrix& c) 
-      : workspace_(n), constraint_matrices_(a), constraint_affine_(c) {}
+      : rank_(n), workspace_(n), constraint_matrices_(a), constraint_affine_(c) {}
 
   Matrix GeodesicUpdate(const Matrix& w, const Matrix& s) {
     return Geodesic<T>(w, s);
   }
 
   WorkspaceDenseHermitian* workspace() { return &workspace_; }
-  friend void SetIdentity(HermitianPsdConstraint* o) { o->W = T::Identity(); }
-  friend int Rank(const HermitianPsdConstraint& o) { return T::Rank(); };
+  friend void SetIdentity(HermitianPsdConstraint* o) { o->W = T::Identity(o->rank_); }
+  friend int Rank(const HermitianPsdConstraint& o) { return o.rank_; };
 
   friend void GetMuSelectionParameters(HermitianPsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
    // using T = Real;
@@ -65,8 +65,8 @@ class HermitianPsdConstraint {
     p->gw_lambda_max = NormInfWeighted<T>(o->W, minus_s);
 
     // <e, Q(w^{1/2}) s)
-    p->gw_trace -= T().TraceInnerProduct(o->W, minus_s);
-    p->gw_norm_squared += T().TraceInnerProduct(T().QuadRep(o->W, minus_s), minus_s);
+    p->gw_trace -= T::TraceInnerProduct(o->W, minus_s);
+    p->gw_norm_squared += T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);
   }
 
   int number_of_variables() { return constraint_matrices_.size(); }
@@ -74,15 +74,13 @@ class HermitianPsdConstraint {
   template<typename H>
   friend void TakeStep(HermitianPsdConstraint<H>* o, const StepOptions& opt, const Ref& y, StepInfo*);
 
-
-
   friend void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initialize, SchurComplementSystem* sys) {
     auto G = &sys->G;
     auto& W = o->W; 
     int m = o->constraint_matrices_.size();
     if (initialize) {
       for (int i = 0; i < m; i++) {
-        typename T::Matrix QA = T().QuadRep(W, o->constraint_matrices_.at(i));
+        typename T::Matrix QA = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
         for (int j = i; j < m; j++) {
           (*G)(j, i) = o->EvalDualConstraint(j, QA);
         }
@@ -92,7 +90,7 @@ class HermitianPsdConstraint {
       }
     } else {
       for (int i = 0; i < m; i++) {
-        typename T::Matrix QA = T().QuadRep(W, o->constraint_matrices_.at(i));
+        typename T::Matrix QA = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
         for (int j = i; j < m; j++) {
           (*G)(j, i) += o->EvalDualConstraint(j, QA);
         }
@@ -104,6 +102,7 @@ class HermitianPsdConstraint {
   }
 
  private:
+  int rank_;
   WorkspaceDenseHermitian workspace_;
   std::vector<Matrix> constraint_matrices_;
   Matrix constraint_affine_;
@@ -111,16 +110,16 @@ class HermitianPsdConstraint {
 
 
   double EvalDualConstraint(int j, const Matrix& W) {
-    return T().TraceInnerProduct(constraint_matrices_.at(j), W);
+    return T::TraceInnerProduct(constraint_matrices_.at(j), W);
   }
   double EvalDualObjective(const Matrix& W) {
-    return T().TraceInnerProduct(constraint_affine_, W);
+    return T::TraceInnerProduct(constraint_affine_, W);
   }
 
   void ComputeNegativeSlack(double k, const Ref& y, Matrix* S) {
-    *S = T::ScalarMult(constraint_affine_, -k);
+    *S = T::ScalarMultiply(constraint_affine_, -k);
     for (unsigned int i = 0; i < constraint_matrices_.size(); i++) {
-      *S = T().MatrixAdd(*S, T::ScalarMult(constraint_matrices_.at(i), y(i)));
+      *S = T::Add(*S, T::ScalarMultiply(constraint_matrices_.at(i), y(i)));
     }
   }
 };
