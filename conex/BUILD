@@ -130,6 +130,21 @@ cc_library(
     deps = [ "@eigen" ],
 )
 
+cc_test(
+    name = "exponential_map_test",
+    srcs = ["test/exponential_map_test.cc"],
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "exponential_map"],
+)
+cc_library(
+    name = "exponential_map",
+    hdrs = ["exponential_map.h"],
+    srcs = ["exponential_map.cc"],
+    visibility = ["//visibility:public"],
+    deps = [ "@eigen", "vect_jordan_matrix_algebra" ],
+)
+
+
 cc_library(
     name = "conex_lib",
     hdrs = ["cholesky_decomposition.h",
