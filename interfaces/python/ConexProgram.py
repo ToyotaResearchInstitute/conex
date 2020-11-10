@@ -93,15 +93,6 @@ class Conex:
         self.c.append(np.matrix(c))
         self.num_constraints = self.num_constraints + 1
 
-    def AddLinearInequality(self, A, c): 
-        const_id = self.wrapper.ConexAddDenseLinearConstraint(self.a, A, c)
-        self.m = A.shape[1]
-        self.n = A.shape[0]
-        self.A.append(np.matrix(A))
-        self.c.append(np.matrix(c))
-        self.num_constraints = self.num_constraints + 1
-
-
     def DefaultConfiguration(self):
         config = self.wrapper.ConexSolverConfiguration()
         self.wrapper.ConexSetDefaultOptions(config);

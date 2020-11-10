@@ -45,6 +45,9 @@ class HermitianPsdConstraint {
  public:
   using Matrix = typename T::Matrix;
 
+
+  HermitianPsdConstraint(int n) : rank_(n), workspace_(n){}
+
   HermitianPsdConstraint(int n, const std::vector<Matrix>& a, const Matrix& c) 
       : rank_(n), workspace_(n), constraint_matrices_(a), constraint_affine_(c) {}
 

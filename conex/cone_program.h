@@ -36,6 +36,10 @@ class Program {
 
   std::vector<Constraint> constraints;
 
+  int NumberOfConstraints() {
+    return constraints.size();
+  }
+
   SchurComplementSystem sys;
   WorkspaceStats stats;
   std::vector<Workspace> workspaces;

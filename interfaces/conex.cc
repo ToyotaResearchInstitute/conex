@@ -9,13 +9,36 @@
 #include "conex/linear_constraint.h"
 #include "conex/cone_program.h"
 #include "conex/dense_lmi_constraint.h"
+#include "conex/hermitian_psd.h"
 #include "conex/constraint.h"
 
 // TODO(FrankPermenter): check for null pointers.
 
+#define CONEX_DEMAND(x, msg) \
+    if (!(x)) { \
+      std::cout << "Conex error: " << msg << std::endl; \
+      return CONEX_FAILURE; \
+    } 
+
+#define SAFER_CAST_TO_Program(x, prog) \
+    CONEX_DEMAND(x, "Program pointer is null.");\
+    prog = static_cast<Program*>(x); \
+    if (prog->is_initialized) { \
+      if (prog->constraints.size() + 2 != prog->workspaces.size()) { \
+        CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
+      } \
+    } else { \
+      if (prog->workspaces.size() != 0) { \
+        CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
+      } \
+    } \
+    CONEX_DEMAND(prog, "Program corrupted or invalid pointer."); 
+
+
+
 using DenseMatrix = Eigen::MatrixXd;
-int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfiguration*
-               config, Real* y, int yr) {
+int ConexSolve(void* prog_ptr, const double*b, int br, const ConexSolverConfiguration*
+               config, double* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);
   DenseMatrix blinear = bmap;
@@ -36,7 +59,7 @@ int ConexSolve(void* prog_ptr, const Real*b, int br, const ConexSolverConfigurat
   return Solve(blinear, prog, c, y);
 }
 
-void ConexGetDualVariable(void* prog_ptr, int i, Real* x, int xr,  int xc) {
+void ConexGetDualVariable(void* prog_ptr, int i, double* x, int xr,  int xc) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
   assert(prog.constraints.at(i).dual_variable_size() == xr * xc);
 
@@ -175,4 +198,46 @@ void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num
   stats->mu = 1.0/(program.stats.sqrt_inv_mu[iter_num] *
                             program.stats.sqrt_inv_mu[iter_num]); 
   stats->iteration_number = iter_num;
+}
+
+int CONEX_UpdateLinearOperator(void* p, int constraint, int variable, int
+                                hyper_complex_dim, int value, int row, int col) {
+//  CONEX_DEMAND(p);
+//  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 || 
+//               hyper_complex_dim == 4 || hyper_complex_dim == 8);
+//
+  return CONEX_SUCCESS;
+}
+
+class Test {
+ public:
+  virtual void blah()  { std::cout << m_; };
+  int m_ = 3;
+};
+
+CONEX_STATUS CONEX_AddLinearMatrixInequality(void* p, int order, int hyper_complex_dim, int* constraint_id) {
+  CONEX_DEMAND(order >= 1, "Invalid LMI dimensions.");
+  CONEX_DEMAND(constraint_id, "Received output null pointer.");
+  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 || 
+               hyper_complex_dim == 4 || hyper_complex_dim == 8, "Hypercomplex dimension must be 1, 2, 4, or 8.");
+
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+
+  switch (hyper_complex_dim) {
+    case 1:
+      prg->constraints.push_back(HermitianPsdConstraint<Real>(order));
+      break;
+    case 2:
+      prg->constraints.push_back(HermitianPsdConstraint<Complex>(order));
+      break;
+    case 4:
+      prg->constraints.push_back(HermitianPsdConstraint<Quaternions>(order));
+      break;
+    case 8:
+      CONEX_DEMAND(order <= 3, "Order of octonion algebra cannot be greater than 3.");
+      prg->constraints.push_back(HermitianPsdConstraint<Octonions>(order));
+  }
+  *constraint_id = prg->NumberOfConstraints() - 1;
+  return CONEX_SUCCESS;
 }

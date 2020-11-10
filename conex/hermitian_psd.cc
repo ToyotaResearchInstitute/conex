@@ -17,9 +17,10 @@ void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt, const Ref& y
     norminf = lambda_2; 
   }
 
+  auto WSWS = T::Multiply(WS, WS);
+
   info->norminfd = norminf;
-  info->normsqrd = T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s) +
-                   2 * T::TraceInnerProduct(o->W, minus_s) + Rank(*o);
+  info->normsqrd = WSWS.at(0).trace() + 2 * WS.at(0).trace() + Rank(*o);
 
   double scale = 1;
   if (norminf * norminf > 2.0) {

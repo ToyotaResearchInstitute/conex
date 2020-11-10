@@ -25,6 +25,12 @@ eigen_decomp.o: ../conex/eigen_decomp.cc
 matrix_exponential.o: ../conex/matrix_exponential.cc
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/matrix_exponential.cc
 
+vect_jordan_matrix_algebra.o: ../conex/vect_jordan_matrix_algebra.cc
+	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/vect_jordan_matrix_algebra.cc
+
+exponential_map.o: ../conex/exponential_map.cc
+	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/exponential_map.cc
+
 approximate_eigenvalues.o: ../conex/approximate_eigenvalues.cc
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/approximate_eigenvalues.cc
 
