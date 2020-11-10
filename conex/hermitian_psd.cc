@@ -1,4 +1,5 @@
 #include "conex/hermitian_psd.h"
+#include "conex/exponential_map.h"
 using Eigen::MatrixXd;
 
 template<typename T>
@@ -6,8 +7,15 @@ void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt, const Ref& y
   typename T::Matrix minus_s;
   o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
 
-  // TODO: fix this approximation.
-  double norminf = NormInfWeighted<T>(o->W, minus_s) - opt.e_weight;
+  auto WS = T::Multiply(o->W, minus_s);
+  int n = Rank(*o);
+  auto gw_eig = T::ApproximateEigenvalues(WS, o->W,  T::Random(n, 1), n / 2);
+  const double lambda_1 = std::fabs(opt.e_weight+gw_eig.minCoeff());
+  const double lambda_2 = std::fabs(opt.e_weight+gw_eig.maxCoeff());
+  double norminf = lambda_1;
+  if (norminf < lambda_2) {
+    norminf = lambda_2; 
+  }
 
   info->norminfd = norminf;
   info->normsqrd = T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s) +
@@ -19,20 +27,45 @@ void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt, const Ref& y
     minus_s = T::ScalarMultiply(minus_s, scale);
   }
 
-  auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
-  o->W = T::ScalarMultiply(exp_sw, std::exp(opt.e_weight * scale));
+
+  WS.at(0).diagonal().array() += opt.e_weight;
+  if (scale != 1.0) {
+    WS = T::ScalarMultiply(WS, scale);
+  }
+
+  auto expWS = T::Zero(n, n);
+  ExponentialMap(WS, &expWS);
+  o->W = T::Multiply(expWS, o->W);
+  o->W = T::ScalarMultiply(T::Add(o->W, T::ConjugateTranspose(o->W)), .5);
 }
 
 template<typename T>
 void GetMuSelectionParameters(HermitianPsdConstraint<T>* o,  const Ref& y, MuSelectionParameters* p) {
   typename T::Matrix minus_s;
   o->ComputeNegativeSlack(1, y, &minus_s);
- 
-  p->gw_lambda_max = NormInfWeighted<T>(o->W, minus_s);
 
-  // <e, Q(w^{1/2}) s)
-  p->gw_trace -= T::TraceInnerProduct(o->W, minus_s);
-  p->gw_norm_squared += T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);
+  int n = Rank(*o);
+  auto WS = T::Multiply(o->W, minus_s);
+  auto gw_eig = T::ApproximateEigenvalues(WS, o->W,  T::Random(n, 1), n / 2);
+
+  const double lamda_max = -gw_eig.minCoeff();
+  const double lamda_min = -gw_eig.maxCoeff();
+
+  if (p->gw_lambda_max < lamda_max) {
+    p->gw_lambda_max = lamda_max;
+  }
+  if (p->gw_lambda_min > lamda_min) {
+    p->gw_lambda_min = lamda_min;
+  }
+  if (p->gw_lambda_max < lamda_max) {
+    p->gw_lambda_max = lamda_max;
+  }
+  if (p->gw_lambda_min > lamda_min) {
+    p->gw_lambda_min = lamda_min;
+  }
+  auto WSWS = T::Multiply(WS, WS);
+  p->gw_norm_squared += WSWS.at(0).trace();
+  p->gw_trace += -WS.at(0).trace();
 }
 
 template void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, const Ref& y, StepInfo* info);
@@ -90,33 +123,51 @@ void GetMuSelectionParameters(HermitianPsdConstraint<Octonions>* o,  const Ref& 
   p->gw_norm_squared += T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);
 }
 
-
-
 template<typename T>
 void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initialize, SchurComplementSystem* sys) {
     auto G = &sys->G;
     auto& W = o->W; 
     int m = o->constraint_matrices_.size();
+    
+    typename T::Matrix AW;
+    typename T::Matrix WAW;
     if (initialize) {
       for (int i = 0; i < m; i++) {
-        // 
-        typename T::Matrix QA = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
-        for (int j = i; j < m; j++) {
-          (*G)(j, i) = o->EvalDualConstraint(j, QA);
+        if constexpr(std::is_same<T, Octonions>::value) {
+          WAW = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
+        } else {
+          AW = T::Multiply(o->constraint_matrices_.at(i), W);
+          WAW = T::Multiply(W, AW);
         }
-
-        sys->AW(i, 0)  = o->EvalDualConstraint(i, W);
-        sys->AQc(i, 0) = o->EvalDualObjective(QA);
+        for (int j = i; j < m; j++) {
+          (*G)(j, i) = o->EvalDualConstraint(j, WAW);
+        }
+        if constexpr(std::is_same<T, Octonions>::value) {
+          sys->AW(i, 0) = o->EvalDualConstraint(i, W);
+        } else {
+          sys->AW(i, 0) = AW.at(0).trace(); 
+        }
+        sys->AQc(i, 0) = o->EvalDualObjective(WAW);
       }
     } else {
       for (int i = 0; i < m; i++) {
-        typename T::Matrix QA = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
-        for (int j = i; j < m; j++) {
-          (*G)(j, i) += o->EvalDualConstraint(j, QA);
+        if constexpr(std::is_same<T, Octonions>::value) {
+          WAW = T::QuadraticRepresentation(W, o->constraint_matrices_.at(i));
+        } else {
+          AW = T::Multiply(o->constraint_matrices_.at(i), W);
+          WAW = T::Multiply(W, AW);
         }
 
-        sys->AW(i, 0)  += o->EvalDualConstraint(i, W);
-        sys->AQc(i, 0) += o->EvalDualObjective(QA);
+        for (int j = i; j < m; j++) {
+          (*G)(j, i) += o->EvalDualConstraint(j, WAW);
+        }
+
+        if constexpr(std::is_same<T, Octonions>::value) {
+          sys->AW(i, 0) += o->EvalDualConstraint(i, W);
+        } else {
+          sys->AW(i, 0) += AW.at(0).trace(); 
+        }
+        sys->AQc(i, 0) += o->EvalDualObjective(WAW);
       }
     }
   }
