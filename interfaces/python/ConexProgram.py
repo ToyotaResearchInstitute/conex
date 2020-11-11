@@ -123,6 +123,13 @@ class Conex:
             sol.x, sol.s, sol.err = self.get_slacks_and_dual_vars(np.matrix(sol.y).transpose(), b)
         return sol
 
+    def NewLinearMatrixInequality(self, order, hyper_complex_dim):
+        constraint = self.wrapper.intp();
+        status = self.wrapper.CONEX_NewLinearMatrixInequality(self.a, order, hyper_complex_dim, constraint)
+        if status != 0:
+            raise NameError("Failed to add constraint.")
+            
+
     def AddDenseLinearMatrixInequality(self, A, c): 
         self.n = A.shape[1]
         self.m = A.shape[2]

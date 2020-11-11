@@ -5,6 +5,9 @@
     #include "../conex.h"
 %}
 
+%include cpointer.i
+%pointer_class(int, intp);
+
 %include "numpy.i"
 
 %init %{

@@ -236,8 +236,23 @@ def VerifyMuIsNonIncreasing():
         if i > 0:
             if stats[i].mu > stats[i - 1].mu:
                 return False
-
     return True
+
+def HermitianLMI():
+    prog = Conex()
+    try:
+        prog.NewLinearMatrixInequality(2, 2);
+        return True
+    except:
+        return False
+
+    invalid_lmi_size = -2
+    try:
+        prog.NewLinearMatrixInequality(invalid_lmi_size, 2);
+        return False
+    except:
+        return True
+
 
 class UnitTests(unittest.TestCase):
     def test1(self):
@@ -254,5 +269,7 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(TestSparseInstance())
     def test7(self):
         self.assertTrue(VerifyMuIsNonIncreasing());
+    def test8(self):
+        self.assertTrue(HermitianLMI());
 if __name__ == '__main__':
     unittest.main()

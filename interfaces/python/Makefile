@@ -3,7 +3,7 @@ all: _conex.so
 numpy.i:
 	python dependencies/get_numpy_interface.py
 
-_conex.so: numpy.i ../libconex.so 
+_conex.so: numpy.i ../libconex.so conex.i
 	rm -rf build
 	rm -f conex_wrap.c
 	python dependencies/setup.py build
