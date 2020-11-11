@@ -28,27 +28,38 @@ TEST(TestArguments, AddLMI) {
 TEST(TestArguments, UpdateLMI) {
   void* p = ConexCreateConeProgram();
 
+  int status;
   int constraint_id = 0;
   int order = 2;
   int hyper_complex_dim = 2;
 
-  EXPECT_TRUE(CONEX_NewLinearMatrixInequality(p, order, hyper_complex_dim, 
-                                              &constraint_id) == CONEX_SUCCESS);
+  status = CONEX_NewLinearMatrixInequality(p, order, hyper_complex_dim, 
+                                              &constraint_id);
+  EXPECT_EQ(CONEX_SUCCESS, status);
   
-  EXPECT_TRUE(CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, order - 2, hyper_complex_dim -1));
+  status = CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, order - 2, hyper_complex_dim -1);
+  EXPECT_EQ(CONEX_SUCCESS, status);
 
   int bad_hyper_complex_dim = hyper_complex_dim;
-  int status = CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, order - 2, 
-                                       bad_hyper_complex_dim);
+  status = CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, order - 2, bad_hyper_complex_dim);
   EXPECT_EQ(CONEX_FAILURE, status); 
 
   int bad_order = order;
-  EXPECT_EQ(CONEX_FAILURE, 
-            CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, bad_order, order - 2, 
-                                       hyper_complex_dim - 1));
+  status = CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, bad_order, order - 2, hyper_complex_dim - 1);
+  EXPECT_EQ(CONEX_FAILURE, status); 
 
   int bad_index = order;
-  EXPECT_EQ(CONEX_FAILURE, CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, bad_index, hyper_complex_dim - 1));
+  status = CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, bad_index, hyper_complex_dim - 1);
+  EXPECT_EQ(CONEX_FAILURE, status); 
+
+  status = CONEX_UpdateAffineTerm(p, constraint_id, .3,  order - 1, order - 2, bad_hyper_complex_dim);
+  EXPECT_EQ(CONEX_FAILURE, status); 
+
+  status = CONEX_UpdateAffineTerm(p, constraint_id, .3,  order - 1, order - 2, hyper_complex_dim -1);
+  EXPECT_EQ(CONEX_SUCCESS, status); 
+
+
+
 
   ConexDeleteConeProgram(p);
 }

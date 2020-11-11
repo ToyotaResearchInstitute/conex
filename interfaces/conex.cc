@@ -248,7 +248,7 @@ CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value, i
 
 }
 
-CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value, int variable, 
+CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value,
                                         int row, int col, int hyper_complex_dim) {
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);

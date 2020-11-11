@@ -184,11 +184,11 @@ template void ConstructSchurComplementSystem(HermitianPsdConstraint<Octonions>* 
 template<typename H>
 bool UpdateLinearOperator(HermitianPsdConstraint<H>* o,  
                           double val, int var, int r, int c, int dim)  {
-  using T =  HermitianPsdConstraint<H>;
 
-  CONEX_DEMAND(dim < H::HyperComplexDimension(), "IO:  complex dimension out of bounds.");
-  CONEX_DEMAND(r < o->rank_ && c < o->rank_, "IO: matrix dimension exceed order of constraint.");
+  CONEX_DEMAND(dim < H::HyperComplexDimension(), "Complex dimension out of bounds.");
+  CONEX_DEMAND(r < o->rank_ && c < o->rank_, "Matrix dimension out of bounds.");
 
+  using T = HermitianPsdConstraint<H>;
   if constexpr(std::is_same<T, Octonions>::value) {
     if (dim >= 3)  {
       return false;
@@ -204,19 +204,55 @@ bool UpdateLinearOperator(HermitianPsdConstraint<H>* o,
   } else {
     o->constraint_matrices_.at(var).at(dim)(c, r) = -val;
   }
-  return true;
+  return CONEX_SUCCESS;
 }
 
 template bool UpdateLinearOperator(HermitianPsdConstraint<Complex>* o,  double val,
 int var, int r, int c, int dim);
-
 template bool UpdateLinearOperator(HermitianPsdConstraint<Real>* o,  double val,
 int var, int r, int c, int dim);
-
-
 template bool UpdateLinearOperator(HermitianPsdConstraint<Quaternions>* o,  double val,
 int var, int r, int c, int dim);
-
 template bool UpdateLinearOperator(HermitianPsdConstraint<Octonions>* o,  double val,
 int var, int r, int c, int dim);
+
+
+template<typename H>
+bool UpdateAffineTerm(HermitianPsdConstraint<H>* o,  
+                          double val,  int r, int c, int dim)  {
+  CONEX_DEMAND(dim < H::HyperComplexDimension(), "Complex dimension out of bounds.");
+  CONEX_DEMAND(r < o->rank_ && c < o->rank_, "Matrix dimension out of bounds.");
+
+  using T = HermitianPsdConstraint<H>;
+  if constexpr(std::is_same<T, Octonions>::value) {
+    if (dim >= 3)  {
+      return false;
+    }
+  }
+
+  if (o->constraint_affine_.size() == 0) {
+    o->constraint_affine_ = H::Zero(o->rank_, o->rank_);
+  }
+  
+  o->constraint_affine_.at(dim)(r, c) = val;
+  if (dim == 0) {
+    o->constraint_affine_.at(dim)(c, r) = val;
+  } else {
+    o->constraint_affine_.at(dim)(c, r) = -val;
+  }
+ 
+  return CONEX_SUCCESS;
+}
+
+template bool UpdateAffineTerm(HermitianPsdConstraint<Complex>* o,  double val,
+int r, int c, int dim);
+template bool UpdateAffineTerm(HermitianPsdConstraint<Real>* o,  double val,
+int r, int c, int dim);
+template bool UpdateAffineTerm(HermitianPsdConstraint<Quaternions>* o,  double val,
+int r, int c, int dim);
+template bool UpdateAffineTerm(HermitianPsdConstraint<Octonions>* o,  double val,
+int r, int c, int dim);
+
+
+
 

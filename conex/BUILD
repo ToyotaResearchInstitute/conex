@@ -155,6 +155,7 @@ cc_library(
             "hermitian_psd.h",
             "linear_constraint.h",
             "error_checking_macros.h",
+            "error_codes.h",
             "memory_utils.h",
             "newton_step.h",
             "psd_constraint.h",

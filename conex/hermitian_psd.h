@@ -74,6 +74,9 @@ class HermitianPsdConstraint {
   friend bool UpdateLinearOperator(HermitianPsdConstraint<H>* o,  
                                    double val, int var, int r, int c, int dim);
 
+  template<typename H>
+  friend bool UpdateAffineTerm(HermitianPsdConstraint<H>* o,  
+                                   double val,  int r, int c, int dim);
 
  private:
   int rank_;
