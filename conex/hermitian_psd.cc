@@ -47,7 +47,7 @@ void GetMuSelectionParameters(HermitianPsdConstraint<T>* o,  const Ref& y, MuSel
 
   int n = Rank(*o);
   auto WS = T::Multiply(o->W, minus_s);
-  auto gw_eig = T::ApproximateEigenvalues(WS, o->W,  T::Random(n, 1), n / 2);
+  auto gw_eig = T::ApproximateEigenvalues(WS, o->W,  T::Random(n, 1), n / 2 + 1);
 
   const double lamda_max = -gw_eig.minCoeff();
   const double lamda_min = -gw_eig.maxCoeff();
@@ -166,7 +166,7 @@ void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initializ
         sys->AQc(i, 0) += o->EvalDualObjective(WAW);
       }
     }
-  }
+}
 
 
 

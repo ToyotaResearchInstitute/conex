@@ -265,14 +265,22 @@ def HermitianLMIInterface():
         return True
 
 def SolveHermitianLMI():
-    prog = Conex()
-    n = 4
-    hyper_complex_dim = 4
-    c = prog.NewLinearMatrixInequality(n, hyper_complex_dim);
+    order = 4
+    num_vars = order
+    prog = Conex(num_vars)
+    hyper_complex_dim = 1
+    constraint = prog.NewLinearMatrixInequality(order, hyper_complex_dim);
     
-    prog.NewLinearMatrixInequality(n, hyper_complex_dim);
-    prog.UpdateLinearOperator(c, 1, 0, 0, 0, 1)
-    return True
+    for i in range(0, num_vars):
+        prog.UpdateLinearOperator(constraint, 1, i, i, i, hyper_complex_dim - 1)
+
+    prog.UpdateAffineTerm(constraint, 0, 0, 0, hyper_complex_dim - 1)
+
+    print "Calling"
+    b = np.ones((num_vars, 1))
+    sol = prog.Maximize(b)
+
+    return sol.status
 
 class UnitTests(unittest.TestCase):
     def test1(self):
@@ -291,6 +299,8 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(VerifyMuIsNonIncreasing());
     def test8(self):
         self.assertTrue(HermitianLMIInterface());
+    def test9(self):
+        self.assertTrue(SolveHermitianLMI());
 
 if __name__ == '__main__':
     unittest.main()

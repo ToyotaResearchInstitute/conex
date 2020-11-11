@@ -106,8 +106,6 @@ class Conex:
         return config
 
     def Maximize(self, b, config = []): 
-        if len(b) != self.m:
-            raise NameError("Cost vector dimension does not match number of variables.")
 
         if not config:
             config = self.DefaultConfiguration();
@@ -117,12 +115,11 @@ class Conex:
         if b.shape[1] > b.shape[0]:
             b = b.transpose()
 
+        if b.shape[0] != self.m:
+            raise NameError("Cost vector dimension does not match number of variables.")
+
         sol.y = np.ones((self.m)).astype(real)
-        sol.status = self.wrapper.ConexSolve(self.a, np.squeeze(np.array(b)), config, sol.y)
-        
-        if sol.status:
-            sol.x = self.GetDualVariables()
-            sol.s, sol.err = self.ComputeErrors(np.matrix(sol.y).transpose(), sol.x, b)
+        sol.status = self.wrapper.ConexSolve(self.a, np.squeeze(np.array(b), 1), config, sol.y)
 
         return sol
 
@@ -146,10 +143,16 @@ class Conex:
         return constraint.value()
 
     def UpdateLinearOperator(self, constraint, value, variable, row, col = 0, hyper_complex_dim = 0):
-        status = self.wrapper.CONEX_UpdateLinearOperator(self.a,  
-                value, variable, row, col, hyper_complex_dim, constraint)
+        status = self.wrapper.CONEX_UpdateLinearOperator(self.a, constraint,
+                value, variable, row, col, hyper_complex_dim)
         if status != 0:
             raise NameError("Failed to update operator.")
+
+    def UpdateAffineTerm(self, constraint, value,  row, col = 0, hyper_complex_dim = 0):
+        status = self.wrapper.CONEX_UpdateAffineTerm(self.a, constraint, 
+                value, row, col, hyper_complex_dim)
+        if status != 0:
+            raise NameError("Failed to update affine term.")
 
     def AddDenseLinearMatrixInequality(self, A, c): 
         self.n = A.shape[1]
