@@ -51,28 +51,6 @@ int ConexAddSparseLMIConstraint(void* prog,
   const double* cmat, int cr, int cc,
   const long* vars, int vars_c);
 
-int ConexAddComplexLinearMatrixInequality(void* prog,
-  const double* Aarray, int Aarrayr, int Aarrayc, int m,
-  const double* cmat, int cr, int cc,
-  const long* vars, int vars_c);
-
-int ConexAddQuaternionLinearMatrixInequality(void* prog,
-  const double* Aarray, int Aarrayr, int Aarrayc, int m,
-  const double* cmat, int cr, int cc,
-  const long* vars, int vars_c);
-
-int ConexAddOctonionLinearMatrixInequality(void* prog,
-  const double* A,   int r,  int c,  int m,
-  const double* Ai, int ri, int ci, int mi,
-  const double* Aj, int rj, int cj, int mj,
-  const double* Ak, int rk, int ck, int mk,
-  const double* Al, int rl, int cl, int ml,
-  const double* Am, int rm, int cm, int mm,
-  const double* An, int rn, int cn, int mn,
-  const double* Ao, int ro, int co, int mo,
-  const double* cmat, int cr, int cc,
-  const long* vars, int vars_c);
-
 int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguration* config, 
                 double* y, int yr);
 
@@ -84,10 +62,6 @@ int ConexGetDualVariableSize(void* prog_ptr, int i);
 void ConexSetDefaultOptions(ConexSolverConfiguration* config);
 
 void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num);
-
-
-int SetAffine(int constraint, int variable, int hyper_complex_dim,
-              int value, int row, int col);
 
 CONEX_STATUS CONEX_UpdateLinearOperator(void* program, int constraint, double value, int variable, 
                                         int row, int col, int hyper_complex_dim);

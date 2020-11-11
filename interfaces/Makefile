@@ -3,7 +3,6 @@ EIGEN=$(EIGEN_DIR)
 CONEX=../
 
 all: libconex.so
-	./run.sh 
 
 cone_program.o: ../conex/cone_program.cc 
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/cone_program.cc 
@@ -35,11 +34,18 @@ exponential_map.o: ../conex/exponential_map.cc
 approximate_eigenvalues.o: ../conex/approximate_eigenvalues.cc
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/approximate_eigenvalues.cc
 
+hermitian_psd.o: ../conex/hermitian_psd.cc
+	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/hermitian_psd.cc
+
+vect_jordan_matrix_algebra.o: ../conex/vect_jordan_matrix_algebra.cc
+	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/vect_jordan_matrix_algebra.cc
+
+
 conex.o: conex.h conex.cc
 	g++ -c $(COPTS)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
 
-libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o
-	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o
+libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o
+	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o
 
 .PHONY: clean
 
