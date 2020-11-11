@@ -45,7 +45,6 @@ class HermitianPsdConstraint {
  public:
   using Matrix = typename T::Matrix;
 
-
   HermitianPsdConstraint(int n) : rank_(n), workspace_(n){}
 
   HermitianPsdConstraint(int n, const std::vector<Matrix>& a, const Matrix& c) 
@@ -70,6 +69,11 @@ class HermitianPsdConstraint {
 
   template<typename H>
   friend void ConstructSchurComplementSystem(HermitianPsdConstraint<H>* o, bool initialize, SchurComplementSystem* sys);
+
+  template<typename H>
+  friend bool UpdateLinearOperator(HermitianPsdConstraint<H>* o,  
+                                   double val, int var, int r, int c, int dim);
+
 
  private:
   int rank_;

@@ -94,6 +94,7 @@ class MatrixAlgebra {
  public:
 
   using Matrix = HyperComplexMatrix;
+  static int HyperComplexDimension() { return n; };
   static Matrix Multiply(const Matrix& x, const Matrix& y);
   static Matrix Add(const Matrix& x, const Matrix& y);
   static Matrix Random(int r, int c);

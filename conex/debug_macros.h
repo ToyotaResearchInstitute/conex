@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <iomanip>
+
 #   define DUMP(x) \
     do { \
             std::cerr << __FILE__  << " line " << __LINE__ \

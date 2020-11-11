@@ -1,5 +1,6 @@
 #include "conex/hermitian_psd.h"
 #include "conex/exponential_map.h"
+#include "conex/error_checking_macros.h"
 using Eigen::MatrixXd;
 
 template<typename T>
@@ -27,7 +28,6 @@ void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt, const Ref& y
     scale = 2.0/(norminf * norminf);
     minus_s = T::ScalarMultiply(minus_s, scale);
   }
-
 
   WS.at(0).diagonal().array() += opt.e_weight;
   if (scale != 1.0) {
@@ -73,13 +73,9 @@ template void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt, 
 template void TakeStep(HermitianPsdConstraint<Complex>* o, const StepOptions& opt, const Ref& y, StepInfo* info);
 template void TakeStep(HermitianPsdConstraint<Quaternions>* o, const StepOptions& opt, const Ref& y, StepInfo* info);
 
-
 template void GetMuSelectionParameters(HermitianPsdConstraint<Real>* o,  const Ref& y, MuSelectionParameters* p);
-
 template void GetMuSelectionParameters(HermitianPsdConstraint<Complex>* o,  const Ref& y, MuSelectionParameters* p);
-
 template void GetMuSelectionParameters(HermitianPsdConstraint<Quaternions>* o,  const Ref& y, MuSelectionParameters* p);
-
 
 template<>
 void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
@@ -107,7 +103,6 @@ void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, cons
   auto exp_sw = o->GeodesicUpdate(o->W, minus_s);
   o->W = T::ScalarMultiply(exp_sw, std::exp(opt.e_weight * scale));
 }
-
 
 template<>
 void GetMuSelectionParameters(HermitianPsdConstraint<Octonions>* o,  const Ref& y, MuSelectionParameters* p) {
@@ -173,6 +168,9 @@ void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o, bool initializ
     }
   }
 
+
+
+
 template void ConstructSchurComplementSystem(HermitianPsdConstraint<Real>* o, bool initialize, SchurComplementSystem* sys);
 
 template void ConstructSchurComplementSystem(HermitianPsdConstraint<Complex>* o, bool initialize, SchurComplementSystem* sys);
@@ -180,4 +178,45 @@ template void ConstructSchurComplementSystem(HermitianPsdConstraint<Complex>* o,
 template void ConstructSchurComplementSystem(HermitianPsdConstraint<Quaternions>* o, bool initialize, SchurComplementSystem* sys);
 
 template void ConstructSchurComplementSystem(HermitianPsdConstraint<Octonions>* o, bool initialize, SchurComplementSystem* sys);
+
+
+
+template<typename H>
+bool UpdateLinearOperator(HermitianPsdConstraint<H>* o,  
+                          double val, int var, int r, int c, int dim)  {
+  using T =  HermitianPsdConstraint<H>;
+
+  CONEX_DEMAND(dim < H::HyperComplexDimension(), "IO:  complex dimension out of bounds.");
+  CONEX_DEMAND(r < o->rank_ && c < o->rank_, "IO: matrix dimension exceed order of constraint.");
+
+  if constexpr(std::is_same<T, Octonions>::value) {
+    if (dim >= 3)  {
+      return false;
+    }
+  }
+
+  for (int i = o->constraint_matrices_.size(); i <= var; i++) {
+    o->constraint_matrices_.push_back(H::Zero(o->rank_, o->rank_));
+  }
+  o->constraint_matrices_.at(var).at(dim)(r, c) = val;
+  if (dim == 0) {
+    o->constraint_matrices_.at(var).at(dim)(c, r) = val;
+  } else {
+    o->constraint_matrices_.at(var).at(dim)(c, r) = -val;
+  }
+  return true;
+}
+
+template bool UpdateLinearOperator(HermitianPsdConstraint<Complex>* o,  double val,
+int var, int r, int c, int dim);
+
+template bool UpdateLinearOperator(HermitianPsdConstraint<Real>* o,  double val,
+int var, int r, int c, int dim);
+
+
+template bool UpdateLinearOperator(HermitianPsdConstraint<Quaternions>* o,  double val,
+int var, int r, int c, int dim);
+
+template bool UpdateLinearOperator(HermitianPsdConstraint<Octonions>* o,  double val,
+int var, int r, int c, int dim);
 

@@ -86,19 +86,18 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* config);
 void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num);
 
 
-
-int NewSparseLinearMatrixInequality(void* prog, int order,
-                                    int hyper_complex_dim);
-
 int SetAffine(int constraint, int variable, int hyper_complex_dim,
               int value, int row, int col);
 
-CONEX_STATUS CONEX_UpdateLinearOperator(int constraint, int variable, int hyper_complex_dim,
-                               int value, int row, int col);
+CONEX_STATUS CONEX_UpdateLinearOperator(void* program, int constraint, double value, int variable, 
+                                        int row, int col, int hyper_complex_dim);
 
-int CONEX_AddLinearMatrixInequality(void* program, int order, int  hyper_complex_dim, 
+CONEX_STATUS CONEX_NewLinearMatrixInequality(void* program, int order, int  hyper_complex_dim, 
                                     int *constraint_id);
 
+
+CONEX_STATUS CONEX_UpdateAffineTerm(void* program, int constraint, double value,
+                                        int row, int col, int hyper_complex_dim);
 
 #ifdef __cplusplus
 } // extern "C"

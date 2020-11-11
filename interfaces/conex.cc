@@ -12,13 +12,8 @@
 #include "conex/hermitian_psd.h"
 #include "conex/constraint.h"
 
+#include "conex/error_checking_macros.h"
 // TODO(FrankPermenter): check for null pointers.
-
-#define CONEX_DEMAND(x, msg) \
-    if (!(x)) { \
-      std::cout << "Conex error: " << msg << std::endl; \
-      return CONEX_FAILURE; \
-    } 
 
 #define SAFER_CAST_TO_Program(x, prog) \
     CONEX_DEMAND(x, "Program pointer is null.");\
@@ -215,7 +210,7 @@ class Test {
   int m_ = 3;
 };
 
-CONEX_STATUS CONEX_AddLinearMatrixInequality(void* p, int order, int hyper_complex_dim, int* constraint_id) {
+CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order, int hyper_complex_dim, int* constraint_id) {
   CONEX_DEMAND(order >= 1, "Invalid LMI dimensions.");
   CONEX_DEMAND(constraint_id, "Received output null pointer.");
   CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 || 
@@ -241,3 +236,23 @@ CONEX_STATUS CONEX_AddLinearMatrixInequality(void* p, int order, int hyper_compl
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
 }
+
+
+CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value, int variable, 
+                                        int row, int col, int hyper_complex_dim) {
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+  CONEX_DEMAND(constraint < prg->constraints.size(), "Invalid Constraint.");
+  return UpdateLinearOperator(&prg->constraints.at(constraint), value, variable, 
+                              row, col, hyper_complex_dim);
+
+}
+
+CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value, int variable, 
+                                        int row, int col, int hyper_complex_dim) {
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+  CONEX_DEMAND(constraint < prg->constraints.size(), "Invalid Constraint.");
+  return UpdateAffineTerm(&prg->constraints.at(constraint), value, row, col, hyper_complex_dim);
+}
+

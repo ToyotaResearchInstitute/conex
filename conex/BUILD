@@ -154,6 +154,7 @@ cc_library(
             "elimination_ordering.h",
             "hermitian_psd.h",
             "linear_constraint.h",
+            "error_checking_macros.h",
             "memory_utils.h",
             "newton_step.h",
             "psd_constraint.h",

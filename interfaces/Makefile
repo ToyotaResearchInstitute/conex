@@ -3,6 +3,7 @@ EIGEN=$(EIGEN_DIR)
 CONEX=../
 
 all: libconex.so
+	./run.sh 
 
 cone_program.o: ../conex/cone_program.cc 
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/cone_program.cc 
