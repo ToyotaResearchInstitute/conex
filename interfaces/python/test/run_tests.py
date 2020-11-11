@@ -49,8 +49,11 @@ def TestRandomInstance():
 
     prog.AddDenseLinearMatrixInequality(Amat, cmat)
 
-
     sol = prog.Maximize(b)
+    if sol.status:
+        sol.x = prog.GetDualVariables();
+        sol.s,  sol.err = prog.ComputeErrors(np.matrix(sol.y).transpose(), sol.x, np.matrix(b).transpose())
+
     return CheckErrors(sol.err)
 
 def TestSparseInstance():
@@ -110,6 +113,12 @@ def TestLMI():
 
     b = prog.A[0].transpose().__mul__(np.eye(n))
     sol = prog.Maximize(b)
+
+    sol = prog.Maximize(b)
+    if sol.status:
+        sol.x = prog.GetDualVariables();
+        sol.s,  sol.err = prog.ComputeErrors(np.matrix(sol.y).transpose(), sol.x, np.matrix(b))
+
     return CheckErrors(sol.err) and sol.status
 
 def TestBothInfeasLP():
@@ -180,7 +189,11 @@ def DualFailsSlater():
 
     b[0] = 1
     b[1] = 0
+
     sol = prog.Maximize(b)
+    if sol.status:
+        sol.x = prog.GetDualVariables();
+        sol.s, sol.err = prog.ComputeErrors(np.matrix(sol.y).transpose(), sol.x, np.matrix(b).transpose())
     return CheckErrors(sol.err) and sol.status
 
 def PrimalInfeas():
@@ -201,8 +214,6 @@ def PrimalInfeas():
     b[1] = 1
     sol = prog.Maximize(b)
     return sol.status == 0 
-
-
 
 def VerifyMuIsNonIncreasing():
     prog = Conex()
@@ -238,7 +249,7 @@ def VerifyMuIsNonIncreasing():
                 return False
     return True
 
-def HermitianLMI():
+def HermitianLMIInterface():
     prog = Conex()
     try:
         prog.NewLinearMatrixInequality(2, 2);
@@ -253,6 +264,15 @@ def HermitianLMI():
     except:
         return True
 
+def SolveHermitianLMI():
+    prog = Conex()
+    n = 4
+    hyper_complex_dim = 4
+    c = prog.NewLinearMatrixInequality(n, hyper_complex_dim);
+    
+    prog.NewLinearMatrixInequality(n, hyper_complex_dim);
+    prog.UpdateLinearOperator(c, 1, 0, 0, 0, 1)
+    return True
 
 class UnitTests(unittest.TestCase):
     def test1(self):
@@ -270,6 +290,7 @@ class UnitTests(unittest.TestCase):
     def test7(self):
         self.assertTrue(VerifyMuIsNonIncreasing());
     def test8(self):
-        self.assertTrue(HermitianLMI());
+        self.assertTrue(HermitianLMIInterface());
+
 if __name__ == '__main__':
     unittest.main()

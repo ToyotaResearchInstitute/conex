@@ -119,16 +119,37 @@ class Conex:
 
         sol.y = np.ones((self.m)).astype(real)
         sol.status = self.wrapper.ConexSolve(self.a, np.squeeze(np.array(b)), config, sol.y)
+        
         if sol.status:
-            sol.x, sol.s, sol.err = self.get_slacks_and_dual_vars(np.matrix(sol.y).transpose(), b)
+            sol.x = self.GetDualVariables()
+            sol.s, sol.err = self.ComputeErrors(np.matrix(sol.y).transpose(), sol.x, b)
+
         return sol
 
+    def GetDualVariables(self):
+        x = []
+        for i in range(0, self.num_constraints):
+            c = np.matrix(self.c[i]).transpose()
+            n2 = c.shape[0]
+            n1 = c.shape[1]
+            xi = np.ones((n1, n2)).astype(real)
+            self.wrapper.ConexGetDualVariable(self.a, i, xi)
+            xi = np.matrix(xi).transpose()
+            x.append(xi)
+
+        return x
     def NewLinearMatrixInequality(self, order, hyper_complex_dim):
         constraint = self.wrapper.intp();
         status = self.wrapper.CONEX_NewLinearMatrixInequality(self.a, order, hyper_complex_dim, constraint)
         if status != 0:
             raise NameError("Failed to add constraint.")
-            
+        return constraint.value()
+
+    def UpdateLinearOperator(self, constraint, value, variable, row, col = 0, hyper_complex_dim = 0):
+        status = self.wrapper.CONEX_UpdateLinearOperator(self.a,  
+                value, variable, row, col, hyper_complex_dim, constraint)
+        if status != 0:
+            raise NameError("Failed to update operator.")
 
     def AddDenseLinearMatrixInequality(self, A, c): 
         self.n = A.shape[1]
@@ -152,9 +173,12 @@ class Conex:
         self.wrapper.ConexAddSparseLMIConstraint(self.a, A, c, variables) 
         self.num_constraints = self.num_constraints + 1
 
-    def get_slacks_and_dual_vars(self, y, b):
+    def ComputeErrors(self, y, xa, b):
+        b = np.matrix(b)
+        if b.shape[1] > b.shape[0]:
+            b = b.transpose()
+
         err = Errors()
-        xa = []
         sa = []
         for i in range(0, self.num_constraints):
             A = self.A[i]
@@ -162,10 +186,7 @@ class Conex:
             n2 = c.shape[0]
             n1 = c.shape[1]
 
-            x = np.ones((n1, n2)).astype(real)
-            self.wrapper.ConexGetDualVariable(self.a, i, x)
-            x = np.matrix(x).transpose()
-            xa.append(x)
+            x = xa[i]
             Ay = A.__mul__(y)
             if i == 0:
                 Ax = A.transpose().__mul__(x)
@@ -173,6 +194,7 @@ class Conex:
                 Ax = Ax + A.transpose().__mul__(x) 
 
             s = np.add(np.array(c) , np.array(-Ay))
+            sa.append(s)
 
             if n2 == 1 or n1 == 1:
                 err.x_dot_s = s.transpose() * x
@@ -184,4 +206,4 @@ class Conex:
                 err.min_eig_X.append(min(la.eig(x)[0]))
 
         err.Ax_minus_b = la.norm(b - Ax)
-        return xa, sa, err 
+        return sa, err 
