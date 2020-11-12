@@ -3,6 +3,24 @@ from ConexProgram import *
 import numpy as np
 import scipy.linalg as la
 
+def AddRandomLinearMatrixInequality(self, numvars, order, hyper_complex_dim):
+    constraint = self.NewLinearMatrixInequality(order, hyper_complex_dim)
+    b = np.ones((numvars, 1)) * 0
+    for k in range(0, hyper_complex_dim):
+        for i in range(0, order):
+            jstart = i
+            self.UpdateAffineTerm(constraint, 1, i, i, 0)
+            if k > 0:
+                jstart = i + 1
+            for j in range(jstart, order):
+                for v in range(0, numvars):
+                    val = np.random.randn(1)[0]
+                    self.UpdateLinearOperator(constraint, val, v, i, j, k)
+                    if (i == j) and k == 0:
+                        b[v] = b[v] + val
+    return self, b
+
+
 def randsym(d):
     A = np.matrix(np.random.randn(d, d)); 
     return np.matrix(0.5*np.add(A, A.transpose()))
@@ -264,20 +282,38 @@ def HermitianLMIInterface():
     except:
         return True
 
-def SolveHermitianLMI():
-    order = 4
-    num_vars = order
+def SolveHermitianLMI(hyper_complex_dim):
+    order = 3
+    num_vars = order - 1
     prog = Conex(num_vars)
-    hyper_complex_dim = 1
     constraint = prog.NewLinearMatrixInequality(order, hyper_complex_dim);
-    
+
+    # Build the LMI:
+    #  0  <= (1, x, 0)    
+    #        (x, 2, y)    
+    #        (0, y, 1)    
     for i in range(0, num_vars):
-        prog.UpdateLinearOperator(constraint, 1, i, i, i, hyper_complex_dim - 1)
+        prog.UpdateLinearOperator(constraint, -1.0, i, i+1, i, hyper_complex_dim - 1)
 
-    prog.UpdateAffineTerm(constraint, 0, 0, 0, hyper_complex_dim - 1)
+    for i in range(0, order):
+        val = 1
+        if i == 1:
+            val = 2
+        prog.UpdateAffineTerm(constraint, val, i, i, 0)
 
-    print "Calling"
-    b = np.ones((num_vars, 1))
+    b = -np.ones((num_vars, 1))
+    sol = prog.Maximize(b)
+
+    return la.norm(np.add(sol.y, np.ones((num_vars)))) < 1e-6 and sol.status
+
+def SolveRandomHermitianLMI():
+    order = 20
+    num_vars = 15 
+    for i in [0, 2, 4, 8]:
+        prog = Conex(num_vars)
+        hyper_complex_dim = 2
+        prog, b = AddRandomLinearMatrixInequality(prog, num_vars, order, hyper_complex_dim)
+
     sol = prog.Maximize(b)
 
     return sol.status
@@ -300,7 +336,11 @@ class UnitTests(unittest.TestCase):
     def test8(self):
         self.assertTrue(HermitianLMIInterface());
     def test9(self):
-        self.assertTrue(SolveHermitianLMI());
-
+        self.assertTrue(SolveHermitianLMI(1));
+        self.assertTrue(SolveHermitianLMI(2));
+        self.assertTrue(SolveHermitianLMI(4));
+        self.assertTrue(SolveHermitianLMI(8));
+    def test9(self):
+        self.assertTrue(SolveRandomHermitianLMI());
 if __name__ == '__main__':
     unittest.main()
