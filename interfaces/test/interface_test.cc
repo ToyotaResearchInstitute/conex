@@ -55,9 +55,11 @@ TEST(TestArguments, UpdateLMI) {
   status = CONEX_UpdateAffineTerm(p, constraint_id, .3,  order - 1, order - 2, bad_hyper_complex_dim);
   EXPECT_EQ(CONEX_FAILURE, status); 
 
-  status = CONEX_UpdateAffineTerm(p, constraint_id, .3,  order - 1, order - 2, hyper_complex_dim -1);
+  status = CONEX_UpdateAffineTerm(p, constraint_id, .3,  order - 1, order - 2, hyper_complex_dim - 1);
   EXPECT_EQ(CONEX_SUCCESS, status); 
 
+  status = CONEX_UpdateAffineTerm(p, constraint_id, .3, 0, 0, hyper_complex_dim - 1);
+  EXPECT_EQ(CONEX_FAILURE, status); 
 
 
 

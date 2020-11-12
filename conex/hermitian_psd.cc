@@ -187,6 +187,7 @@ bool UpdateLinearOperator(HermitianPsdConstraint<H>* o,
 
   CONEX_DEMAND(dim < H::HyperComplexDimension(), "Complex dimension out of bounds.");
   CONEX_DEMAND(r < o->rank_ && c < o->rank_, "Matrix dimension out of bounds.");
+  CONEX_DEMAND(!(val != 0 && r == c && dim > 0), "Imaginary components must be skew-symmetric.");
 
   using T = HermitianPsdConstraint<H>;
   if constexpr(std::is_same<T, Octonions>::value) {
@@ -222,6 +223,7 @@ bool UpdateAffineTerm(HermitianPsdConstraint<H>* o,
                           double val,  int r, int c, int dim)  {
   CONEX_DEMAND(dim < H::HyperComplexDimension(), "Complex dimension out of bounds.");
   CONEX_DEMAND(r < o->rank_ && c < o->rank_, "Matrix dimension out of bounds.");
+  CONEX_DEMAND(!(val != 0 && r == c && dim > 0), "Imaginary components must be skew-symmetric.");
 
   using T = HermitianPsdConstraint<H>;
   if constexpr(std::is_same<T, Octonions>::value) {
@@ -233,7 +235,7 @@ bool UpdateAffineTerm(HermitianPsdConstraint<H>* o,
   if (o->constraint_affine_.size() == 0) {
     o->constraint_affine_ = H::Zero(o->rank_, o->rank_);
   }
-  
+
   o->constraint_affine_.at(dim)(r, c) = val;
   if (dim == 0) {
     o->constraint_affine_.at(dim)(c, r) = val;
