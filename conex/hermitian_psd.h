@@ -50,9 +50,6 @@ class HermitianPsdConstraint {
   HermitianPsdConstraint(int n, const std::vector<Matrix>& a, const Matrix& c) 
       : rank_(n), workspace_(n), constraint_matrices_(a), constraint_affine_(c) {}
 
-  Matrix GeodesicUpdate(const Matrix& w, const Matrix& s) {
-    return Geodesic<T>(w, s);
-  }
 
   WorkspaceDenseHermitian* workspace() { return &workspace_; }
   friend void SetIdentity(HermitianPsdConstraint* o) { o->W = T::Identity(o->rank_); }
