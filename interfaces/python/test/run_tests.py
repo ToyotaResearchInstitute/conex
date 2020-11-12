@@ -308,10 +308,12 @@ def SolveHermitianLMI(hyper_complex_dim):
 
 def SolveRandomHermitianLMI():
     order = 20
-    num_vars = 15 
-    for i in [0, 2, 4, 8]:
+    num_vars = 10
+    for i in [1, 2, 4, 8]:
+        hyper_complex_dim = i
+        if (hyper_complex_dim == 8):
+            order = 3
         prog = Conex(num_vars)
-        hyper_complex_dim = 2
         prog, b = AddRandomLinearMatrixInequality(prog, num_vars, order, hyper_complex_dim)
 
     sol = prog.Maximize(b)
