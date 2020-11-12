@@ -166,7 +166,7 @@ template<int n>
   }
 
 template<int n>
-  bool MatrixAlgebra<n>::IsHermitian(const Matrix& w) {
+bool MatrixAlgebra<n>::IsHermitian(const Matrix& w) {
     double eps = 1e-12;
     if ((w.at(0) - w.at(0).transpose()).norm() > eps) {
       return false;
@@ -177,7 +177,7 @@ template<int n>
       }
     }
     return true;
-  }
+}
 
 template<int n>
 double MatrixAlgebra<n>::TraceInnerProduct(const Matrix& x, const Matrix& y) {
@@ -333,12 +333,6 @@ class JacobiSolver {
         Eigen::DecompositionOptions::EigenvaluesOnly);
     return x.eigenvalues();
   }
-
-
-
-
-
-
 
   int n_;
   bool full_ = false;

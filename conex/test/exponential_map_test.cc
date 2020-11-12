@@ -85,17 +85,14 @@ typename T::Matrix Symmetrize(const typename T::Matrix& x) {
 TEST(TestCases, GeodesicUpdateOctonions) {
   using T = Octonions;
   int order = 3;
-  auto wsqrt = Symmetrize<T>(T::Random(order, order));
   auto s = Symmetrize<T>(T::Random(order, order));
-  auto w = T::JordanMultiply(wsqrt, wsqrt);
-  w = T::Identity(order);
+  auto w = T::Identity(order);
   s = T::Add(w, T::ScalarMultiply(s, .1));
 
   auto y = GeodesicUpdate(w, s);
   EXPECT_TRUE((VectorXd(T::Eigenvalues(s).array().exp()) - T::Eigenvalues(y)).norm() < 1e-3);
 
 
-  // Q(I) exp( Q(I) D)
   auto d = T::Zero(order, order);
   for (int i = 0; i < 3; i++) {
     d.at(0)(i, i) = 1 + i * .02;
@@ -107,3 +104,31 @@ TEST(TestCases, GeodesicUpdateOctonions) {
 }
 
 
+VectorXd sort(const VectorXd& x) {
+  auto y = x;
+  std::sort(y.data(), y.data() + x.rows());
+  return y;
+}
+
+TEST(TestCases, GeodesicUpdateRescaling) {
+  using T = Octonions;
+  int order = 3;
+  auto wsqrt = Symmetrize<T>(T::Random(order, order));
+  // auto w = T::Multiply(wsqrt, wsqrt);
+  auto w = T::Identity(order);
+  auto s = Symmetrize<T>(T::Random(order, order));
+  s = T::Add(T::Identity(order), T::ScalarMultiply(s, .05));
+  s = T::ScalarMultiply(s, -1);
+
+
+  auto yref = T::ScalarMultiply(GeodesicUpdate(w, s), std::exp(1));
+  auto ycalc = GeodesicUpdateScaled(w, s);
+
+  auto eig_ref = T::Eigenvalues(yref);
+  auto eig_calc = T::Eigenvalues(ycalc);
+  for (int i = 0; i < order; i++) {
+    EXPECT_TRUE(eig_calc(i) >= 0);
+    EXPECT_NEAR(eig_ref(i), eig_calc(i), 1e-2);
+  }
+
+}

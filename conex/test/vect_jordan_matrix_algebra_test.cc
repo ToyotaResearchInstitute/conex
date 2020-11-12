@@ -230,6 +230,5 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   EXPECT_TRUE((sort(T::Eigenvalues(Q)) - sort(eig(Q.at(0)).eigenvalues)).norm() < 1e-8);
 }
 
-
 } // namespace conex
 
