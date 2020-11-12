@@ -116,6 +116,9 @@ class MatrixAlgebra {
   static Eigen::VectorXd ApproximateEigenvalues(const HyperComplexMatrix& WS, const HyperComplexMatrix& W, 
                                      const HyperComplexMatrix& r, int num_iter);
 
+  static Matrix MakeHermitian(const Matrix& x) {
+      return ScalarMultiply(Add(x, ConjugateTranspose(x)), .5);
+  }
   double NormInfWeighted(const Matrix& w, const Matrix& s);
 
 };

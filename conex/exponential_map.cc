@@ -1,7 +1,14 @@
 #include "conex/exponential_map.h"
 
-
-//  I + X + X^2
+namespace {
+inline int factorial(int n) {
+  int y = 1;
+  for (int i = 2; i <= n; i++) {
+    y *= i; 
+  }
+  return y;
+}
+};
 
 template<int n>
 void DoExponentialMap(const HyperComplexMatrix& xinput, HyperComplexMatrix* y) {
@@ -28,7 +35,6 @@ void DoExponentialMap(const HyperComplexMatrix& xinput, HyperComplexMatrix* y) {
     xpow = T::Multiply(*y, *y);
     *y = T::Multiply(xpow, xpow);
   }
-
 };
 
 void ExponentialMap(const HyperComplexMatrix& arg, HyperComplexMatrix* result) {
@@ -54,4 +60,23 @@ void ExponentialMap(const HyperComplexMatrix& arg, HyperComplexMatrix* result) {
       bool valid_arguments = false;
       assert(valid_arguments);
   }
+}
+
+
+using T = Octonions;
+T::Matrix GeodesicUpdate(const T::Matrix& w, const T::Matrix& s) {
+  auto y1 = w; 
+  auto y2 = T::QuadraticRepresentation(w, s);
+  auto y = T::Add(y1, y2);
+  for (int i = 1; i < 8; i++) {
+    y1 = T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, y1));
+    y2 = T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, y2));
+    y =  T::Add(y, T::Add(T::ScalarMultiply(y1, 1.0/factorial(2*i)), 
+                          T::ScalarMultiply(y2, 1.0/factorial(2*i+1))));
+
+    y1 = T::ScalarMultiply(T::Add(y1, T::ConjugateTranspose(y1)), .5);
+    y2 = T::ScalarMultiply(T::Add(y2, T::ConjugateTranspose(y2)), .5);
+    y = T::ScalarMultiply(T::Add(y, T::ConjugateTranspose(y)), .5);
+  }
+  return y;
 }

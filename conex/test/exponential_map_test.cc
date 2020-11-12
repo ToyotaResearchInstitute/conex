@@ -1,5 +1,6 @@
 #include "conex/exponential_map.h"
 
+#include "conex/vect_jordan_matrix_algebra.h"
 #include "gtest/gtest.h"
 
 #include <Eigen/Dense>
@@ -73,4 +74,36 @@ TYPED_TEST_CASE(TestCases, JordanTypes);
 TYPED_TEST(TestCases, MultiplyByIdentity) {
   TestFixture::CompareWithReference();
 }
+
+template<typename T>
+typename T::Matrix Symmetrize(const typename T::Matrix& x) {
+  auto y = T::Add(x, T::ConjugateTranspose(x));
+  y = T::ScalarMultiply(y, .5);
+  return y;
+}
+
+TEST(TestCases, GeodesicUpdateOctonions) {
+  using T = Octonions;
+  int order = 3;
+  auto wsqrt = Symmetrize<T>(T::Random(order, order));
+  auto s = Symmetrize<T>(T::Random(order, order));
+  auto w = T::JordanMultiply(wsqrt, wsqrt);
+  w = T::Identity(order);
+  s = T::Add(w, T::ScalarMultiply(s, .1));
+
+  auto y = GeodesicUpdate(w, s);
+  EXPECT_TRUE((VectorXd(T::Eigenvalues(s).array().exp()) - T::Eigenvalues(y)).norm() < 1e-3);
+
+
+  // Q(I) exp( Q(I) D)
+  auto d = T::Zero(order, order);
+  for (int i = 0; i < 3; i++) {
+    d.at(0)(i, i) = 1 + i * .02;
+  }
+  y = GeodesicUpdate(T::Identity(order),  d);
+  for (int i = 0; i < order; i++) {
+    EXPECT_NEAR(y.at(0)(i, i), d.at(0).diagonal().array().exp()(i), 1e-4);
+  }
+}
+
 
