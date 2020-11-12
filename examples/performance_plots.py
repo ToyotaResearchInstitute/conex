@@ -15,20 +15,23 @@ def geodist(v0, varray):
     val = [geodistv(v0, v) for v in varray]
     return val
 
-
-
-def PlotMuUpdate():
+def PlotMuUpdate(hyper_complex_dim, title):
     m = 10
-    eps = 0.005
 
     config = Conex().DefaultConfiguration()
     config.divergence_upper_bound = 100
     config.inv_sqrt_mu_max = 100000
 
-    mu5 = SolveRandomSDP(3, 5, config)
-    mu25 = SolveRandomSDP(3, 10, config)
-    mu50 = SolveRandomSDP(3, 50, config)
-    mu100 = SolveRandomSDP(3, 100, config)
+    if 0:
+        mu5 = SolveRandomSDP(m, 5, config)
+        mu25 = SolveRandomSDP(m, 10, config)
+        mu50 = SolveRandomSDP(m, 50, config)
+        mu100 = SolveRandomSDP(m, 100, config)
+    else:
+        mu5 = SolveRandomHermitianSDP(m, 5, hyper_complex_dim, config)
+        mu25 = SolveRandomHermitianSDP(m, 10, hyper_complex_dim, config)
+        mu50 = SolveRandomHermitianSDP(m, 50, hyper_complex_dim, config)
+        mu100 = SolveRandomHermitianSDP(m, 100, hyper_complex_dim, config)
 
     plt.rcParams.update({'font.size': 13})
     plt.plot( range(1, 1+len(mu5)),   np.log(mu5),  'k--', label="n=5")
@@ -38,6 +41,7 @@ def PlotMuUpdate():
     plt.legend()
     plt.xlabel('Newton steps (long)')
     plt.ylabel('log(mu)')
+    plt.title(title)
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.show(True)
 
@@ -70,7 +74,8 @@ def GetCenteringIterates(A, b, c, mu):
     warray = []
     for j in range(0, 16):
         solution = prog.Maximize(b, config)
-        warray.append(solution.x[0])
+        x = prog.GetDualVariables()
+        warray.append(x[0])
         config.initialization_mode = 1
     return warray
 
@@ -133,6 +138,43 @@ def PlotGeodesicDistance():
         logscale = True
         plt.show()
 
+
+def AddRandomLinearMatrixInequality(self, numvars, order, hyper_complex_dim):
+    constraint = self.NewLinearMatrixInequality(order, hyper_complex_dim)
+    b = np.ones((numvars, 1)) * 0
+    for k in range(0, hyper_complex_dim):
+        for i in range(0, order):
+            jstart = i
+            self.UpdateAffineTerm(constraint, 1, i, i, 0)
+            if k > 0:
+                jstart = i + 1
+            for j in range(jstart, order):
+                for v in range(0, numvars):
+                    val = np.random.randn(1)[0]
+                    self.UpdateLinearOperator(constraint, val, v, i, j, k)
+                    if (i == j) and k == 0:
+                        b[v] = b[v] + val
+    return self, b
+
+def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, config):
+    prog = Conex(num_variables)
+
+    if hyper_complex_dim != 8:
+        prog, b  = AddRandomLinearMatrixInequality(prog, num_variables, order, hyper_complex_dim)
+    else:
+        for i in range(0, order / 3):
+            prog, bi  = AddRandomLinearMatrixInequality(prog, num_variables, 3, hyper_complex_dim)
+            if i == 0:
+                b = bi
+            else:
+                b = np.add(b, bi)
+
+    solution = prog.Maximize(b, config)
+    mu = []
+    if solution.status:
+        mu = [stats.mu for stats in prog.GetIterationStats()]
+    return mu 
+
 def SolveRandomSDP(num_variables, n, config, w0 = []):
     prog = Conex()
     A = np.ones((n, n, num_variables))
@@ -149,5 +191,8 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     config.initialization_mode = 0
     return [stats.mu for stats in prog.GetIterationStats()]
 
-PlotMuUpdate()
 PlotGeodesicDistance()
+PlotMuUpdate(1, "Real")
+PlotMuUpdate(2, "Complex")
+PlotMuUpdate(4, "Quaternion")
+PlotMuUpdate(8, "Octonion")
