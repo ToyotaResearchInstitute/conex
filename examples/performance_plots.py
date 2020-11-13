@@ -21,7 +21,7 @@ def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
     config = Conex().DefaultConfiguration()
     config.divergence_upper_bound = 1000
     config.inv_sqrt_mu_max = 130000
-    config.final_centering_steps = 3
+    config.final_centering_steps = 1
 
     if 0:
         mu5 = SolveRandomSDP(m, 5, config)
@@ -29,21 +29,31 @@ def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
         mu50 = SolveRandomSDP(m, 50, config)
         mu100 = SolveRandomSDP(m, 100, config)
     else:
-        mu5 = SolveRandomHermitianSDP(m, 5, hyper_complex_dim, config)
-        mu25 = SolveRandomHermitianSDP(m, 10, hyper_complex_dim, config)
-        mu50 = SolveRandomHermitianSDP(m, 50, hyper_complex_dim, config)
-        mu100 = SolveRandomHermitianSDP(m, 100, hyper_complex_dim, config)
+        if hyper_complex_dim > 0:
+            if hyper_complex_dim == 8:
+                config.divergence_upper_bound = .1
+                config.inv_sqrt_mu_max = 1000
+            mu5 = SolveRandomHermitianSDP(m, 5, hyper_complex_dim, config)
+            mu25 = SolveRandomHermitianSDP(m, 10, hyper_complex_dim, config)
+            mu50 = SolveRandomHermitianSDP(m, 50, hyper_complex_dim, config)
+            mu100 = SolveRandomHermitianSDP(m, 100, hyper_complex_dim, config)
+            rank5 = 5; rank25 = 25; rank50 = 50; rank100 = 100;
+        else:
+            mu5, rank5 = SolveMixedConeProgram(m, 1, config)
+            mu25, rank25 = SolveMixedConeProgram(m, 2, config)
+            mu50, rank50 = SolveMixedConeProgram(m, 3, config)
+            mu100, rank100 = SolveMixedConeProgram(m, 4, config) 
 
-    return
+    plt.clf()
     plt.rcParams.update({'font.size': 13})
-    plt.plot( range(1, 1+len(mu5)),   np.log(mu5),  'k--', label="n=5")
-    plt.plot(range(1, 1+len(mu25)),  np.log(mu25),  'k-+', label="n=25")
-    plt.plot(range(1, 1+len(mu50)), np.log(mu50),  'k-o', label="n=50")
-    plt.plot(range(1, 1+len(mu100)), np.log(mu100),  'k', label="n=100")
+    plt.plot( range(1, 1+len(mu5)),   np.log(mu5),  'k--', label="n="+str(rank5))
+    plt.plot(range(1, 1+len(mu25)),  np.log(mu25),  'k-+', label="n="+str(rank25))
+    plt.plot(range(1, 1+len(mu50)), np.log(mu50),  'k-o', label="n="+str(rank50))
+    plt.plot(range(1, 1+len(mu100)), np.log(mu100),  'k', label="n="+str(rank100))
     plt.legend()
     plt.xlabel('Newton steps (long)')
     plt.ylabel('log(mu)')
-    plt.title(title)
+#    plt.title(title)
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.savefig(title + "mu_update.eps")
     if show_plot:
@@ -125,7 +135,6 @@ def PlotGeodesicDistance(show_plot):
         for d in div:
             d = np.real(d)
             if logscale:
-                print d
                 plt.plot(np.log(np.abs(d)))
             else: 
                 plt.plot(d)
@@ -143,6 +152,18 @@ def PlotGeodesicDistance(show_plot):
         if show_plot:
             plt.show()
 
+def AddRandomLorentzConeConstraint(self, numvars, order):
+    constraint = self.NewLorentzConeConstraint(order)
+    b = np.ones((numvars, 1)) * 0
+    self.UpdateAffineTerm(constraint, 1, 0)
+
+    for i in range(0, order + 1):
+        for v in range(0, numvars):
+            val = np.random.randn(1)[0]
+            self.UpdateLinearOperator(constraint, val, v, i)
+            if (i == 0):
+                b[v] = b[v] + val
+    return self, b
 
 def AddRandomLinearMatrixInequality(self, numvars, order, hyper_complex_dim):
     constraint = self.NewLinearMatrixInequality(order, hyper_complex_dim)
@@ -180,6 +201,24 @@ def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, config):
         mu = [stats.mu for stats in prog.GetIterationStats()]
     return mu 
 
+def SolveMixedConeProgram(num_variables, copies, config, hyper_complex_dim = [1, 2, 4]):
+    prog = Conex(num_variables)
+    order = 8
+    b = np.zeros((num_variables, 1))
+    rank = 0
+    for i in range(0, copies):
+        for hyper_complex_dim_i in hyper_complex_dim:
+            prog, bi  = AddRandomLinearMatrixInequality(prog, num_variables, order, hyper_complex_dim_i)
+            b = np.add(b, bi)
+            rank = rank + order
+        #prog, bi = AddRandomLorentzConeConstraint(prog, num_variables, order)
+        #rank = rank + 2
+
+    solution = prog.Maximize(b, config)
+    mu = []
+    if solution.status:
+        mu = [stats.mu for stats in prog.GetIterationStats()]
+    return mu, rank 
 def SolveRandomSDP(num_variables, n, config, w0 = []):
     prog = Conex()
     A = np.ones((n, n, num_variables))
@@ -197,8 +236,9 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     return [stats.mu for stats in prog.GetIterationStats()]
 
 show_plot = False
-PlotGeodesicDistance(show_plot)
-PlotMuUpdate(1, "Real", show_plot)
-PlotMuUpdate(2, "Complex", show_plot)
-PlotMuUpdate(4, "Quaternion", show_plot)
-#PlotMuUpdate(8, "Octonion")
+#PlotGeodesicDistance(show_plot)
+#PlotMuUpdate(1, "Real", show_plot)
+#PlotMuUpdate(2, "Complex", show_plot)
+#PlotMuUpdate(4, "Quaternion", show_plot)
+PlotMuUpdate(-1, "special", show_plot)
+PlotMuUpdate(8, "exceptional", show_plot)

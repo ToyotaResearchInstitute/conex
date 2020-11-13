@@ -205,8 +205,8 @@ bool Solve(const DenseMatrix& b, Program& prog,
     REPORT(d_2);
     REPORT(d_inf);
 
-    prog.stats.num_iter = i;
-    prog.stats.sqrt_inv_mu[i - 1] = newton_step_parameters.inv_sqrt_mu;
+    prog.stats.num_iter = i + 1;
+    prog.stats.sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
     std::cout << std::endl;
   }
 
