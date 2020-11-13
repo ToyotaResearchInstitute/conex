@@ -16,13 +16,14 @@ void DoExponentialMap(const HyperComplexMatrix& xinput, HyperComplexMatrix* y) {
 
   int squarings = 2; // Must be power of 2.
   int degree = 2;
+
   // Initialize to x
   HyperComplexMatrix xpow(n);
   for (int i = 0; i < n; i++) {
     xpow.at(i) = xinput.at(i) * 1.0/std::pow(2.0, squarings);
   }
 
-  // y = I + x. 
+  // Initialiaze: y = I + x. 
   *y = xpow;
   y->at(0).diagonal().array() += 1;
   for (int i = 2; i <= degree; i++) {
@@ -62,7 +63,6 @@ void ExponentialMap(const HyperComplexMatrix& arg, HyperComplexMatrix* result) {
       assert(valid_arguments);
   }
 }
-
 
 template<typename T>
 typename T::Matrix DoGeodesicUpdate(const typename T::Matrix& w, const typename T::Matrix& s) {
@@ -108,8 +108,6 @@ HyperComplexMatrix GeodesicUpdate(const HyperComplexMatrix& x, const HyperComple
   // Unreachable
   return x;
 }
-
-
 
 // Evaluates f(w, s) := Q(w^{1/2}) exp(e + Q(w^{1/2} s) using the identity
 //
