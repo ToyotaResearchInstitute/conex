@@ -15,12 +15,13 @@ def geodist(v0, varray):
     val = [geodistv(v0, v) for v in varray]
     return val
 
-def PlotMuUpdate(hyper_complex_dim, title):
+def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
     m = 10
 
     config = Conex().DefaultConfiguration()
-    config.divergence_upper_bound = 100
-    config.inv_sqrt_mu_max = 100000
+    config.divergence_upper_bound = 1000
+    config.inv_sqrt_mu_max = 130000
+    config.final_centering_steps = 3
 
     if 0:
         mu5 = SolveRandomSDP(m, 5, config)
@@ -33,6 +34,7 @@ def PlotMuUpdate(hyper_complex_dim, title):
         mu50 = SolveRandomHermitianSDP(m, 50, hyper_complex_dim, config)
         mu100 = SolveRandomHermitianSDP(m, 100, hyper_complex_dim, config)
 
+    return
     plt.rcParams.update({'font.size': 13})
     plt.plot( range(1, 1+len(mu5)),   np.log(mu5),  'k--', label="n=5")
     plt.plot(range(1, 1+len(mu25)),  np.log(mu25),  'k-+', label="n=25")
@@ -43,7 +45,9 @@ def PlotMuUpdate(hyper_complex_dim, title):
     plt.ylabel('log(mu)')
     plt.title(title)
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.show(True)
+    plt.savefig(title + "mu_update.eps")
+    if show_plot:
+        plt.show(True)
 
 def random_symmetric_matrix(n):
     x = np.matrix(np.random.randn(n, n))
@@ -111,7 +115,7 @@ def GetGeodesicDistanceToMuCenteredPoint():
 
     return div
 
-def PlotGeodesicDistance():
+def PlotGeodesicDistance(show_plot):
     div = GetGeodesicDistanceToMuCenteredPoint()
     logscale = False
     for i in range(0, 2):
@@ -136,7 +140,8 @@ def PlotGeodesicDistance():
 
             plt.savefig("converge.eps")
         logscale = True
-        plt.show()
+        if show_plot:
+            plt.show()
 
 
 def AddRandomLinearMatrixInequality(self, numvars, order, hyper_complex_dim):
@@ -191,8 +196,9 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     config.initialization_mode = 0
     return [stats.mu for stats in prog.GetIterationStats()]
 
-PlotGeodesicDistance()
-PlotMuUpdate(1, "Real")
-PlotMuUpdate(2, "Complex")
-PlotMuUpdate(4, "Quaternion")
-PlotMuUpdate(8, "Octonion")
+show_plot = False
+PlotGeodesicDistance(show_plot)
+PlotMuUpdate(1, "Real", show_plot)
+PlotMuUpdate(2, "Complex", show_plot)
+PlotMuUpdate(4, "Quaternion", show_plot)
+#PlotMuUpdate(8, "Octonion")
