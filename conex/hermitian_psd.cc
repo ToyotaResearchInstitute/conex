@@ -100,8 +100,7 @@ void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt, cons
     minus_s = T::ScalarMultiply(minus_s, scale);
   }
 
-  auto exp_sw = GeodesicUpdate(o->W, minus_s);
-  o->W = T::ScalarMultiply(exp_sw, std::exp(opt.e_weight * scale));
+  o->W = GeodesicUpdateScaled(o->W, minus_s);
 }
 
 template<>

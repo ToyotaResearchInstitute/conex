@@ -14,7 +14,8 @@ template<int n>
 void DoExponentialMap(const HyperComplexMatrix& xinput, HyperComplexMatrix* y) {
   using T = MatrixAlgebra<n>;
 
-  int squarings = 2*4;
+  int squarings = 2; // Must be power of 2.
+  int degree = 2;
   // Initialize to x
   HyperComplexMatrix xpow(n);
   for (int i = 0; i < n; i++) {
@@ -24,7 +25,7 @@ void DoExponentialMap(const HyperComplexMatrix& xinput, HyperComplexMatrix* y) {
   // y = I + x. 
   *y = xpow;
   y->at(0).diagonal().array() += 1;
-  for (int i = 2; i < 5; i++) {
+  for (int i = 2; i <= degree; i++) {
     // Multiply previous term by 1/i x.
     xpow = T::Multiply(xinput, xpow);
     xpow.rescale(1.0/i  *  1.0/std::pow(2.0, squarings)  );
@@ -109,33 +110,36 @@ HyperComplexMatrix GeodesicUpdate(const HyperComplexMatrix& x, const HyperComple
 }
 
 
+
+// Evaluates f(w, s) := Q(w^{1/2}) exp(e + Q(w^{1/2} s) using the identity
+//
+//  f(w, s) = Q(w^{1/2}) (1 + 1/n (e+ Q(w^{1/2} s) )^{n}
+//
+// for n = 2. Expanding:
+//
+//  f(w, s) = Q(w^{1/2}) ((1 + 1/2) e + 1/2  Q(w^{1/2} s ) ((1 + 1/2) e + 1/2  Q(w^{1/2} s)
+//
+//           = Q(w^{1/2})  (c e + k Q(w^{1/2}) s)^2,
+//
+//  for c = 1.5 and k = 2.
+//
+// Using the fact that:
+//
+//   [Q(w^{1/2} s)]^2 =  Q(w^{1/2} Q(s) Q(w^{1/2}) e
+//
+// We conclude that
+//
+//   f(w, s) = Q(w^{1/2}) (c^2 e + 2 c k Q(w^{1/2}) s +  k^2 Q(w^{1/2}) Q(s) w
+//           = (c^2 w + 2  c k Q(w) s +  k^2 Q(w) Q(s) w
 template<typename T>
 typename T::Matrix DoGeodesicUpdateScaled(const typename T::Matrix& w, const typename T::Matrix& s) {
-  // Q(w^{1/2}) exp(e + Q(w^{1/2} s)
-  //
-  // Q(w^{1/2}) (1 + 1/n (e+ Q(w^{1/2} s) )^{n}
-  //
-  // Q(w^{1/2}) ((1 + 1/2) e + 1/2  Q(w^{1/2} s ) ((1 + 1/2) e + 1/2  Q(w^{1/2} s)
-  //
-  //  = Q(w^{1/2})  (c e + k Q(w^{1/2}) s)^2
-  //
-  //  for c = 1.5 and k = 2
-  //
-  //  Using the fact that:
-  //
-  //   [Q(w^{1/2} s)]^2 =  Q(w^{1/2} Q(s) Q(w^{1/2}) e
-  //
-  // We conclude that
-  //    Q(w^{1/2})  (c e + k Q(w^{1/2}) s   + k Q(w) Q(s) w   )^2
-  //
-  //      Q(w^{1/2}) (c^2 e + 2  c k Q(w^{1/2}) s +  k^2 Q(w^{1/2}) Q(s) w
-  //               = (c^2 w + 2  c k Q(w) s +  k^2 Q(w) Q(s) w
   double c = 1.5;
   double k = 1.0/2.0;
-  return T::Add(T::Add(
+  return T::MakeHermitian(
+         T::Add(T::Add(
          T::ScalarMultiply(w, c*c), 
          T::ScalarMultiply(T::QuadraticRepresentation(w, s), 2 * k * c)), 
-         T::ScalarMultiply(T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, w)), k*k));
+         T::ScalarMultiply(T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, w)), k*k)));
 }
 
 HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x, const HyperComplexMatrix& s) {
@@ -164,7 +168,3 @@ HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x, const Hyper
   // Unreachable
   return x;
 }
-
-
-
-
