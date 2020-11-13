@@ -135,9 +135,17 @@ class Conex:
             x.append(xi)
 
         return x
+
     def NewLinearMatrixInequality(self, order, hyper_complex_dim):
         constraint = self.wrapper.intp();
         status = self.wrapper.CONEX_NewLinearMatrixInequality(self.a, order, hyper_complex_dim, constraint)
+        if status != 0:
+            raise NameError("Failed to add constraint.")
+        return constraint.value()
+
+    def NewLorentzConeConstraint(self, order):
+        constraint = self.wrapper.intp();
+        status = self.wrapper.CONEX_NewLorentzConeConstraint(self.a, order, constraint)
         if status != 0:
             raise NameError("Failed to add constraint.")
         return constraint.value()

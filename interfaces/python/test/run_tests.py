@@ -20,6 +20,18 @@ def AddRandomLinearMatrixInequality(self, numvars, order, hyper_complex_dim):
                         b[v] = b[v] + val
     return self, b
 
+def AddRandomLorentzConeConstraint(self, numvars, order):
+    constraint = self.NewLorentzConeConstraint(order)
+    b = np.ones((numvars, 1)) * 0
+    self.UpdateAffineTerm(constraint, 1, 0)
+
+    for i in range(0, order + 1):
+        for v in range(0, numvars):
+            val = np.random.randn(1)[0]
+            self.UpdateLinearOperator(constraint, val, v, i)
+            if (i == 0):
+                b[v] = b[v] + val
+    return self, b
 
 def randsym(d):
     A = np.matrix(np.random.randn(d, d)); 
@@ -320,6 +332,17 @@ def SolveRandomHermitianLMI():
 
     return sol.status
 
+def SolveRandomSOCP():
+    order = 20
+    num_vars = 10
+    prog = Conex(num_vars)
+    prog, b = AddRandomLorentzConeConstraint(prog, num_vars, order)
+
+    sol = prog.Maximize(b)
+
+    return sol.status
+
+
 class UnitTests(unittest.TestCase):
     def test1(self):
         self.assertTrue(TestLMI())
@@ -344,5 +367,8 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(SolveHermitianLMI(8));
     def test9(self):
         self.assertTrue(SolveRandomHermitianLMI());
+    def test10(self):
+        self.assertTrue(SolveRandomSOCP())
+
 if __name__ == '__main__':
     unittest.main()
