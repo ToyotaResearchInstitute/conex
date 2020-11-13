@@ -1,5 +1,6 @@
 #include "conex/soc_constraint.h"
 #include "conex/newton_step.h"
+#include "conex/error_checking_macros.h"
 using EigenType = DenseMatrix;
 using Real = double;
 
@@ -284,6 +285,37 @@ void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
     sys->QwCNorm += (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
     sys->QwCTrace += (W.cwiseProduct(o->constraint_affine_)).sum();
   }
+}
+
+template <typename T>
+void ConservativeResizeHelper(T* constraint_matrix_, int var, int rows) {
+  if (!(var < constraint_matrix_->cols())) {
+    int cols_new = var + 1 - constraint_matrix_->cols();
+    constraint_matrix_->conservativeResize(rows, var + 1);
+    constraint_matrix_->rightCols(cols_new).setZero(); 
+  }
+}
+
+bool UpdateLinearOperator(SOCConstraint* o,  double val, int var, int r, int c, int dim) {
+  CONEX_DEMAND(dim == 0, "Complex second-order cone not supported.");
+  CONEX_DEMAND(c == 0, "Second-order constraint is not matrix valued.");
+  CONEX_DEMAND(r <= o->n_, "Row index out of bounds.");
+  CONEX_DEMAND((var >= 0) && (r >= 0), "Indices cannot be negative.");
+
+  ConservativeResizeHelper(&o->constraint_matrix_, var, o->n_ + 1);
+  o->constraint_matrix_(r, var) = val;
+  return CONEX_SUCCESS;
+}
+
+bool UpdateAffineTerm(SOCConstraint* o,  double val,  int r, int c, int dim) {
+  CONEX_DEMAND(dim == 0, "Complex second-order cone not supported.");
+  CONEX_DEMAND(c == 0, "Second-order constraint is not matrix valued.");
+  CONEX_DEMAND(r <= o->n_, "Row index out of bounds.");
+  CONEX_DEMAND(r >= 0, "Indices cannot be negative.");
+
+  ConservativeResizeHelper(&o->constraint_affine_, 0, o->n_ + 1);
+  o->constraint_affine_(r) = val;
+  return CONEX_SUCCESS;
 }
 
 

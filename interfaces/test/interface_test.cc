@@ -60,8 +60,5 @@ TEST(TestArguments, UpdateLMI) {
 
   status = CONEX_UpdateAffineTerm(p, constraint_id, .3, 0, 0, hyper_complex_dim - 1);
   EXPECT_EQ(CONEX_FAILURE, status); 
-
-
-
   ConexDeleteConeProgram(p);
 }

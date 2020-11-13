@@ -13,3 +13,10 @@ cc_test(
     deps = ["@gtest//:main", "libconex"],
 )
 
+cc_test(
+    name = "interface_test_soc",
+    srcs = ["test/interface_test_soc.cc"],
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "libconex"],
+)
+

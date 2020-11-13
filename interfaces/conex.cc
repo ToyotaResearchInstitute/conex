@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 
 #include "conex/linear_constraint.h"
+#include "conex/soc_constraint.h"
 #include "conex/cone_program.h"
 #include "conex/dense_lmi_constraint.h"
 #include "conex/hermitian_psd.h"
@@ -255,4 +256,18 @@ CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value,
   CONEX_DEMAND(constraint < prg->constraints.size(), "Invalid Constraint.");
   return UpdateAffineTerm(&prg->constraints.at(constraint), value, row, col, hyper_complex_dim);
 }
+
+CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order, int* constraint_id) {
+  CONEX_DEMAND(order >= 1, "Received invalid n. Second order cone must have order (n + 1) >= 2.");
+  CONEX_DEMAND(constraint_id, "Received output null pointer.");
+
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+
+  prg->constraints.push_back(SOCConstraint(order));
+  *constraint_id = prg->NumberOfConstraints() - 1;
+  return CONEX_SUCCESS;
+}
+
+
 

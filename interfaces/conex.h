@@ -69,9 +69,10 @@ CONEX_STATUS CONEX_UpdateLinearOperator(void* program, int constraint, double va
 CONEX_STATUS CONEX_NewLinearMatrixInequality(void* program, int order, int  hyper_complex_dim, 
                                     int *constraint_id);
 
-
 CONEX_STATUS CONEX_UpdateAffineTerm(void* program, int constraint, double value,
                                         int row, int col, int hyper_complex_dim);
+
+CONEX_STATUS CONEX_NewLorentzConeConstraint(void* program, int order, int *constraint_id);
 
 #ifdef __cplusplus
 } // extern "C"
