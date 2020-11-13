@@ -1,4 +1,6 @@
 function setup()
+    %TODO(FrankPermenter): Remove this. 
+    setenv('BLAS_VERSION','/usr/lib/x86_64-linux-gnu/libblas.so.3')
 
     display('Updating path...')
     directory = fileparts(which('setup.m'));
