@@ -15,8 +15,8 @@ struct WorkspaceSOC {
     using Map = Eigen::Map<DenseMatrix, Eigen::Aligned>;
      int n = o->n_;
      new (&o->W1)  Map(data, n, 1);
-     new (&o->temp_1) Map(data + 1*get_size_aligned(n),    n+1, 1);
-     new (&o->temp_2) Map(data + 2*get_size_aligned(n+1),  n+1, 1);
+     new (&o->temp_1) Map(data + get_size_aligned(n),    n+1, 1);
+     new (&o->temp_2) Map(data + get_size_aligned(n) + get_size_aligned(n+1),  n+1, 1);
   }
 
   friend void print(const WorkspaceSOC& o) {
