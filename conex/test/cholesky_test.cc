@@ -202,6 +202,14 @@ TEST(Cholesky, BlockDiag) {
   int n = GetMax(cliques) + 1;
   A = GetMatrix(n, cliques, Mcliques);
 
+  // Clique start is a list of supernodes (snd): {m, n, p}; 
+  //  Then, snd(m) =  (m, m+1, ..., n - 1)
+  // Each variable in clique start is a "representative" vertex.
+  // is a representative vertex of a a clique of A.
+  //
+  // Supernodes: subset {v_1, v_2, ..., v_N} of a clique C with same neighbors
+  // in complement of C.
+  //
   std::vector<int> cliquestart{0, 3, 4};
   std::vector<int> size{3, 3, 3};
   std::vector<std::vector<int>> root_nodes;

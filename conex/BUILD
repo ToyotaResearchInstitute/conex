@@ -143,6 +143,28 @@ cc_library(
     deps = [ "@eigen", "vect_jordan_matrix_algebra" ],
 )
 
+cc_test(
+    name = "tree_gram_test",
+    srcs = ["test/tree_gram_test.cc"],
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "tree_gram"],
+)
+
+cc_test(
+    name = "block_triangular_operations_test",
+    srcs = ["test/block_triangular_operations_test.cc"],
+    copts = ["-Iexternal/gtest/include -O0"], 
+    deps = ["@gtest//:main", "tree_gram"],
+)
+
+cc_library(
+    name = "tree_gram",
+    hdrs = ["tree_gram.h",  "block_triangular_operations.h"],
+    srcs = ["tree_gram.cc", "block_triangular_operations.cc"],
+    visibility = ["//visibility:public"],
+    deps = ["@eigen"],
+)
+
 cc_library(
     name = "conex_lib",
     hdrs = ["cholesky_decomposition.h",

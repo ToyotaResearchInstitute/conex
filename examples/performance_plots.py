@@ -33,11 +33,11 @@ def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
             if hyper_complex_dim == 8:
                 config.divergence_upper_bound = .1
                 config.inv_sqrt_mu_max = 1000
-            mu5 = SolveRandomHermitianSDP(m, 5, hyper_complex_dim, config)
-            mu25 = SolveRandomHermitianSDP(m, 10, hyper_complex_dim, config)
-            mu50 = SolveRandomHermitianSDP(m, 50, hyper_complex_dim, config)
-            mu100 = SolveRandomHermitianSDP(m, 100, hyper_complex_dim, config)
-            rank5 = 5; rank25 = 25; rank50 = 50; rank100 = 100;
+            mu5 = SolveRandomHermitianSDP(m, 6, hyper_complex_dim, config)
+            mu25 = SolveRandomHermitianSDP(m, 12, hyper_complex_dim, config)
+            mu50 = SolveRandomHermitianSDP(m, 48, hyper_complex_dim, config)
+            mu100 = SolveRandomHermitianSDP(m, 99, hyper_complex_dim, config)
+            rank5 = 6; rank25 = 12; rank50 = 48; rank100 = 99;
         else:
             mu5, rank5 = SolveMixedConeProgram(m, 1, config)
             mu25, rank25 = SolveMixedConeProgram(m, 2, config)
@@ -235,10 +235,10 @@ def SolveRandomSDP(num_variables, n, config, w0 = []):
     config.initialization_mode = 0
     return [stats.mu for stats in prog.GetIterationStats()]
 
-show_plot = False
+show_plot = True
 #PlotGeodesicDistance(show_plot)
 #PlotMuUpdate(1, "Real", show_plot)
 #PlotMuUpdate(2, "Complex", show_plot)
 #PlotMuUpdate(4, "Quaternion", show_plot)
-PlotMuUpdate(-1, "special", show_plot)
+#PlotMuUpdate(-1, "special", show_plot)
 PlotMuUpdate(8, "exceptional", show_plot)
