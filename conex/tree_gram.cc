@@ -14,11 +14,6 @@ using T = TriangularMatrixOperations;
 
 namespace {
 
-std::vector<int> UnionOfSorted(const std::vector<int>& x1, const std::vector<int>& x2) {
-  std::vector<int> y;
-  set_union(x1.begin(), x1.end(), x2.begin(), x2.end(), inserter(y, y.end()));
-  return y;
-}
 
 
 
@@ -194,14 +189,6 @@ class LowerTriangularSuperNodal {
   std::vector<MatrixXd>& separator_;
 };
 
-void IntersectionOfSorted(const std::vector<int>& v1,
-                  const std::vector<int>& v2,
-                  std::vector<int>* v3){
-    v3->clear();
-    std::set_intersection(v1.begin(), v1.end(),
-                          v2.begin(), v2.end(),
-                          back_inserter(*v3));
-}
 
 std::vector<int> ResidualSize(std::vector<Clique>& path) {
   std::vector<int> y;
@@ -217,6 +204,14 @@ std::vector<int> ResidualSize(std::vector<Clique>& path) {
 } // namespace
 
 
+void IntersectionOfSorted(const std::vector<int>& v1,
+                  const std::vector<int>& v2,
+                  std::vector<int>* v3){
+    v3->clear();
+    std::set_intersection(v1.begin(), v1.end(),
+                          v2.begin(), v2.end(),
+                          back_inserter(*v3));
+}
 
 
 SparseTriangularMatrix GetFillInPattern(int N, const std::vector<Clique>& cliques_input) {
@@ -243,15 +238,26 @@ void Sort(std::vector<Clique>* path) {
 }
 
 
-
+// Want A B  C  D  E
+//   Add A_i \cap A_k
+//    to all A_j for i < j < k.
+//
 void RunningIntersectionClosure(std::vector<Clique>* path) {
   if (path->size() < 2) {
     return;
   }
-  for (int i = 0; i < static_cast<int>(path->size() - 2); i++) {
-    std::vector<int> temp;
-    IntersectionOfSorted(path->at(i), path->at(i+2), &temp);
-    path->at(i+1) = UnionOfSorted(path->at(i+1), temp);
+  int n = path->size();
+  for (int i = 0; i < n - 2; i++) {
+    for (int j = n - 1; j > i + 1; j--) {
+      std::vector<int> temp;
+      IntersectionOfSorted(path->at(i), path->at(j), &temp);
+      if (temp.size() == 0) {
+        continue;
+      }
+      for (int k = j - 1; k > i; k--) {
+        path->at(k) = UnionOfSorted(path->at(k), temp);
+      }
+    }
   }
 }
 
@@ -382,7 +388,6 @@ VectorXd T::ApplyInverse(SparseTriangularMatrix* mat, const VectorXd& b) {
   TriangularMatrixColumnOperations col(mat);
   y(0) = res(0) / col.Diagonal(); 
   for (int i = 1; i < n; i++) {
-    
     // Iterate over non-zero entries of column.
     // for (int j = i; j < n; j++) {
     //   res(j) = res(j) - L.Get(j, i - 1) * y(i - 1);
@@ -395,3 +400,9 @@ VectorXd T::ApplyInverse(SparseTriangularMatrix* mat, const VectorXd& b) {
   return y;
 }
 
+
+std::vector<int> UnionOfSorted(const std::vector<int>& x1, const std::vector<int>& x2) {
+  std::vector<int> y;
+  set_union(x1.begin(), x1.end(), x2.begin(), x2.end(), inserter(y, y.end()));
+  return y;
+}

@@ -25,26 +25,33 @@ void DoCholeskyTest(const std::vector<Clique> &cliques) {
   for (auto &sn : mat.supernodes) {
     sn.diagonal().array() += 100;
   }
-  auto mat2 = mat;
 
   Eigen::MatrixXd x = T::ToDense(mat);
   Eigen::LLT<MatrixXd> llt(x);
   MatrixXd L = llt.matrixL();
   EXPECT_TRUE(llt.info() == Eigen::Success);
 
-  B::BlockCholeskyInPlace(&mat2);
-  MatrixXd error = T::ToDense(mat2) - L;
+  B::BlockCholeskyInPlace(&mat);
+  MatrixXd error = T::ToDense(mat) - L;
   error = error.triangularView<Eigen::Lower>();
   EXPECT_NEAR(error.norm(), 0, 1e-12);
 }
 
 TEST(LowerTri, Cholesky) {
   DoCholeskyTest({{0, 1, 2}, {2}});
-  DoCholeskyTest({{0, 1, 2, 4}, {3, 4}, {5, 6, 7}});
+  DoCholeskyTest({{0, 1, 2, 4, 7}, {3, 4}, {5, 6, 7}});
   DoCholeskyTest({{0, 1, 5}, {1, 2, 5}, {3, 4, 5}});
   DoCholeskyTest({{0, 1, 2}, {1, 2, 3}, {3, 4, 2}});
   DoCholeskyTest({{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10}});
 }
+
+// Pick root A
+// for all elements B
+//    ( A \cap B ) 
+//  Order A B C
+//    B \subseteq A \cap C 
+//
+
 
 void DoInverseTest(const std::vector<Clique> &cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);

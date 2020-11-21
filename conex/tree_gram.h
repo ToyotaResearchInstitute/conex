@@ -19,6 +19,12 @@ struct SparseTriangularMatrix {
 std::vector<Clique> Permute(std::vector<Clique>& path, std::vector<int>& permutation);
 void Sort(std::vector<Clique>* path);
 
+void IntersectionOfSorted(const std::vector<int>& v1,
+                  const std::vector<int>& v2,
+                  std::vector<int>* v3);
+
+std::vector<int> UnionOfSorted(const std::vector<int>& x1, const std::vector<int>& x2);
+
 
 void RunningIntersectionClosure(std::vector<Clique>* path);
 SparseTriangularMatrix GetFillInPattern(int N, const std::vector<Clique>& path);
