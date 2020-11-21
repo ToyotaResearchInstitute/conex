@@ -3,7 +3,7 @@
 #include <algorithm> 
 #include <stack> 
 
-#include "conex/tree_gram.h"
+#include "conex/supernodal_solver.h"
 #include "conex/debug_macros.h"
 
 using std::vector;
@@ -49,21 +49,40 @@ class SymmetricMatrix {
   vector<int>& operator()(int a, int b) {
     return data_.at(LinearIndex(a, b, n_));
   }
+  const vector<int>& operator()(int a, int b) const {
+    return data_.at(LinearIndex(a, b, n_));
+  }
   int n_;
   vector<T> data_;
 };
 
-} // namespace
 
 
-void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
-                     int root,
-                     std::vector<int>* order,
-                     std::vector<std::vector<int>>* supernodes,
-                     std::vector<std::vector<int>>* separators) {
 
+using Edge = std::pair<int, int>;
+vector<int> GetMaxWeightedDegreeNode(int n, const vector<Edge>& edges, 
+                     const SymmetricMatrix<vector<int>>& intersections) {
+
+  vector<int> weights(n);
+  for (auto& w : weights) {
+    w = 0;
+  }
+
+  for (auto& e : edges) {
+    weights.at(e.first) += intersections(e.first, e.second).size();
+    weights.at(e.second) += intersections(e.first, e.second).size();
+  }
+  return weights;
+}
+
+int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
+                     int root_in,
+                     SymmetricMatrix<vector<int>>* intersections_ptr,
+                     vector<vector<int>>* separators,
+                     std::vector<int>* order) {
+  auto& intersections = *intersections_ptr;
   size_t n = cliques_sorted.size();
-  SymmetricMatrix<vector<int>> intersections(n);
+  assert(root_in < static_cast<int>(n));
 
   vector<int> visited(n);
   for (auto& b : visited) {
@@ -71,17 +90,19 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
   }
 
   std::stack<size_t> node_stack;
+  int root = root_in;
+  if (root < 0) {
+    root = 0;
+  }
   node_stack.push(root);
-  
 
-  size_t iters = 0;
-  using Edge = std::pair<int, int>;
   using Path = vector<Edge>;
   vector<Path> paths;
+  vector<Edge> edges;
 
   order->clear();
+
   while (order->size() < n) {
-    iters++;
     size_t active = node_stack.top(); 
 
     if (visited.at(active) == 0) {
@@ -112,21 +133,12 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
       }
     }
 
-
-    // bool first_pass = true;
     for (auto e : argmax) {
-      // active -> super
-      //    active 
-      //      | 
-      //      e   e
-      // add separators
       separators->at(e) = intersections(active, e);
       node_stack.push(e);
-      // if (first_pass) {
       order->push_back(e);
-      //first_pass = false;
-      // }
       visited.at(e) = 1;
+      edges.emplace_back(active, e);
     } 
 
     if (argmax.size() == 0) {
@@ -142,7 +154,39 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
     }
   }
 
+  auto weights = GetMaxWeightedDegreeNode(n, edges, intersections);
+  int root_node =  std::distance(weights.begin(), 
+                   std::max_element(weights.begin(), weights.begin() + weights.size()));
+
   std::reverse(order->begin(), order->end());
+  return root_node;
+}
+
+} // namespace
+
+void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
+                     int root,
+                     std::vector<int>* order,
+                     std::vector<std::vector<int>>* supernodes,
+                     std::vector<std::vector<int>>* separators) {
+  size_t n = cliques_sorted.size();
+  order->clear();
+  order->resize(n);
+  separators->clear();
+  separators->resize(n);
+
+  SymmetricMatrix<vector<int>> intersections(n);
+  int better_root = PickCliqueOrderHelper(cliques_sorted, root, &intersections, separators, order); 
+  if (root == -1) {
+    order->clear();
+    order->resize(n);
+    separators->clear();
+    separators->resize(n);
+    int r2 = PickCliqueOrderHelper(cliques_sorted, better_root, &intersections, separators, order); 
+    assert(r2 == better_root);
+  }
+
+  supernodes->resize(n);
   for (auto& e : *order) {
     supernodes->at(e).resize(cliques_sorted.at(e).size() - separators->at(e).size());
     if (supernodes->at(e).size() > 0) {
@@ -157,7 +201,8 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
   for (auto& e : eliminated) {
     e = n + 1;
   }
- 
+
+  // Fill in
   for (size_t i = 0; i < order->size(); i++) { 
     for (auto v : supernodes->at(order->at(i))) {
       if (eliminated.at(v) < n) {
@@ -174,7 +219,3 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
     }
   }
 }
-
-
-
-

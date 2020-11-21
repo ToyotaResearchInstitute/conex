@@ -144,31 +144,39 @@ cc_library(
 )
 
 cc_test(
-    name = "tree_gram_test",
-    srcs = ["test/tree_gram_test.cc"],
+    name = "supernodal_solver_test",
+    srcs = ["test/supernodal_solver_test.cc"],
     copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "tree_gram"],
+    deps = ["@gtest//:main", "supernodal_solver"],
 )
 
 cc_test(
     name = "block_triangular_operations_test",
     srcs = ["test/block_triangular_operations_test.cc"],
     copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "tree_gram"],
+    deps = ["@gtest//:main", "supernodal_solver"],
 )
 
 cc_test(
     name = "clique_ordering_test",
     srcs = ["test/clique_ordering_test.cc"],
     copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "tree_gram"],
+    deps = ["@gtest//:main", "supernodal_solver"],
+)
+
+cc_test(
+    name = "assembly_test",
+    srcs = ["test/assembly_test.cc"],
+    copts = ["-Iexternal/gtest/include"], 
+    deps = ["@gtest//:main", "supernodal_solver"],
 )
 
 
 cc_library(
-    name = "tree_gram",
-    hdrs = ["tree_gram.h",  "block_triangular_operations.h",  "clique_ordering.h"],
-    srcs = ["tree_gram.cc", "debug_macros.h", "block_triangular_operations.cc", "clique_ordering.cc"],
+    name = "supernodal_solver",
+    hdrs = ["linear_inequality.h", "kkt_system_assembler.h", "supernodal_cholesky_data.h", "equality_constraint.h", "supernodal_solver.h", "triangular_matrix_workspace.h", "block_triangular_operations.h",  "clique_ordering.h"],
+    srcs = ["linear_inequality.cc", "equality_constraint.cc", "supernodal_solver.cc", "triangular_matrix_workspace.cc", "debug_macros.h", "block_triangular_operations.cc", 
+            "clique_ordering.cc"],
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -206,5 +214,3 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential", "exponential_map", "vect_jordan_matrix_algebra", "eigen_decomp" ],
 )
-
-

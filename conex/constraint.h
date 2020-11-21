@@ -18,10 +18,24 @@ bool UpdateAffineTerm(T*, double , int, int, int) {
   CONEX_DEMAND(false, "Constraint does not support updates of affine term.");
 }
 
+// A helper class for forwarding to different implementations of an "interface."
+// With this approach, implementations do not need to use inheritance or virtual
+// functions. Instead, they simply provide functions of appropriate name and
+// signature, e.g.,
+//
+//    void TakeStep(Implementation1*, {arguments});
+//    void Rank(Implementation1*, {arguments});
+//    ..
+//    void TakeStep(Implementation2*, {arguments});
+//    void Rank(Implementation2*, {arguments});
+//
+// Note that implementations can be ANSI C compliant when the signature is.
+//
+// Reference: "Inheritance is the base-class of evil" by Sean Parent.  class Constraint {
 class Constraint {
  public:
-  template <typename T>
-  Constraint(const T& t) : model(std::make_unique<Model<T>>(t)) { }
+  template <typename Implementation>
+  Constraint(const Implementation& t) : model(std::make_unique<Model<Implementation>>(t)) { }
 
   friend void ConstructSchurComplementSystem(Constraint* o, bool initialize, SchurComplementSystem* sys) {
     o->model->do_schur_complement(initialize, sys);
@@ -87,9 +101,9 @@ class Constraint {
     virtual ~Concept()  = default;
   };
 
-  template <typename T>
+  template <typename Implementation>
   struct Model final : Concept {
-    Model(const T& t) : data(t) {}
+    Model(const Implementation& t) : data(t) {}
 
     void do_schur_complement(bool initialize, SchurComplementSystem* sys) override {
       ConstructSchurComplementSystem(&data, initialize, sys);
@@ -138,7 +152,7 @@ class Constraint {
       TakeStep(&data, opt, y, info); 
     }
 
-    T data;
+    Implementation data;
   };
   std::unique_ptr<Concept> model;
 };

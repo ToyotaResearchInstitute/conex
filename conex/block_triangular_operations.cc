@@ -5,76 +5,30 @@ using Eigen::VectorXd;
 using T = BlockTriangularOperations;
 namespace {
 
-class LowerTriangularSuperNodal {
-  // We partition matrix into
-  //
-  // SN1  R1
-  // R1   SN2  R2
-  // R1   R2   SN3
-  //
-  // Where R1 is sparse.
- public:
-  LowerTriangularSuperNodal(SparseTriangularMatrix* mat) :
-  supernodes_(mat->supernodes),
-  residual_size_(mat->residual_size),
-  path_(mat->path),
-  separator_(mat->separator) { }
 
 
-  // The smallest super-node less than i.
-  int LookupSuperNode(int index, int start) const {
-    for (int j = static_cast<int>(path_.size()) - 1; j >= 0; j--) {
-      if (index >= path_.at(j).at(0)) {
-        return j;
-      }
-    }
-    assert(0);
-  }
-
-
-  void Increment(double val, int i, int j) {
-    if (val == 0) {
-      return;
-    }
-    // Find the supernode that owns the column.
-    int node = LookupSuperNode(j, 0);
-
-    // Apply offsets.
-    int offset_i = i - path_.at(node).at(0);
-    int offset_j = j - path_.at(node).at(0);
-    if ((offset_i < residual_size_.at(node))  &&
-        (offset_j < residual_size_.at(node))) {
-      supernodes_.at(node)(offset_i, offset_j) += val;
-    }
-    for (size_t k = residual_size_.at(node); k < path_.at(node).size(); k++) {
-      if (i == path_.at(node).at(k)) {
-        separator_.at(node)(offset_j,  k - residual_size_.at(node)) += val;
-      }
-    }
-    bool entry_not_in_sparsity_pattern = false;
-    assert(!entry_not_in_sparsity_pattern);
-  }
-
- public:
-  std::vector<MatrixXd>& supernodes_;
-  std::vector<int>& residual_size_;
-  std::vector<Clique>& path_;
-  std::vector<MatrixXd>& separator_;
-};
-
-// Returns the supernode subindex and the seperator subindex for two overlapping
-// cliques. 
+// Returns the supernode subindex and the separator subindex for 
+// the intersection of supernode and separator.
+//
+//  N1
+//  S1  N2
+//  S1  S2  N3
+//
+//  Given Si and Nj, returns rows of Si and Sj that are nonzero.
 using Match = std::pair<int, int>;
-std::vector<Match> Intersection(const SparseTriangularMatrix& mat, int supernode, int seperator) {
+std::vector<Match> IntersectionOfSupernodeAndSeparator(const TriangularMatrixWorkspace& mat, 
+                                                       int supernode, int seperator) {
   std::vector<Match> y;
-  // Supernodes
-  for (int i = 0; i < mat.residual_size.at(supernode); i++) {
-    // Non-supernodes
-    for (size_t j = mat.residual_size.at(seperator); j < mat.path.at(seperator).size(); j++) {
-      if (mat.path.at(supernode).at(i) == mat.path.at(seperator).at(j)) {
-        y.emplace_back(i, j  - mat.residual_size.at(seperator));
+  int i = 0;
+  for (auto si: mat.snodes.at(supernode)) {
+    int j = 0;
+    for (auto sj: mat.separators.at(seperator)) {
+      if (si == sj) {
+        y.emplace_back(i, j);
       }
+      j++;
     }
+    i++;
   }
   return y;
 }
@@ -154,8 +108,6 @@ class PartitionVectorIterator {
     }
   }
 };
-
-
 }
 
 //  Given block lower-triangular matrix, applies the recursion
@@ -164,28 +116,30 @@ class PartitionVectorIterator {
 //        L_2 B_1
 //            L_3
 //
-//   y_{i} = inv(L_{i}) r_{i}
-//   r = r -  c_i * y_i
+//   y_{i} = inv(L_{i}) b_{i}
+//   b = b -  c_i * y_i
 //
 //   Structure of B_i:  non-zero columns are dense. 
-void T::ApplyBlockInverseOfTransposeInPlace(const SparseTriangularMatrix& mat, VectorXd* y) {
-  PartitionVectorIterator ypart(*y, mat.N, mat.residual_size);
-  mat.supernodes.back().triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
+void T::ApplyBlockInverseOfTransposeInPlace(const TriangularMatrixWorkspace& mat, VectorXd* y) {
+  PartitionVectorIterator ypart(*y, mat.N, mat.supernode_size);
+  mat.diagonal.back().triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
 
-  for (int i = static_cast<int>(mat.supernodes.size() - 2); i >= 0; i--) {
+  for (int i = static_cast<int>(mat.diagonal.size() - 2); i >= 0; i--) {
     ypart.Decrement();
 
+    // Loop over partition {B_j} of c_{i+1}
+    PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
     for (int j = i; j >= 0; j--) {
-      PartitionVectorIterator residual(*y, mat.N, mat.residual_size);
       residual.Set(j);
-      // Loop over intersection of supernode i+1 and seperator j.
-      auto index_and_column_list = Intersection(mat, i + 1, j);
+      // Find columns of B_j that are nonzero on columns c_{i+1} of supernode i+1.
+      // This corresponds to separators(i) that contain supernode(j) for j > i.
+      auto index_and_column_list = IntersectionOfSupernodeAndSeparator(mat, i + 1, j);
       for (const auto& pair : index_and_column_list) {
-        residual.b_i() -=  mat.separator.at(j).col(pair.second) * 
+        residual.b_i() -=  mat.off_diagonal.at(j).col(pair.second) * 
             ypart.b_i_plus_1()(pair.first);
       }
     }
-    mat.supernodes.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
+    mat.diagonal.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
   }
 }
 
@@ -196,40 +150,155 @@ void T::ApplyBlockInverseOfTransposeInPlace(const SparseTriangularMatrix& mat, V
 //
 //   y_{i} = inv(L_{i}) r_{i}
 //   r = r -  c_i * y_i
-void T::ApplyBlockInverseInPlace(const SparseTriangularMatrix& mat, VectorXd* y) {
+void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat, VectorXd* y) {
+  PartitionVectorForwardIterator ypart(*y,  mat.supernode_size);
+  mat.diagonal.at(0).triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
 
-  PartitionVectorForwardIterator ypart(*y,  mat.residual_size);
-  mat.supernodes.at(0).triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
-
-  for (size_t i = 1; i < mat.supernodes.size(); i++) {
+  for (size_t i = 1; i < mat.diagonal.size(); i++) {
     ypart.Increment();
-    if (mat.separator.at(i-1).size() > 0) {
-      VectorXd temp =  mat.separator.at(i-1).transpose() * ypart.b_i_minus_1();
+    if (mat.off_diagonal.at(i-1).size() > 0) {
+      VectorXd temp =  mat.off_diagonal.at(i-1).transpose() * ypart.b_i_minus_1();
       int cnt = 0;
-      for (size_t j = mat.residual_size.at(i-1); j < mat.path.at(i-1).size(); j++) {
-        (*y)(mat.path.at(i-1).at(j)) -= temp(cnt);
+      for (auto si : mat.separators.at(i-1)) {
+        (*y)(si) -= temp(cnt);
         cnt++;
       }
     }
+    mat.diagonal.at(i).triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
+  }
+}
 
-    mat.supernodes.at(i).triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
+void T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
+  std::vector<Eigen::LLT<Eigen::Ref<MatrixXd>>> llts;
+  for (size_t i = 0; i < C->diagonal.size(); i++) {
+    // In place LLT of [n, n] block 
+    llts.emplace_back(C->diagonal.at(i));
+
+    // Construction of [n, s] block
+    llts.back().matrixL().solveInPlace(C->off_diagonal.at(i));
+    auto& temp = C->off_diagonal.at(i);
+
+    int index = 0;
+    auto s_s = C->seperator_diagonal.at(i);
+    for (int k = 0; k < temp.cols(); k++) {
+      for (int j = k; j < temp.cols(); j++) {
+        *s_s.at(index++) -= temp.col(k).dot(temp.col(j));
+      }
+    }
   }
 }
 
 
-void T::BlockCholeskyInPlace(SparseTriangularMatrix* C) {
-  std::vector<Eigen::LLT<Eigen::Ref<MatrixXd>>> llts;
-  for (size_t i = 0; i < C->supernodes.size(); i++) {
-    llts.emplace_back(C->supernodes.at(i));
-    C->supernodes.at(i).triangularView<Eigen::Lower>().solveInPlace(C->separator.at(i));
-    auto& temp = C->separator.at(i);
 
-    LowerTriangularSuperNodal mat(C);
-    for (int k = 0; k < temp.cols(); k++) {
-      for (int j = k; j < temp.cols(); j++) {
-        int c = C->path.at(i).at(C->residual_size.at(i) + k);
-        int r = C->path.at(i).at(C->residual_size.at(i) + j);
-        mat.Increment(-temp.col(k).dot(temp.col(j)), r, c);
+
+// Apply inv(M^T)  = inv(L^T P) = P^T inv(L^T) 
+void T::ApplyBlockInverseOfMTranspose(const TriangularMatrixWorkspace& mat, 
+       const std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization,
+                                      VectorXd* y) {
+  PartitionVectorIterator ypart(*y, mat.N, mat.supernode_size);
+  // mat.diagonal.back().triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
+  factorization.back().matrixL().transpose().solveInPlace(ypart.b_i());
+  Eigen::PermutationMatrix<-1> P0(factorization.back().transpositionsP()); 
+  ypart.b_i() = P0.transpose() * ypart.b_i();
+
+  for (int i = static_cast<int>(mat.diagonal.size() - 2); i >= 0; i--) {
+    ypart.Decrement();
+
+    // Loop over partition {B_j} of c_{i+1}
+    PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
+    for (int j = i; j >= 0; j--) {
+      residual.Set(j);
+      // Find columns of B_j that are nonzero on columns c_{i+1} of supernode i+1.
+      // This corresponds to separators(i) that contain supernode(j) for j > i.
+      auto index_and_column_list = IntersectionOfSupernodeAndSeparator(mat, i + 1, j);
+      for (const auto& pair : index_and_column_list) {
+        residual.b_i() -=  mat.off_diagonal.at(j).col(pair.second) * 
+            ypart.b_i_plus_1()(pair.first);
+      }
+    }
+
+    // mat.diagonal.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
+    factorization.at(i).matrixL().transpose().solveInPlace(ypart.b_i());
+    Eigen::PermutationMatrix<-1> Pi(factorization.at(i).transpositionsP()); 
+    ypart.b_i() = Pi.transpose() * ypart.b_i();
+  }
+}
+
+void T::ApplyBlockInverseOfMD(const TriangularMatrixWorkspace& mat, 
+       const std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization,
+                                      VectorXd* y) {
+  // Apply inv(M) = inv(P^T L) = inv(L) P 
+  PartitionVectorForwardIterator ypart(*y,  mat.supernode_size);
+  Eigen::PermutationMatrix<-1> P0(factorization.at(0).transpositionsP()); 
+  ypart.b_i() = P0*ypart.b_i();
+  factorization.at(0).matrixL().solveInPlace(ypart.b_i());
+
+  for (size_t i = 1; i < mat.diagonal.size(); i++) {
+    ypart.Increment();
+    if (mat.off_diagonal.at(i-1).size() > 0) {
+      VectorXd temp =  mat.off_diagonal.at(i-1).transpose() * ypart.b_i_minus_1();
+      int cnt = 0;
+      for (auto si : mat.separators.at(i-1)) {
+        (*y)(si) -= temp(cnt);
+        cnt++;
+      }
+    }
+    Eigen::PermutationMatrix<-1> Pi(factorization.at(i).transpositionsP()); 
+    ypart.b_i() = Pi*ypart.b_i();
+    factorization.at(i).matrixL().solveInPlace(ypart.b_i());
+  }
+
+  // Apply D inverse
+  PartitionVectorForwardIterator ypart2(*y,  mat.supernode_size);
+  ypart2.b_i() = factorization.at(0).vectorD().cwiseInverse().cwiseProduct(ypart2.b_i());
+  for (size_t i = 1; i < mat.diagonal.size(); i++) {
+    ypart2.Increment();
+    ypart2.b_i() = factorization.at(i).vectorD().cwiseInverse().cwiseProduct(ypart2.b_i());
+  }
+}
+
+
+// M D M^T
+// M = P^T L
+//
+//   M    0   D_1      M^T   Q^T
+//   Q    T       D_2        T^T
+//
+//  M D_1             M^T   Q^T
+//  Q D_1     T D_2         T^T
+//        
+//  [M D_1 M^T   M D_1 Q^T
+//   Q D_1 M^T   Q D_1 Q^T + T D_2 T^T] 
+//
+//  So, Q^T = inv(D_1) inv(M) off_diag 
+//          = inv(D_1) inv(L) P  * off_diag
+void T::BlockLDLTInPlace(TriangularMatrixWorkspace* C, 
+                        std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>>* factorization) {
+  auto& llts = *factorization; 
+  llts.clear();
+
+  for (size_t i = 0; i < C->diagonal.size(); i++) {
+    // In place LLT of [n, n] block 
+    C->diagonal.at(i) = C->diagonal.at(i).selfadjointView<Eigen::Lower>();
+    llts.emplace_back(C->diagonal.at(i));
+    Eigen::PermutationMatrix<-1> P(llts.at(i).transpositionsP());
+
+    //   Q^T = inv(D_1) inv(L) inv(P)  * off_diag
+    if (C->off_diagonal.at(i).size() > 0) {
+
+      C->off_diagonal.at(i) = P * C->off_diagonal.at(i);
+      llts.back().matrixL().solveInPlace(C->off_diagonal.at(i));
+      C->off_diagonal.at(i).noalias() = 
+          llts.back().vectorD().asDiagonal().inverse()*(C->off_diagonal.at(i));
+
+      MatrixXd temp = llts.back().vectorD().asDiagonal() * C->off_diagonal.at(i);
+
+      int index = 0;
+      auto s_s = C->seperator_diagonal.at(i);
+      for (int k = 0; k < temp.cols(); k++) {
+        for (int j = k; j < temp.cols(); j++) {
+          *s_s.at(index++) -= temp.col(k).dot(C->off_diagonal.at(i).col(j));
+        }
       }
     }
   }

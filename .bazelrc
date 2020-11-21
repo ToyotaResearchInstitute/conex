@@ -3,10 +3,13 @@ build --linkopt="-lblas"
 build --copt="-DEIGEN_USE_BLAS"
 build --copt="-O3"
 
+build:benchmark --copt="-g"
+build:benchmark --copt="-fno-omit-frame-pointer"
+
 build:debug --copt="-g"
 build:debug --copt="-O0"
-build:debug --copt="-Werror"
-build:debug --copt="-Wall"
+#build:debug --copt="-Werror"
+#build:debug --copt="-Wall"
 build:debug -c dbg
 build:debug --javacopt="-g"
 build:debug --strip="never"
