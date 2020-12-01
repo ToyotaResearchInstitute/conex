@@ -3,9 +3,9 @@ function run_tests(path_to_conex_library)
     addpath(path_to_conex_library)
   end
 
-  LPTests();
-  SDPTests();
-  SparseTests();
+  %LPTests();
+  %SDPTests();
+  %SparseTests();
   SedumiTests();
 
 function LPTests()
@@ -105,22 +105,22 @@ function SparseTests()
   end
   
 function SedumiTests()
-  m = 40;
-  n = 140;
+  m = 15;
+  n = 150;
   K.s = n;
   sym = @(x) x + x';
   vect = @(x) x(:);
   for i = 1:m
     A(i, :) = vect(sym(randn(n, n)))';
   end
-  x = randn(n, n); x = x*x';
+  %x = randn(n, n); x = x*x';
+  %x = eye(n, n); x = x*x';
   x = eye(n, n); 
   b = A * x(:);
   c = vect(eye(n, n));
 
-  tic;
-  [xc, yc] = conex(A, b, c, K);
-  time_conex = toc;
+  [xc, yc, info] = conex(A, b, c, K);
+  time_conex = info.cpusec;
 
   time_sedumi = -1;
   if exist('sedumi', 'file') == 2 %a matlab file name sedumi exists
@@ -133,4 +133,19 @@ function SedumiTests()
     fprintf('eig min |s|: Sedumi %d,  Conex %d \n', [min(eigK(c-A'*ys, K)), min(eigK(c-A'*yc, K))]);
   end
 
+  time_sdpt3 = -1;
+  if exist('sdpt3', 'file') == 2 %a matlab file name sedumi exists
+    [blk,Avec,C,b,perm] = read_sedumi(A,b,c,K);
+    options = sqlparameters;
+    options.vers = 2;
+    tic;
+    [~, xs, ys] = sdpt3(blk, Avec, C, b, options);
+    xs = xs{1}(:);
+    ys = ys(:);
+    time_sdpt3 = toc;
+    fprintf('Times: SDPT3 %d,  Conex %d \n', [time_sdpt3, time_conex]);
+    fprintf('|Ax-b|: SDPT3 %d,  Conex %d \n', [norm(A*xs-b), norm(A*xc-b)]);
+    fprintf('eig min |x|: SDPT3 %d,  Conex %d \n', [min(eigK(xs, K)), min(eigK(xc, K))]);
+    fprintf('eig min |s|: SDPT3 %d,  Conex %d \n', [min(eigK(c-A'*ys, K)), min(eigK(c-A'*yc, K))]);
+  end
 

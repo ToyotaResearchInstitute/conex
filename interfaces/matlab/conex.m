@@ -34,10 +34,11 @@ for i = 1:length(problem.K.s)
   %p.AddDenseLinearMatrixInequality(Ai2, reshape(problem.constraints{i}.affine, n, n));
 end
 
-p.options.inv_sqrt_mu_max = 90000;
+p.options.inv_sqrt_mu_max = 50000;
 p.options.infeasibility_threshold = 1e10;
 p.options.max_iteration = 25;
-p.options.divergence_upper_bound = 2000;
+p.options.prepare_dual_variables = 1;
+p.options.divergence_upper_bound = 1000;
 p.options.prepare_dual_variables = 1;
 p.options.final_centering_steps = 1;
 
