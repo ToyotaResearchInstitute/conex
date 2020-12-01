@@ -110,6 +110,11 @@ bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config,
            double* primal_variable) {
 
+#ifdef EIGEN_USE_MKL_ALL
+  std::cout << "CONEX: MKL Enabled"; 
+#endif
+
+
   auto& constraints = prog.constraints;
   auto& sys = prog.sys;
 
@@ -136,7 +141,6 @@ bool Solve(const DenseMatrix& b, Program& prog,
   Ref y(ydata.data(), m, 1);
 
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  double inv_sqrt_mu_min = std::sqrt(1.0/(1e-15 + config.maximum_mu));
 
   StepOptions newton_step_parameters;
   newton_step_parameters.affine = 0;
@@ -156,6 +160,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
+
     ConstructSchurComplementSystem(&constraints, true /*init*/, &sys);
 
     Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
@@ -166,7 +171,9 @@ bool Solve(const DenseMatrix& b, Program& prog,
     }
 
     if (update_mu) {
+      START_TIMER(Mu)
       newton_step_parameters.inv_sqrt_mu = UpdateMu(constraints, llt, sys, b, config, rankK,  &y);
+      END_TIMER
     } else {
       centering_steps++;
     }
@@ -191,7 +198,9 @@ bool Solve(const DenseMatrix& b, Program& prog,
     newton_step_parameters.c_weight = newton_step_parameters.inv_sqrt_mu;
 
     StepInfo info;
+    START_TIMER(Step)
     TakeStep(&constraints, newton_step_parameters, y, &info);
+    END_TIMER
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
     const double d_inf = std::fabs(info.norminfd);

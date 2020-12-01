@@ -335,9 +335,9 @@ class JacobiSolver {
   }
 
   int n_;
-  bool full_ = false;
-  std::vector<Matrix> powers_of_A_;
   Matrix W_;
+  std::vector<Matrix> powers_of_A_;
+  bool full_ = false;
 };
 
 

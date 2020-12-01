@@ -1,14 +1,4 @@
-
-MKLROOT=/opt/intel/compilers_and_libraries_2018.3.222/linux/mkl/
-COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_MKL_ALL  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
-COPTSI=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_MKL_ALL  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
-
-#Sequential
-#LOPTS= -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
-
-#Parallel
-LOPTS= -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
-
+COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS 
 EIGEN=$(EIGEN_DIR)
 CONEX=../
 
@@ -51,14 +41,13 @@ vect_jordan_matrix_algebra.o: ../conex/vect_jordan_matrix_algebra.cc
 	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/vect_jordan_matrix_algebra.cc
 
 conex.o: conex.h conex.cc
-	g++ -c $(COPTSI)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
+	g++ -c $(COPTS)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
 
 libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o soc_constraint.o
-	g++ -static-libstdc++   -Wl,--exclude-libs,ALL -Wl,--gc-sections  -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o soc_constraint.o   $(LOPTS)    -fopenmp
+	g++ -static-libstdc++ -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o soc_constraint.o -lblas 
 
 main: libconex.so
-	g++ main.cc bin/mkl/libconex.so 
-	#g++ main.cc $(LOPTS) bin/blas/libconex.so
+	g++ main.cc bin/blas/libconex.so
 
 .PHONY: clean
 

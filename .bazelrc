@@ -2,6 +2,7 @@ build --cxxopt='-std=c++17'
 build --linkopt="-lblas"
 build --copt="-DEIGEN_USE_BLAS"
 build --copt="-O3"
+build --copt="-fPIC"
 
 build:benchmark --copt="-g"
 build:benchmark --copt="-fno-omit-frame-pointer"

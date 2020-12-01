@@ -6,7 +6,7 @@ function run_tests(path_to_conex_library)
   LPTests();
   SDPTests();
   SparseTests();
-  SedumiTests();
+
 
 function LPTests()
   p = ConexProgram();
@@ -68,7 +68,6 @@ function SDPTests()
 
 function SparseTests()
   p = ConexProgram();
-
   num_var = 1;
 
   n = 3;
@@ -103,34 +102,8 @@ function SparseTests()
   if (norm(b1 + b2 - b(:)) > 1e-12)
       error('Test failed: dual constraints violated.')
   end
-  
-function SedumiTests()
-  m = 40;
-  n = 140;
-  K.s = n;
-  sym = @(x) x + x';
-  vect = @(x) x(:);
-  for i = 1:m
-    A(i, :) = vect(sym(randn(n, n)))';
-  end
-  x = randn(n, n); x = x*x';
-  x = eye(n, n); 
-  b = A * x(:);
-  c = vect(eye(n, n));
 
-  tic;
-  [xc, yc] = conex(A, b, c, K);
-  time_conex = toc;
-
-  time_sedumi = -1;
-  if exist('sedumi', 'file') == 2 %a matlab file name sedumi exists
-    tic
-    [xs, ys] = sedumi(A, b, c, K);
-    time_sedumi = toc;
-    fprintf('Times: Sedumi %d,  Conex %d \n', [time_sedumi, time_conex]);
-    fprintf('|Ax-b|: Sedumi %d,  Conex %d \n', [norm(A*xs-b), norm(A*xc-b)]);
-    fprintf('eig min |x|: Sedumi %d,  Conex %d \n', [min(eigK(xs, K)), min(eigK(xc, K))]);
-    fprintf('eig min |s|: Sedumi %d,  Conex %d \n', [min(eigK(c-A'*ys, K)), min(eigK(c-A'*yc, K))]);
-  end
-
+function e = dimacs(A, b, c, x, y) 
+  e(1) = norm(A*x(:)-b)/(1+norm(b(:),'inf'));
+  e(2) = (c(:)'*x - b'*y)/(1 + abs(c(:)'*x) + abs(b'*y));
 
