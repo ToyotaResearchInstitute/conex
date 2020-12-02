@@ -105,8 +105,8 @@ function SparseTests()
   end
   
 function SedumiTests()
-  m = 15;
-  n = 150;
+  n = 200;
+  m = 50;
   K.s = n;
   sym = @(x) x + x';
   vect = @(x) x(:);

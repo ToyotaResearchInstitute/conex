@@ -26,12 +26,18 @@ info.cpusec = 0;
 problem = ConexPreprocess(A, b, c, K);
 
 p = ConexProgram();
-for i = 1:length(problem.K.s)
-  n = problem.K.s(i);
-  Ai2 = problem.constraints{i}.matrix_conex_format;
-  p.AddSparseLinearMatrixInequality(Ai2, reshape(problem.constraints{i}.affine, n, n),  ...
-  problem.constraints{i}.variables-1);
-  %p.AddDenseLinearMatrixInequality(Ai2, reshape(problem.constraints{i}.affine, n, n));
+if length(problem.K.s)  > 1
+  for i = 1:length(problem.K.s)
+    n = problem.K.s(i);
+    Ai2 = problem.constraints{i}.matrix_conex_format;
+    p.AddSparseLinearMatrixInequality(Ai2, reshape(problem.constraints{i}.affine, n, n),  ...
+    problem.constraints{i}.variables-1);
+    %p.AddDenseLinearMatrixInequality(Ai2, reshape(problem.constraints{i}.affine, n, n));
+  end
+else
+    n = problem.K.s(1);
+    Ai2 = problem.constraints{1}.matrix_conex_format;
+    p.AddDenseLinearMatrixInequality(Ai2, reshape(problem.constraints{1}.affine, n, n));
 end
 
 p.options.inv_sqrt_mu_max = 50000;

@@ -27,9 +27,9 @@ classdef ConexProgram < handle
  methods
     function self = ConexProgram(self)
       if ~libisloaded('libconex')
-        loadlibrary ../bin/mkl/libconex.so ../conex.h
-        %setenv('BLAS_VERSION','/usr/lib/x86_64-linux-gnu/libblas.so.3')
-        %loadlibrary ../bin/blas/libconex.so ../conex.h
+%        loadlibrary ../bin/mkl/libconex.so ../conex.h
+        setenv('BLAS_VERSION','/usr/lib/x86_64-linux-gnu/libblas.so.3')
+        loadlibrary ../bin/blas/libconex.so ../conex.h
       end
       self.p = calllib('libconex', 'ConexCreateConeProgram');
       self.options = libstruct('ConexSolverConfiguration');
@@ -48,7 +48,7 @@ classdef ConexProgram < handle
       num_constraint = size(A, 1);
       Aptr = libpointer('doublePtr', full(A(:)));
       Cptr = libpointer('doublePtr', full(c));
-      self.constraints(end+1) =calllib('libconex', 'ConexAddDenseLinearConstraint', self.p, Aptr,  ...
+      self.constraints(end+1) = calllib('libconex', 'ConexAddDenseLinearConstraint', self.p, Aptr,  ...
       num_constraint, num_var, Cptr, num_constraint);
     end
 
@@ -85,19 +85,19 @@ classdef ConexProgram < handle
     end
 
     function [y, x, status] = Maximize(self, b)
-        if size(b, 2) > 1 && size(b, 1) > 1
-          error('Cost must be a vector.')
-        end
-        num_var = length(b);
-        bptr = libpointer('doublePtr', full(b));
-        yptr = libpointer('doublePtr', zeros(num_var, 1));
-        status = calllib('libconex', 'ConexSolve', self.p, bptr, length(b), self.options, yptr, num_var);
+      if size(b, 2) > 1 && size(b, 1) > 1
+        error('Cost must be a vector.')
+      end
+      num_var = length(b);
+      bptr = libpointer('doublePtr', full(b));
+      yptr = libpointer('doublePtr', zeros(num_var, 1));
+      status = calllib('libconex', 'ConexSolve', self.p, bptr, length(b), self.options, yptr, num_var);
 
-        x = {};
-        for i = 1:length(self.constraints)
-          x{i} = self.GetDualVariable(self.constraints(i));
-        end
-        y = yptr.Value;
+      x = {};
+      for i = 1:length(self.constraints)
+        x{i} = self.GetDualVariable(self.constraints(i));
+      end
+      y = yptr.Value;
     end
 
  end

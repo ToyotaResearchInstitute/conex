@@ -8,10 +8,11 @@
 #include "conex/eigen_decomp.h"
 
 using DenseMatrix = Eigen::MatrixXd;
-#if 1
+#define TEST_OR_PROFILE 0
+#if TEST_OR_PROFILE
 int TestDiagonalSDP() {
-  int n = 20;
-  int m = 10;
+  int n = 5;
+  int m = 2;
   SolverConfiguration config;
   config.inv_sqrt_mu_max = 25000;
   config.prepare_dual_variables = true;
@@ -127,7 +128,7 @@ TEST(SDP, SparseAndDenseAgree) {
 int TestSDP(int i) {
   SolverConfiguration config;
   int n = 150;
-  int m = 13;
+  int m = 50;
   auto constraints2 = GetRandomDenseMatrices(n, m);
 
   DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
@@ -139,7 +140,6 @@ int TestSDP(int i) {
 
 
   auto b = GetFeasibleObjective(m, prog.constraints);
-  DUMP("Calling!");
   Solve(b, prog, config, y.data());
   return 0;
 

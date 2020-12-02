@@ -23,9 +23,16 @@ cc_test(
 cc_test(
     name = "sdp",
     srcs = glob(["test/test_sdp.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
+    copts = ["-Iexternal/gtest/include -fno-omit-frame-pointer"], 
     deps = ["@gtest//:main", "conex_lib", "test_util"],
 )
+
+cc_binary(
+    name = "psdp",
+    srcs = glob(["test/profile_sdp.cc"]),
+    deps = ["@gtest//:main", "conex_lib", "test_util"],
+)
+
 
 cc_test(
     name = "socp",
