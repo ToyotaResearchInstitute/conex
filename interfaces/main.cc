@@ -3,8 +3,6 @@
 
 
 int main() {
-
-
   void* p = ConexCreateConeProgram();
 
   int status;
@@ -31,7 +29,4 @@ int main() {
   ConexSolve(p, &b[0], num_vars, &config, &y[0], num_vars);
 
   ConexDeleteConeProgram(p);
-
-
-
 }

@@ -6,9 +6,9 @@ function run_tests(path_to_conex_library)
   %LPTests();
   %SDPTests();
   %SparseTests();
-  n = 10;
-  %m = round(.1*n*n);
-  m = 10%round(n);
+  n = 50;
+  m = round(.1*n*n);
+  %m = 10%round(n);
   num_problems = 1; 
   SedumiTests(n, m, num_problems);
 

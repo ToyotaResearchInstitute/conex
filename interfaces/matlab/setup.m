@@ -1,6 +1,13 @@
-function setup()
+function setup(K)
+    if (nargin < 1)
+      K.use_blas = 0 
+    end
+
     %TODO(FrankPermenter): Remove this. 
-    setenv('BLAS_VERSION','/usr/lib/x86_64-linux-gnu/libblas.so.3')
+    if (K.use_blas)
+      display('Setting Matlab to BLAS-Mode')
+      setenv('BLAS_VERSION','/usr/lib/x86_64-linux-gnu/libblas.so.3')
+    end
 
     display('Updating path...')
     directory = fileparts(which('setup.m'));
