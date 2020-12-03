@@ -110,6 +110,11 @@ bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config,
            double* primal_variable) {
 
+#ifdef EIGEN_USE_MKL_ALL
+  std::cout << "CONEX: MKL Enabled"; 
+#endif
+
+
   auto& constraints = prog.constraints;
   auto& sys = prog.sys;
 

@@ -6,7 +6,11 @@ function run_tests(path_to_conex_library)
   %LPTests();
   %SDPTests();
   %SparseTests();
-  SedumiTests();
+  n = 10;
+  %m = round(.1*n*n);
+  m = 10%round(n);
+  num_problems = 1; 
+  SedumiTests(n, m, num_problems);
 
 function LPTests()
   p = ConexProgram();
@@ -103,49 +107,84 @@ function SparseTests()
   if (norm(b1 + b2 - b(:)) > 1e-12)
       error('Test failed: dual constraints violated.')
   end
-  
-function SedumiTests()
-  n = 200;
-  m = 50;
+
+function e = dimacs(A, b, c, x, y) 
+  e(1) = norm(A*x(:)-b)/(1+norm(b(:),'inf'));
+  e(2) = (c(:)'*x - b'*y)/(1 + abs(c(:)'*x) + abs(b'*y));
+
+
+
+function SedumiTests(n, m, num)
+
+
   K.s = n;
   sym = @(x) x + x';
   vect = @(x) x(:);
-  for i = 1:m
-    A(i, :) = vect(sym(randn(n, n)))';
+  for t=1:num
+    A = zeros(m, n*n);
+    for i = 1:m
+      A(i, :) = vect(sym(randn(n, n)))';
+    end
+    %x = randn(n, n); x = x*x';
+    %x = eye(n, n); x = x*x';
+    x = eye(n, n); 
+    b = A * x(:);
+    c = vect(eye(n, n));
+
+    [xc, yc, info] = conex(A, b, c, K);
+    time_conex(t) = info.cpusec;
+
+    if 0
+    time_sedumi = -1;
+    if exist('sedumi', 'file') == 2 %a matlab file name sedumi exists
+      tic
+      [xs, ys] = sedumi(A, b, c, K);
+      time_sedumi(t) = toc;
+      errPs(t) = norm(A*xs-b);
+      errPc(t) = norm(A*xc-b);
+      eigXs(t) = min(eigK(xs, K))
+      eigXc(t) = min(eigK(xc, K));
+      eigSs(t) = min(eigK(c-A'*ys, K));
+      eigSc(t) = min(eigK(c-A'*yc, K));
+    end
+    end
+
+    if exist('sdpt3', 'file') == 2 %a matlab file name sedumi exists
+      [blk,Avec,C,b,perm] = read_sedumi(A,b,c,K);
+      options = sqlparameters;
+      options.vers = 2;
+      profile on
+      tic;
+      [~, xs, ys] = sdpt3(blk, Avec, C, b, options);
+      xs = xs{1}(:);
+      ys = ys(:);
+      time_sdpt3(t) = toc;
+      profile off
+      errPs(t) = norm(A*xs-b)/(1+norm(b(:),'inf'));
+      errPc(t) = norm(A*xc-b)/(1+norm(b(:),'inf'));
+
+      errGaps(t) =   (c(:)'*xs - b'*ys)/(1 + abs(c(:)'*xs) + abs(b'*ys));
+      errGapc(t) =   (c(:)'*xc - b'*yc)/(1 + abs(c(:)'*xc) + abs(b'*yc));
+
+      eigXs(t) = min(eigK(xs, K))
+      eigXc(t) = min(eigK(xc, K));
+      eigSs(t) = min(eigK(c-A'*ys, K));
+      eigSc(t) = min(eigK(c-A'*yc, K));
+      fprintf('|e_p, e_g| Conex %d\n', dimacs(A,b,c,xc,yc));
+      fprintf('|e_p, e_g| SDPT3 %d\n', dimacs(A,b,c,xs,ys));
+    end
   end
-  %x = randn(n, n); x = x*x';
-  %x = eye(n, n); x = x*x';
-  x = eye(n, n); 
-  b = A * x(:);
-  c = vect(eye(n, n));
 
-  [xc, yc, info] = conex(A, b, c, K);
-  time_conex = info.cpusec;
+      fprintf('Times: SDPT3 %d,  Conex %d \n', [mean(time_sdpt3), mean(time_conex)]);
+      fprintf('|Ax-b|: SDPT3 %d,  Conex %d \n', [mean(errPs), mean(errPc) ]);
+      fprintf('Gap |x|: SDPT3 %d,  Conex %d \n', [mean(errGaps), mean(errGapc)]);
 
-  time_sedumi = -1;
-  if exist('sedumi', 'file') == 2 %a matlab file name sedumi exists
-    tic
-    [xs, ys] = sedumi(A, b, c, K);
-    time_sedumi = toc;
-    fprintf('Times: Sedumi %d,  Conex %d \n', [time_sedumi, time_conex]);
-    fprintf('|Ax-b|: Sedumi %d,  Conex %d \n', [norm(A*xs-b), norm(A*xc-b)]);
-    fprintf('eig min |x|: Sedumi %d,  Conex %d \n', [min(eigK(xs, K)), min(eigK(xc, K))]);
-    fprintf('eig min |s|: Sedumi %d,  Conex %d \n', [min(eigK(c-A'*ys, K)), min(eigK(c-A'*yc, K))]);
-  end
+      fprintf('eig min |x|: SDPT3 %d,  Conex %d \n', [mean(eigXs), mean(eigXc)]);
+      fprintf('eig min |s|: SDPT3 %d,  Conex %d \n', [mean(eigSs), mean(eigSc)]);
 
-  time_sdpt3 = -1;
-  if exist('sdpt3', 'file') == 2 %a matlab file name sedumi exists
-    [blk,Avec,C,b,perm] = read_sedumi(A,b,c,K);
-    options = sqlparameters;
-    options.vers = 2;
-    tic;
-    [~, xs, ys] = sdpt3(blk, Avec, C, b, options);
-    xs = xs{1}(:);
-    ys = ys(:);
-    time_sdpt3 = toc;
-    fprintf('Times: SDPT3 %d,  Conex %d \n', [time_sdpt3, time_conex]);
-    fprintf('|Ax-b|: SDPT3 %d,  Conex %d \n', [norm(A*xs-b), norm(A*xc-b)]);
-    fprintf('eig min |x|: SDPT3 %d,  Conex %d \n', [min(eigK(xs, K)), min(eigK(xc, K))]);
-    fprintf('eig min |s|: SDPT3 %d,  Conex %d \n', [min(eigK(c-A'*ys, K)), min(eigK(c-A'*yc, K))]);
-  end
+      fprintf('Times: SDPT3 %d,  Conex %d \n', [var(time_sdpt3), var(time_conex)]);
+      fprintf('|Ax-b|: SDPT3 %d,  Conex %d \n', [var(errPs), var(errPc) ]);
+      fprintf('Gap: SDPT3 %d,  Conex %d \n', [var(errGaps), var(errGapc)]);
 
+      fprintf('eig min |x|: SDPT3 %d,  Conex %d \n', [var(eigXs), var(eigXc)]);
+      fprintf('eig min |s|: SDPT3 %d,  Conex %d \n', [var(eigSs), var(eigSc)]);

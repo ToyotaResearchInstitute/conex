@@ -14,6 +14,7 @@ end
 if nargin < 5
   pars =[];
   pars.errors = 0;
+  pars.blkdiag = length(K.s) > 1;
 end
 
 info.numerr = 0;
@@ -23,10 +24,16 @@ info.feasratio = 1;
 info.timing = [0, 0, 0]; 
 info.cpusec = 0;
 
-problem = ConexPreprocess(A, b, c, K);
+
+if (pars.blkdiag)
+  problem = ConexPreprocess(A, b, c, K);
+else
+  problem.K = K;
+  problem.b = b;
+end
 
 p = ConexProgram();
-if length(problem.K.s)  > 1
+if length(K.s)  > 1
   for i = 1:length(problem.K.s)
     n = problem.K.s(i);
     Ai2 = problem.constraints{i}.matrix_conex_format;
@@ -36,10 +43,11 @@ if length(problem.K.s)  > 1
   end
 else
     n = problem.K.s(1);
-    Ai2 = problem.constraints{1}.matrix_conex_format;
-    p.AddDenseLinearMatrixInequality(Ai2, reshape(problem.constraints{1}.affine, n, n));
+    m = size(A, 1);
+    p.AddDenseLinearMatrixInequality(reshape(A', n, n*m) , reshape(full(c), n, n));
 end
 
+%p.options.inv_sqrt_mu_max = 50000;
 p.options.inv_sqrt_mu_max = 50000;
 p.options.infeasibility_threshold = 1e10;
 p.options.max_iteration = 25;
@@ -53,7 +61,12 @@ tic;
 info.cpusec = toc;
 info.dinf = ~solved;
 info.pinf = ~solved;
-[x, y] = problem.ConexPostProcess(conex_primal, conex_dual);
+if pars.blkdiag
+  [x, y] = problem.ConexPostProcess(conex_primal, conex_dual);
+else
+  y = conex_primal;
+  x = conex_dual{1};
+end
 
 if pars.errors
   info.errors(1) = abs(c'*x - b'*y);

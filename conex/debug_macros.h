@@ -15,11 +15,11 @@
 #define START_TIMER(x) \
   { \
   auto start1 = std::chrono::high_resolution_clock::now(); \
-  std::cout << #x << ":";
+  std::cout << #x <<"(us)"<< ":";
 
 #define END_TIMER \
   auto stop1 = std::chrono::high_resolution_clock::now(); \
-  std::cout << " "   << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << "us, " ; \
+  std::cout << " "   << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() << ", " ; \
   }
 template<typename T1, typename T2>
 inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& P) {
