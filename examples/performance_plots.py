@@ -15,47 +15,108 @@ def geodist(v0, varray):
     val = [geodistv(v0, v) for v in varray]
     return val
 
+def PlotMuUpdateVsDivBound():
+    m = 30
+    n = 30
+    hyper_complex_dim = 1
+    config1 = Conex().DefaultConfiguration()
+    config2 = Conex().DefaultConfiguration()
+    config3 = Conex().DefaultConfiguration()
+    config4 = Conex().DefaultConfiguration()
+    config1.inv_sqrt_mu_max = 100000
+    config2.inv_sqrt_mu_max = 100000
+    config3.inv_sqrt_mu_max = 100000
+    config4.inv_sqrt_mu_max = 100000
+    config1.final_centering_steps = 1
+    config2.final_centering_steps = 1
+    config3.final_centering_steps = 1
+    config4.final_centering_steps = 1
+
+    config1.divergence_upper_bound = .1
+    config2.divergence_upper_bound = .5
+    config3.divergence_upper_bound = 10
+    config4.divergence_upper_bound = 1000
+
+    configs = []
+    labels = []
+    configs.append(config1)
+    configs.append(config2)
+    configs.append(config3)
+    configs.append(config4)
+    hyper_complex_dim = 1
+    mu = SolveRandomHermitianSDP(m, n, hyper_complex_dim, configs)
+
+def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, configs):
+    for config in configs: 
+        solution = prog.Maximize(b, config)
+        mu = []
+        mu = [stats.mu for stats in prog.GetIterationStats()]
+        mus.append(mu)
+        labels.append('divub ' + str(configs[i].divergence_upper_bound))
+
+    Plot(title, show_plot, mus, labels)
+
+
+
 def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
     m = 10
-
     config = Conex().DefaultConfiguration()
     config.divergence_upper_bound = 1000
     config.inv_sqrt_mu_max = 130000
     config.final_centering_steps = 1
 
+    mu = []
     if 0:
-        mu5 = SolveRandomSDP(m, 5, config)
-        mu25 = SolveRandomSDP(m, 10, config)
-        mu50 = SolveRandomSDP(m, 50, config)
-        mu100 = SolveRandomSDP(m, 100, config)
+        rank1 = 5
+        rank2 = 10
+        rank3 = 50
+        rank4 = 100
+        mu.append(SolveRandomSDP(m, rank1, config))
+        mu.append(SolveRandomSDP(m, rank2, config))
+        mu.append(SolveRandomSDP(m, rank3, config))
+        mu.append(SolveRandomSDP(m, rank4, config))
     else:
         if hyper_complex_dim > 0:
             if hyper_complex_dim == 8:
                 config.divergence_upper_bound = .1
                 config.inv_sqrt_mu_max = 1000
-            mu5 = SolveRandomHermitianSDP(m, 6, hyper_complex_dim, config)
-            mu25 = SolveRandomHermitianSDP(m, 12, hyper_complex_dim, config)
-            mu50 = SolveRandomHermitianSDP(m, 48, hyper_complex_dim, config)
-            mu100 = SolveRandomHermitianSDP(m, 99, hyper_complex_dim, config)
-            rank5 = 6; rank25 = 12; rank50 = 48; rank100 = 99;
+            rank1 = 6; rank2 = 12; rank3 = 48; rank4 = 99;
+            mu.append(SolveRandomHermitianSDP(m, rank1, hyper_complex_dim, config))
+            mu.append(SolveRandomHermitianSDP(m, rank2, hyper_complex_dim, config))
+            mu.append(SolveRandomHermitianSDP(m, rank3, hyper_complex_dim, config))
+            mu.append(SolveRandomHermitianSDP(m, rank4, hyper_complex_dim, config))
         else:
-            mu5, rank5 = SolveMixedConeProgram(m, 1, config)
-            mu25, rank25 = SolveMixedConeProgram(m, 2, config)
-            mu50, rank50 = SolveMixedConeProgram(m, 3, config)
-            mu100, rank100 = SolveMixedConeProgram(m, 4, config) 
+            mu1, rank1 = SolveMixedConeProgram(m, 1, config)
+            mu2, rank2 = SolveMixedConeProgram(m, 2, config)
+            mu3, rank3 = SolveMixedConeProgram(m, 3, config)
+            mu4, rank4 = SolveMixedConeProgram(m, 4, config) 
+            mu.append(mu1)
+            mu.append(mu2)
+            mu.append(mu3)
+            mu.append(mu4)
 
+    labels = []
+    labels.append("n = " + str(rank1));
+    labels.append("n = " + str(rank2));
+    labels.append("n = " + str(rank3));
+    labels.append("n = " + str(rank4));
+    print labels
+
+    Plot(title, show_plot, mu, labels)
+
+def Plot(filename, showplot, mu, labels):
     plt.clf()
     plt.rcParams.update({'font.size': 13})
-    plt.plot( range(1, 1+len(mu5)),   np.log(mu5),  'k--', label="n="+str(rank5))
-    plt.plot(range(1, 1+len(mu25)),  np.log(mu25),  'k-+', label="n="+str(rank25))
-    plt.plot(range(1, 1+len(mu50)), np.log(mu50),  'k-o', label="n="+str(rank50))
-    plt.plot(range(1, 1+len(mu100)), np.log(mu100),  'k', label="n="+str(rank100))
+    styles = ['k--',  'k-*', 'k-.', 'k-o', 'k-*']
+    for i in range(0, len(mu)):
+        mui = mu[i]
+        plt.plot(range(1, 1+len(mui)),   np.log(mui),  styles[i], label=labels[i])
+
     plt.legend()
-    plt.xlabel('Newton steps (long)')
+    plt.xlabel('Newton steps')
     plt.ylabel('log(mu)')
-#    plt.title(title)
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(title + "mu_update.eps")
+    plt.savefig(filename + "mu_update.eps")
     if show_plot:
         plt.show(True)
 
@@ -182,7 +243,7 @@ def AddRandomLinearMatrixInequality(self, numvars, order, hyper_complex_dim):
                         b[v] = b[v] + val
     return self, b
 
-def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, config):
+def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, configs):
     prog = Conex(num_variables)
 
     if hyper_complex_dim != 8:
@@ -195,11 +256,22 @@ def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, config):
             else:
                 b = np.add(b, bi)
 
-    solution = prog.Maximize(b, config)
-    mu = []
-    if solution.status:
-        mu = [stats.mu for stats in prog.GetIterationStats()]
-    return mu 
+    if isinstance(configs, list):
+        mus = []
+        for config in configs: 
+            solution = prog.Maximize(b, config)
+            mu = []
+            if solution.status:
+                mu = [stats.mu for stats in prog.GetIterationStats()]
+            mus.append(mu)
+    else:
+        solution = prog.Maximize(b, configs)
+        mus = []
+        if solution.status:
+            mus = [stats.mu for stats in prog.GetIterationStats()]
+
+    
+    return mus
 
 def SolveMixedConeProgram(num_variables, copies, config, hyper_complex_dim = [1, 2, 4]):
     prog = Conex(num_variables)
@@ -241,4 +313,6 @@ show_plot = True
 #PlotMuUpdate(2, "Complex", show_plot)
 #PlotMuUpdate(4, "Quaternion", show_plot)
 #PlotMuUpdate(-1, "special", show_plot)
-PlotMuUpdate(8, "exceptional", show_plot)
+#PlotMuUpdate(8, "exceptional", show_plot)
+#PlotMuUpdateVsDivBound()
+
