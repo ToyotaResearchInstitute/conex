@@ -59,6 +59,7 @@ p.options.final_centering_steps = 1;
 tic;
 [conex_primal, conex_dual, solved] = p.Maximize(problem.b);
 info.cpusec = toc;
+
 info.dinf = ~solved;
 info.pinf = ~solved;
 if pars.blkdiag

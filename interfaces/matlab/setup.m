@@ -3,7 +3,6 @@ function setup(K)
       K.use_blas = 0 
     end
 
-    %TODO(FrankPermenter): Remove this. 
     if (K.use_blas)
       display('Setting Matlab to BLAS-Mode')
       setenv('BLAS_VERSION','/usr/lib/x86_64-linux-gnu/libblas.so.3')
@@ -24,8 +23,8 @@ function setup(K)
 
     %Checking dependencies
     display('Checking dependencies...')
- %   if ~exist(ConexLibraryName(), 'file') 
- %      error('Cannot find Conex solver library. Please compile and add it to path.') 
- %   end
+    if ~exist(ConexLibraryName(), 'file') 
+       error('Cannot find Conex solver library. Please compile and add it to path.') 
+    end
     display('Done!')
     display('Type run_conex_tests to check installation.')

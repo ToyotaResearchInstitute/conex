@@ -23,17 +23,11 @@ classdef ConexProgram < handle
       m = size(A, 2) / n;
     end
  end
-% setenv('BLAS_VERSION', '/usr/lib/x86_64-linux-gnu/libblas.so.3')
+
  methods
     function self = ConexProgram(self)
       if ~libisloaded('libconex')
-        if ~isempty(getenv('BLAS_VERSION'))
-          display('Using Conex-BLAS')
-          loadlibrary ../bin/blas/libconex.so ../conex.h
-        else
-          display('Using Conex-MKL')
-          loadlibrary ../bin/mkl/libconex.so ../conex.h
-        end
+        loadlibrary libconex.so ../conex.h
       end
       self.p = calllib('libconex', 'ConexCreateConeProgram');
       self.options = libstruct('ConexSolverConfiguration');
