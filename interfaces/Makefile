@@ -3,7 +3,10 @@ MKLROOT=/opt/intel/compilers_and_libraries_2018.3.222/linux/mkl/
 COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_MKL_ALL  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
 COPTSI=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_MKL_ALL  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
 
+#Sequential
 #LOPTS= -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
+
+#Parallel
 LOPTS= -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
 
 EIGEN=$(EIGEN_DIR)
