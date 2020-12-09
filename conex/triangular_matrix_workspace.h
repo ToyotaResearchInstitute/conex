@@ -51,8 +51,8 @@ struct TriangularMatrixWorkspace {
   std::vector<Eigen::Map<Eigen::MatrixXd>> off_diagonal;
   std::vector<std::vector<double*>> seperator_diagonal;
 
-  std::vector<std::vector<int>> separators;
   std::vector<std::vector<int>> snodes;
+  std::vector<std::vector<int>> separators;
 
   int SizeOfSupernode(int i) const {
     return supernode_size.at(i) * supernode_size.at(i);

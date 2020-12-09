@@ -116,10 +116,10 @@ class JacobiSolver {
     return x.eigenvalues();
   }
 
-  std::vector<MatrixXd> powers_of_A_;
-  VectorXd r0_;
   MatrixXd W_;
   int n_;
+  VectorXd r0_;
+  std::vector<MatrixXd> powers_of_A_;
 };
 
 }  // namespace

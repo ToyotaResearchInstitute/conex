@@ -109,7 +109,7 @@ std::vector<int> ReplaceWithPosition(const std::vector<int>& a,
 std::vector<int> ConcatFirstN(const std::vector<int>& a, int N,
                               const std::vector<int>& b) {
   std::vector<int> y;
-  for (size_t i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     y.push_back(a.at(i));
   }
   for (size_t j = 0; j < b.size(); j++) {
@@ -164,7 +164,6 @@ TEST(LDLT, TestAssembly) {
   Eigen::MatrixXd Qi = Eigen::MatrixXd::Identity(3, 3) * 2;
 
   int N = 2;
-  int max_var = (N + 1) * (2 + 1);
 
   ConstraintManager prog;
   BuildLQRProblem(N, &prog);
@@ -359,7 +358,6 @@ TEST(LDLT, Benchmark2) {
   using Eigen::MatrixXd;
 
   int N = 250;
-  int max_var = (N + 1) * (2 + 1);
 
   ConstraintManager prog;
   BuildLQRProblem(N, &prog);

@@ -233,7 +233,7 @@ TEST(SupernodalSolver, TestFullSolver) {
   }
   DUMP(T::ToDense(mat));
   int val = 0;
-  for (int i = 0; i < cliques.size(); i++) {
+  for (size_t i = 0; i < cliques.size(); i++) {
     auto SS = mat.workspace_.seperator_diagonal.at(i);
     Foo data;
     data.supernode_block = mat.supernodes.at(i).data();
