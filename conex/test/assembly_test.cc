@@ -178,7 +178,7 @@ TEST(LDLT, TestAssembly) {
   vector<vector<int>> supernodes;
 
   MatrixData data;
-  TIME(data = GetData(cliques););
+  data = GetData(cliques);
   SparseTriangularMatrix mat(data);
 
   data.supernodes_original_labels.resize(cliques.size());
@@ -243,15 +243,15 @@ TEST(LDLT, TestAssembly) {
   b.setConstant(1);
   Eigen::LDLT<MatrixXd> ldlt;
   VectorXd yref;
-  TIME(ldlt.compute(T); yref = ldlt.solve(b););
+  ldlt.compute(T); yref = ldlt.solve(b);
   DUMP(MatrixXd(ldlt.matrixL()));
 
   VectorXd y = b;
-  TIME(std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
+  std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
        BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
                                                    &factorization);
        BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_,
-                                                   factorization, &y););
+                                                   factorization, &y);
 
   EXPECT_NEAR((Pt * y - yref).norm(), 0, 1e-9);
   // EXPECT_NEAR( (y-yref).norm(), 0, 1e-9);
@@ -373,7 +373,7 @@ TEST(LDLT, Benchmark2) {
   vector<vector<int>> supernodes;
 
   MatrixData data;
-  TIME(data = GetData(cliques););
+  data = GetData(cliques);
   SparseTriangularMatrix mat(data);
 
   data.supernodes_original_labels.resize(cliques.size());
@@ -405,11 +405,11 @@ TEST(LDLT, Benchmark2) {
   VectorXd b(data.N);
   b.setConstant(1);
   VectorXd y = b;
-  TIME(std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
+  std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
        BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
                                                    &factorization);
        BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_,
-                                                   factorization, &y););
+                                                   factorization, &y);
 #if 0
   MatrixXd G = TriangularMatrixOperations::ToDense(mat).selfadjointView<Eigen::Lower>();
 
