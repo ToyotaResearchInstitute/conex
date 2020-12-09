@@ -7,21 +7,19 @@
 struct SolverConfiguration {
   int prepare_dual_variables = 0;
   int initialization_mode = 0;
-  //TODO(FrankPermenter): Remove inv_sqrt_mu_max
+  // TODO(FrankPermenter): Remove inv_sqrt_mu_max
   double inv_sqrt_mu_max = 1000;
   double minimum_mu = 1e-12;
   double maximum_mu = 1e4;
   double divergence_upper_bound = 1;
   int final_centering_steps = 5;
   int max_iterations = 25;
-  double infeasibility_threshold = 1e5; 
+  double infeasibility_threshold = 1e5;
 };
 
 class Program {
  public:
-  void SetNumberOfVariables(int m) {
-    sys.m_ = m;
-  }
+  void SetNumberOfVariables(int m) { sys.m_ = m; }
   void InitializeWorkspace() {
     for (auto& constraint : constraints) {
       workspaces.push_back(constraint.workspace());
@@ -36,25 +34,19 @@ class Program {
 
   std::vector<Constraint> constraints;
 
-  int NumberOfConstraints() {
-    return constraints.size();
-  }
+  int NumberOfConstraints() { return constraints.size(); }
 
   SchurComplementSystem sys;
   WorkspaceStats stats;
   std::vector<Workspace> workspaces;
-  Eigen::VectorXd memory; 
+  Eigen::VectorXd memory;
   bool is_initialized = false;
 };
 
 class ConvexProgram {
-  void AddQuadraticCost() {
-    num_epigraph++;
-  }
+  void AddQuadraticCost() { num_epigraph++; }
 
-  void AddLinearCost() {
-
-  }
+  void AddLinearCost() {}
 
  private:
   Program prog;
@@ -73,7 +65,5 @@ class PolynomialProgram {
 };
 
 DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints);
-bool Solve(const DenseMatrix& b, Program& prog,  
-           const SolverConfiguration& config,
-           double* primal_variable);
-
+bool Solve(const DenseMatrix& b, Program& prog,
+           const SolverConfiguration& config, double* primal_variable);

@@ -1,8 +1,8 @@
 #include "conex/linear_inequality.h"
 #include "conex/debug_macros.h"
 using T = LinearInequality;
-using std::vector;
 using Eigen::MatrixXd;
+using std::vector;
 
 namespace {
 
@@ -17,7 +17,7 @@ int Find(std::vector<int>& x, int v) {
   return -1;
 }
 
-} // namespace
+}  // namespace
 
 void T::Set(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
   int i = 0;
@@ -55,12 +55,9 @@ void T::Increment(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
   }
 }
 
-void T::SetOffDiagonal(Eigen::Map<MatrixXd>* data) {
-}
+void T::SetOffDiagonal(Eigen::Map<MatrixXd>* data) {}
 
-void T::SetSupernodeDiagonal(Eigen::Map<MatrixXd>* data) {
-  data->setZero();
-}
+void T::SetSupernodeDiagonal(Eigen::Map<MatrixXd>* data) { data->setZero(); }
 
 int T::GetCoeff(int i, int j) {
   int row = Find(variables_, i);
@@ -68,9 +65,7 @@ int T::GetCoeff(int i, int j) {
   return A_.col(row).dot(A_.col(col));
 }
 
-void T::BindDiagonalBlock(const DiagonalBlock* data) {
-  diag.push_back(*data);
-}
+void T::BindDiagonalBlock(const DiagonalBlock* data) { diag.push_back(*data); }
 
 void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   if (data->stride != -1) {
@@ -80,7 +75,7 @@ void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   }
 }
 
-template<typename T>
+template <typename T>
 vector<T> InitVector(T* data, int N) {
   vector<T> y;
   for (int i = 0; i < N; i++) {
@@ -89,8 +84,8 @@ vector<T> InitVector(T* data, int N) {
   return y;
 }
 
-void T::Scatter(const std::vector<int>& r, 
-             const std::vector<int>& c, double** data) {
+void T::Scatter(const std::vector<int>& r, const std::vector<int>& c,
+                double** data) {
   int cnt = 0;
   for (size_t j = 0; j < c.size(); j++) {
     for (size_t i = j; i < r.size(); i++) {
@@ -103,9 +98,11 @@ void T::UpdateBlocks() {
   for (const auto& d : diag) {
     Eigen::Map<MatrixXd> data(d.data, d.num_vars, d.num_vars);
     if (d.assign) {
-      Set(InitVector(d.var_data, d.num_vars), InitVector(d.var_data, d.num_vars), &data);
+      Set(InitVector(d.var_data, d.num_vars),
+          InitVector(d.var_data, d.num_vars), &data);
     } else {
-      Increment(InitVector(d.var_data, d.num_vars), InitVector(d.var_data, d.num_vars), &data);
+      Increment(InitVector(d.var_data, d.num_vars),
+                InitVector(d.var_data, d.num_vars), &data);
     }
   }
   for (const auto& d : off_diag) {
@@ -113,12 +110,13 @@ void T::UpdateBlocks() {
     if (d.assign) {
       SetDiagonalBlock(*this, InitVector(d.row_data, d.num_rows), &data);
     } else {
-      Increment(InitVector(d.row_data, d.num_rows), InitVector(d.col_data, d.num_cols), &data);
+      Increment(InitVector(d.row_data, d.num_rows),
+                InitVector(d.col_data, d.num_cols), &data);
     }
   }
 
   for (const auto& d : scatter_block) {
-    Scatter(InitVector(d.row_data, d.num_rows), InitVector(d.col_data, d.num_cols), 
-            d.data_pointers);
+    Scatter(InitVector(d.row_data, d.num_rows),
+            InitVector(d.col_data, d.num_cols), d.data_pointers);
   }
 }

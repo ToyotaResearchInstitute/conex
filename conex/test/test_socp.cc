@@ -1,44 +1,44 @@
-#include "gtest/gtest.h"
-#include <Eigen/Dense>
 #include <iostream>
 #include <memory>
-#include "conex/dense_lmi_constraint.h"
-#include "conex/constraint.h"
-#include "conex/soc_constraint.h"
-#include "conex/quadratic_cone_constraint.h"
 #include "conex/cone_program.h"
+#include "conex/constraint.h"
+#include "conex/dense_lmi_constraint.h"
+#include "conex/quadratic_cone_constraint.h"
+#include "conex/soc_constraint.h"
+#include "gtest/gtest.h"
+#include <Eigen/Dense>
 
 using DenseMatrix = Eigen::MatrixXd;
-
 
 int DoMain() {
   int n = 3;
   SolverConfiguration config;
   config.inv_sqrt_mu_max = 10000;
 
-  std::vector<Eigen::MatrixXd>  A;
+  std::vector<Eigen::MatrixXd> A;
   // 1 x1 x3 x3
   // x1 1
   // x2   1
   // x3     1
   DenseMatrix Wsqrt = Eigen::MatrixXd::Random(n, n);
 
-  Eigen::MatrixXd C(n+1, n+1); C.setIdentity();
-  for (int i = 1; i < n+1; i++) {
-    Eigen::MatrixXd Ai(n+1, n + 1);
+  Eigen::MatrixXd C(n + 1, n + 1);
+  C.setIdentity();
+  for (int i = 1; i < n + 1; i++) {
+    Eigen::MatrixXd Ai(n + 1, n + 1);
     Ai.setZero();
-    Ai.bottomLeftCorner(n, 1) = Wsqrt.col(i-1);
-    Ai.topRightCorner(1, n) = Wsqrt.col(i-1).transpose();
+    Ai.bottomLeftCorner(n, 1) = Wsqrt.col(i - 1);
+    Ai.topRightCorner(1, n) = Wsqrt.col(i - 1).transpose();
     A.push_back(Ai);
   }
   DenseLMIConstraint T2{n + 1, A, C};
 
   Eigen::MatrixXd b(n, 1);
 
-  DenseMatrix  As(n+1, n);
+  DenseMatrix As(n + 1, n);
   As.setZero();
   As.bottomRightCorner(n, n) = Wsqrt;
-  DenseMatrix Cs(n+1, 1);
+  DenseMatrix Cs(n + 1, 1);
   Cs.setZero();
   Cs(0) = 1;
   SOCConstraint T(As, Cs);
@@ -59,7 +59,7 @@ int DoMain() {
     EXPECT_TRUE((y1 - y2).norm() < 1e-4);
 
     DenseMatrix Q = Wsqrt.transpose() * Wsqrt;
-    DenseMatrix Aq(n+1, n);
+    DenseMatrix Aq(n + 1, n);
     Aq.setZero();
     Aq.bottomRightCorner(n, n).setIdentity();
 
@@ -74,8 +74,4 @@ int DoMain() {
   return 0;
 }
 
-TEST(Constraints, SOCP) {
-  DoMain();
-}
-
-
+TEST(Constraints, SOCP) { DoMain(); }

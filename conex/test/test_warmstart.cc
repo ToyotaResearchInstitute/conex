@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 
-#include "conex/linear_constraint.h"
-#include "conex/dense_lmi_constraint.h"
 #include "conex/cone_program.h"
+#include "conex/dense_lmi_constraint.h"
+#include "conex/linear_constraint.h"
 #include "conex/test/test_util.h"
 
 using Eigen::MatrixXd;

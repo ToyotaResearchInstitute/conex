@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
 #include "conex/cholesky_decomposition.h"
-#include "conex/elimination_ordering.h" 
+#include "conex/elimination_ordering.h"
+#include "gtest/gtest.h"
 using Matrix = Eigen::MatrixXd;
 Matrix Ones(int n) {
   Matrix x(n, n);
@@ -37,7 +37,7 @@ std::vector<int> ChordalMFS(int N, const std::vector<Clique>& cliques) {
       std::vector<int> intersection;
       IntersectionOfSorted(cliques.at(i), cliques.at(j), &intersection);
       if (intersection.size() > 0) {
-        M(i, j) = 1;  
+        M(i, j) = 1;
       }
     }
   }
@@ -123,8 +123,6 @@ int main2() {
 
 #endif
 
-
-
 TEST(Cholesky, TestArrow) {
   //  o - o - o
   //
@@ -134,6 +132,7 @@ TEST(Cholesky, TestArrow) {
   int n = 7;
   Matrix A(n, n);
 
+  // clang-format off
   A << 2, 1, 1, 0, 0, 1, 1,
        1, 3, 1, .0, 0, 1, 1,
        1, 1, 5, 3, 3, 1, 1,
@@ -141,24 +140,25 @@ TEST(Cholesky, TestArrow) {
        0, 0, 3, 3, 5, 1, 1,
        1, 1, 1, 1, 1, 4, 1,
        1, 1, 1, 1, 1, 1, 8;
+  // clang-format on
 
   std::vector<int> cliquestart{0, 2, 4};
   std::vector<int> rows{3, 3, 3};
   std::vector<int> cols{3, 3, 3};
-  vector<vector<int>> root{ {5, 6}, {}, {} };
-
+  vector<vector<int>> root{{5, 6}, {}, {}};
 
   Matrix temp = A;
   Matrix R(n, n);
   R.setZero();
 
   SparseCholeskyDecomposition(A, cliquestart, rows, root, &R);
-  EXPECT_TRUE((R*R.transpose() - A).norm() < 1e-8);
+  EXPECT_TRUE((R * R.transpose() - A).norm() < 1e-8);
 }
 
 TEST(Cholesky, TestDecomp) {
   int n = 7;
   Matrix A(n, n);
+  // clang-format off
   A << 2, 1, 1, 0, 0, 0, 0,
        1, 3, 1, .1, 0, 0, 0,
        1, 1, 5, 3, 3, 0, 0,
@@ -166,10 +166,11 @@ TEST(Cholesky, TestDecomp) {
        0, 0, 3, 3, 5, 1, 1,
        0, 0, 0, 0, 1, 4, 1,
        0, 0, 0, 0, 1, 1, 8;
+  // clang-format on
+  
   std::vector<int> cliquestart{0, 1, 2, 4};
   std::vector<int> rows{3, 3, 3, 3};
   std::vector<int> cols{1, 1, 3, 3};
-
 
   Matrix temp = A;
   Matrix R(n, n);
@@ -178,7 +179,7 @@ TEST(Cholesky, TestDecomp) {
   vector<vector<int>> root;
 
   SparseCholeskyDecomposition(A, cliquestart, rows, root, &R);
-  EXPECT_TRUE((R*R.transpose() - A).norm() < 1e-8);
+  EXPECT_TRUE((R * R.transpose() - A).norm() < 1e-8);
 }
 
 TEST(Cholesky, BlockDiag) {
@@ -187,22 +188,22 @@ TEST(Cholesky, BlockDiag) {
   std::vector<Matrix> Mcliques;
   std::vector<Clique> cliques;
 
-  //cliques.push_back({ 0, 1, 2,  7, 8});
-  cliques.push_back({ 0, 1, 2});
+  // cliques.push_back({ 0, 1, 2,  7, 8});
+  cliques.push_back({0, 1, 2});
   Mcliques.push_back(Ones(cliques.back().size()));
 
-  //cliques.push_back({ 2, 3, 4,  7, 8});
-  cliques.push_back({ 3, 4, 5});
+  // cliques.push_back({ 2, 3, 4,  7, 8});
+  cliques.push_back({3, 4, 5});
   Mcliques.push_back(Ones(cliques.back().size()));
 
-  //cliques.push_back({4, 5, 6, 7, 8});
-  cliques.push_back({4, 5, 6 });
+  // cliques.push_back({4, 5, 6, 7, 8});
+  cliques.push_back({4, 5, 6});
   Mcliques.push_back(Ones(cliques.back().size()));
 
   int n = GetMax(cliques) + 1;
   A = GetMatrix(n, cliques, Mcliques);
 
-  // Clique start is a list of supernodes (snd): {m, n, p}; 
+  // Clique start is a list of supernodes (snd): {m, n, p};
   //  Then, snd(m) =  (m, m+1, ..., n - 1)
   // Each variable in clique start is a "representative" vertex.
   // is a representative vertex of a a clique of A.
@@ -219,10 +220,8 @@ TEST(Cholesky, BlockDiag) {
   A = A + Matrix::Identity(n, n) * 10;
 
   SparseCholeskyDecomposition(A, cliquestart, size, root_nodes, &R);
-  EXPECT_TRUE((R*R.transpose() - A).norm() < 1e-8);
+  EXPECT_TRUE((R * R.transpose() - A).norm() < 1e-8);
 }
-
-
 
 TEST(Cholesky, TestDecomp1) {
   Matrix A;
@@ -242,24 +241,24 @@ TEST(Cholesky, TestDecomp1) {
   int n = GetMax(cliques) + 1;
   A = GetMatrix(n, cliques, Mcliques);
 
-  std::vector<int> cliquestart{0, 2, 4}; 
+  std::vector<int> cliquestart{0, 2, 4};
   std::vector<int> size{3, 3, 5};
 
-  std::vector<std::vector<int>> root_nodes{{7}, {8},  {}};
+  std::vector<std::vector<int>> root_nodes{{7}, {8}, {}};
   Matrix R(n, n);
   R.setZero();
   A = A + Matrix::Identity(n, n) * 100;
 
   SparseCholeskyDecomposition(A, cliquestart, size, root_nodes, &R);
-  EXPECT_TRUE((R*R.transpose() - A).norm() < 1e-8);
+  EXPECT_TRUE((R * R.transpose() - A).norm() < 1e-8);
 
   // QR = A
-  // Q = A inv(R) 
+  // Q = A inv(R)
   // Q Q' =  A inv(R) inv(R') A'
 
   // 1    1  1  1
   // 1 1     1  1
-  // 1 1 1      1  = b 
+  // 1 1 1      1  = b
 }
 
 void Append(const std::vector<int>& y, std::vector<int>* x) {
@@ -282,19 +281,19 @@ TEST(Cholesky, Sizes) {
 
   auto clique_order = ChordalMFS(3, cliques);
 
-  std::vector<int> cliquestart{0, 2, 4}; 
+  std::vector<int> cliquestart{0, 2, 4};
   std::vector<int> size{3, 5, 5};
 
   std::vector<int> size_of_differences{2};
 
   std::vector<int> temp{5};
   std::vector<int> order{10};
-  for (int i = 0 ; i < 2; i++) {
-    DifferenceOfSorted(cliques.at(i), cliques.at(i+1), &temp);
+  for (int i = 0; i < 2; i++) {
+    DifferenceOfSorted(cliques.at(i), cliques.at(i + 1), &temp);
     size_of_differences.push_back(temp.size());
   }
 
-  std::vector<int> cliquestart2{0, 0, 0}; 
+  std::vector<int> cliquestart2{0, 0, 0};
   for (unsigned int i = 1; i < cliquestart.size(); i++) {
     cliquestart2.at(i) = cliquestart2.at(i - 1) + size_of_differences.at(i - 1);
   }
@@ -306,9 +305,12 @@ TEST(Cholesky, Sizes) {
   for (int i = 0; i < num_cliques; i++) {
     // A < B < C
     // size A : A \ B + A \cap (B \ C)
-    std::vector<int> a_minus_b{}; a_minus_b.reserve(5);
-    std::vector<int> b_minus_c{}; b_minus_c.reserve(5);
-    std::vector<int> a_cap_b_minus_c{}; a_cap_b_minus_c.reserve(5);
+    std::vector<int> a_minus_b{};
+    a_minus_b.reserve(5);
+    std::vector<int> b_minus_c{};
+    b_minus_c.reserve(5);
+    std::vector<int> a_cap_b_minus_c{};
+    a_cap_b_minus_c.reserve(5);
 
     a_minus_b = cliques.at(i);
     if (i < num_cliques - 1) {
@@ -323,8 +325,8 @@ TEST(Cholesky, Sizes) {
 
     IntersectionOfSorted(cliques.at(i), b_minus_c, &a_cap_b_minus_c);
     size2.at(i) += a_cap_b_minus_c.size();
-   }
-   EXPECT_EQ(size2, size);
+  }
+  EXPECT_EQ(size2, size);
 }
 
 // *   *

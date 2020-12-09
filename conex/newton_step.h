@@ -1,7 +1,7 @@
 #pragma once
-#include <Eigen/Dense>
-#include "memory_utils.h"
 #include "debug_macros.h"
+#include "memory_utils.h"
+#include <Eigen/Dense>
 
 using DenseMatrix = Eigen::MatrixXd;
 using Ref = Eigen::Map<DenseMatrix, Eigen::Aligned>;
@@ -34,23 +34,24 @@ struct StepInfo {
 
 using DenseMatrix = Eigen::MatrixXd;
 struct WorkspaceSchurComplement {
- 
-  WorkspaceSchurComplement(int m) : m_(m) {} 
-  WorkspaceSchurComplement() {} 
+  WorkspaceSchurComplement(int m) : m_(m) {}
+  WorkspaceSchurComplement() {}
 
-  static constexpr int size_of(int m) { return get_size_aligned(m*m) + 3*get_size_aligned(m);  }
-
-  friend int SizeOf(const WorkspaceSchurComplement& o) {
-    return size_of(o.m_);
+  static constexpr int size_of(int m) {
+    return get_size_aligned(m * m) + 3 * get_size_aligned(m);
   }
 
-  friend void Initialize(WorkspaceSchurComplement* o, double *data) {
+  friend int SizeOf(const WorkspaceSchurComplement& o) { return size_of(o.m_); }
+
+  friend void Initialize(WorkspaceSchurComplement* o, double* data) {
     using Map = Eigen::Map<DenseMatrix, Eigen::Aligned>;
-     int m = o->m_;
-     new (&o->G)   Map(data, m, m);
-     new (&o->b)   Map(data + get_size_aligned(m*m),  m, 1);
-     new (&o->AW)  Map(data + get_size_aligned(m*m) + get_size_aligned(m),  m, 1);
-     new (&o->AQc) Map(data + get_size_aligned(m*m) + 2*get_size_aligned(m),  m, 1);
+    int m = o->m_;
+    new (&o->G) Map(data, m, m);
+    new (&o->b) Map(data + get_size_aligned(m * m), m, 1);
+    new (&o->AW)
+        Map(data + get_size_aligned(m * m) + get_size_aligned(m), m, 1);
+    new (&o->AQc)
+        Map(data + get_size_aligned(m * m) + 2 * get_size_aligned(m), m, 1);
   }
 
   friend void print(const WorkspaceSchurComplement& o) {
@@ -60,7 +61,7 @@ struct WorkspaceSchurComplement {
     DUMP(o.AQc);
   }
 
-  double QwCNorm; 
+  double QwCNorm;
   double QwCTrace;
   Eigen::Map<DenseMatrix, Eigen::Aligned> G{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> b{NULL, 0, 0};

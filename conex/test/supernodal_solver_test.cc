@@ -2,8 +2,8 @@
 #include "conex/block_triangular_operations.h"
 #include "conex/debug_macros.h"
 
-#include <Eigen/Dense>
 #include "gtest/gtest.h"
+#include <Eigen/Dense>
 
 using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
@@ -58,15 +58,14 @@ MatrixXd GetMatrix(int N, const vector<Clique>& c, double val) {
 
 bool DoPatternTest(const vector<Clique>& cliques) {
   int N = GetMax(cliques) + 1;
-  MatrixXd error = GetMatrix(N, cliques) - T::ToDense(GetFillInPattern(N, cliques));
+  MatrixXd error =
+      GetMatrix(N, cliques) - T::ToDense(GetFillInPattern(N, cliques));
   error = error.triangularView<Eigen::Lower>();
   return error.norm() == 0;
 }
 
 TEST(Basic, Basic) {
-  vector<Clique> cliques1{{0, 1, 5},
-                          {1, 2, 5},
-                          {3, 4, 5}};
+  vector<Clique> cliques1{{0, 1, 5}, {1, 2, 5}, {3, 4, 5}};
 
   EXPECT_TRUE(DoPatternTest(cliques1));
 
@@ -88,7 +87,7 @@ vector<int> RandomTuple(int max, int size) {
 //
 // A_i = A_i \cup (A_{i-1} \cap A_{i+1})
 //
-//During first application Of RunningIntersectionClosure,
+// During first application Of RunningIntersectionClosure,
 // Things added to A_{i-1} are in A_i.
 // Things added to A_{i+1} are in A_i.
 // So, on next applicatoin, A_i won't change.
@@ -108,17 +107,12 @@ TEST(RunningIntersectionClosureIsIdemponent, Basic) {
 }
 
 TEST(GetPattern, Basic) {
-  vector<Clique> cliques{{0, 1, 2, 5},
-                              {1, 4, 2, 5},
-                              {3, 4, 5}};
-
+  vector<Clique> cliques{{0, 1, 2, 5}, {1, 4, 2, 5}, {3, 4, 5}};
 }
 
 TEST(LowerTri, Constant) {
   using T = TriangularMatrixOperations;
-  vector<Clique> cliques{{0, 1, 5},
-                              {1, 2, 5},
-                              {3, 4, 5}};
+  vector<Clique> cliques{{0, 1, 5}, {1, 2, 5}, {3, 4, 5}};
 
   auto mat = MakeSparseTriangularMatrix(GetMax(cliques) + 1, cliques);
   T::SetConstant(&mat, -1);
@@ -147,18 +141,14 @@ void DoCholeskyTest(const vector<Clique>& cliques) {
 }
 
 TEST(LowerTri, Cholesky) {
-  DoCholeskyTest({{0, 1, 2},  { 2} });
+  DoCholeskyTest({{0, 1, 2}, {2}});
 
   DoCholeskyTest({{0, 1, 2, 4}, {3, 4}, {5, 6, 7}});
-  DoCholeskyTest({{0, 1, 5},
-                  {1, 2, 5},
-                  {3, 4, 5}});
+  DoCholeskyTest({{0, 1, 5}, {1, 2, 5}, {3, 4, 5}});
 
-  DoCholeskyTest({{0, 1, 2},
-                  {1, 2, 3},
-                  {3, 4, 2}});
+  DoCholeskyTest({{0, 1, 2}, {1, 2, 3}, {3, 4, 2}});
 
-  DoCholeskyTest({{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10 }  });
+  DoCholeskyTest({{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10}});
 }
 
 void DoInverseTest(const vector<Clique>& cliques) {
@@ -171,7 +161,7 @@ void DoInverseTest(const vector<Clique>& cliques) {
   Eigen::VectorXd b;
   b.setLinSpaced(L.rows(), -1, 1);
   auto y = T::ApplyInverse(&mat, b);
-  EXPECT_NEAR((L*y - b).norm(), 0, 1e-12);
+  EXPECT_NEAR((L * y - b).norm(), 0, 1e-12);
 }
 
 TEST(LowerTri, InverseTest) {
@@ -190,7 +180,7 @@ void DoInverseOfTransposeTest(const vector<Clique>& cliques) {
   Eigen::VectorXd b;
   b.setLinSpaced(L.rows(), -1, 1);
   auto y = T::ApplyInverseOfTranspose(&mat, b);
-  EXPECT_NEAR((L.transpose()*y - b).norm(), 0, 1e-12);
+  EXPECT_NEAR((L.transpose() * y - b).norm(), 0, 1e-12);
 }
 
 TEST(LowerTri, InverseOfTranspose) {
@@ -199,45 +189,44 @@ TEST(LowerTri, InverseOfTranspose) {
   DoInverseOfTransposeTest({{0, 1, 2, 3}});
 }
 
-
 typedef struct Foo {
-  double* supernode_block;  
+  double* supernode_block;
   double* separator_supernode_block;
   int num_supernodes;
   int num_separators;
-  double** separator_block;  
+  double** separator_block;
   int seperator_block_stride = -1;
 } Foo;
 
-int Set(int initial_value,  Foo* data) {
+int Set(int initial_value, Foo* data) {
   int cnt = initial_value;
   int num_n = data->num_supernodes;
   int num_s = data->num_separators;
-  double *n = data->supernode_block;
+  double* n = data->supernode_block;
   for (int j = 0; j < num_n; j++) {
     for (int i = j; i < num_n; i++) {
-      n[i + j*num_n] = cnt++;
+      n[i + j * num_n] = cnt++;
     }
   }
 
   double* s_n = data->separator_supernode_block;
   for (int j = 0; j < num_s; j++) {
     for (int i = 0; i < num_n; i++) {
-      s_n[i + j*num_n] = cnt++;
+      s_n[i + j * num_n] = cnt++;
     }
   }
 
   int index = 0;
   for (int j = 0; j < num_s; j++) {
     for (int i = j; i < num_s; i++) {
-      *data->separator_block[index++]  = cnt++;
+      *data->separator_block[index++] = cnt++;
     }
   }
   return cnt;
 }
 
 TEST(SupernodalSolver, TestFullSolver) {
-  vector<Clique> cliques{{0, 1, 2, 4, 5}, {3, 4}, {5}, {6,7,8}};
+  vector<Clique> cliques{{0, 1, 2, 4, 5}, {3, 4}, {5}, {6, 7, 8}};
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
   for (auto& sn : mat.supernodes) {
     sn.diagonal().array() += 10;

@@ -1,15 +1,15 @@
-#include "gtest/gtest.h"
-#include <Eigen/Dense>
+#include "conex/jordan_matrix_algebra.h"
 #include "conex/debug_macros.h"
 #include "conex/eigen_decomp.h"
-#include "conex/jordan_matrix_algebra.h"
+#include "gtest/gtest.h"
+#include <Eigen/Dense>
 
 namespace conex {
 
-using Eigen::VectorXd;
-using Eigen::MatrixXd;
 using conex::jordan_algebra::eig;
 using conex::jordan_algebra::Roots;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 VectorXd sort(const VectorXd& x) {
   auto y = x;
@@ -17,7 +17,7 @@ VectorXd sort(const VectorXd& x) {
   return y;
 }
 
-template<typename T>
+template <typename T>
 void DoMultTest() {
   using Element = typename T::Element;
   Element id;
@@ -38,12 +38,12 @@ TEST(JordanMatrixAlgebra, Scalars) {
   DoMultTest<DivisionAlgebra<8>>();
 }
 
-template<typename T>
+template <typename T>
 void DoVerifyJordanIdentity() {
   using Matrix = typename T::Matrix;
   Matrix A = T::Random();
   Matrix B = T::Random();
-  auto W =  T().JordanMult(A, B);
+  auto W = T().JordanMult(A, B);
 
   EXPECT_TRUE(T::IsHermitian(B));
   EXPECT_TRUE(T::IsHermitian(A));
@@ -67,7 +67,7 @@ TEST(JordanMatrixAlgebra, Matrices) {
   DoVerifyJordanIdentity<Real>();
 }
 
-template<typename T>
+template <typename T>
 bool DoQuadAssociativeTest() {
   using Matrix = typename T::Matrix;
   Matrix A = T::Random();
@@ -95,7 +95,7 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   Q = T().JordanMult(Q, Q);
 
   MatrixXd Xs(3, 3);
-  for (int i = 0 ; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       Xs(i, j) = Q.at(LinIndex(i, j))(0);
     }
@@ -104,7 +104,7 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   EXPECT_TRUE((eigenvalues<T>(Q) - sort(eig(Xs).eigenvalues)).norm() < 1e-8);
 }
 
-template<typename T>
+template <typename T>
 void DoEigenvalueTests() {
   auto Q = T::Random();
   Q = T().JordanMult(Q, Q);
@@ -137,7 +137,7 @@ TEST(JordanMatrixAlgebra, EigenvaluePropertiesOctonion) {
 }
 
 // Computes Q(w^{1/2}) exp (Q(w^{1/2}) s) from a power series.
-template<typename T>
+template <typename T>
 bool DoTestGeodesicPowerSeries() {
   auto wsqrt = T::Random();
   auto s = T::Random();
@@ -146,7 +146,8 @@ bool DoTestGeodesicPowerSeries() {
   s = T().MatrixAdd(w, T::ScalarMult(s, .1));
 
   auto y = Geodesic<T>(w, s);
-  return (VectorXd(eigenvalues<T>(s).array().exp()) - eigenvalues<T>(y)).norm() < 1e-3;
+  return (VectorXd(eigenvalues<T>(s).array().exp()) - eigenvalues<T>(y))
+             .norm() < 1e-3;
 }
 
 TEST(JordanMatrixAlgebra, GeodesicPowerSeries) {
@@ -158,7 +159,7 @@ TEST(JordanMatrixAlgebra, GeodesicPowerSeries) {
 
 // Computes the norm |Q(w^{1/2}) s|_{inf} from the eigenvalues of
 // the product Q(w)Q(s) of the quadratic representations Q(w) Q(s).
-template<typename T>
+template <typename T>
 bool TestInfNorm() {
   auto wsqrt = T::Random();
   auto s = T::Random();
@@ -169,8 +170,8 @@ bool TestInfNorm() {
 
   double z_inf = NormInfWeighted<T>(w, s);
 
-  EXPECT_LE(std::fabs(z_inf * z_inf - z_inf_norm*z_inf_norm), 1e-6);
-  return std::fabs(z_inf * z_inf - z_inf_norm*z_inf_norm) < 1e-6;
+  EXPECT_LE(std::fabs(z_inf * z_inf - z_inf_norm * z_inf_norm), 1e-6);
+  return std::fabs(z_inf * z_inf - z_inf_norm * z_inf_norm) < 1e-6;
 }
 
 TEST(JordanMatrixAlgebra, InfNormFromQuadRep) {
@@ -180,5 +181,4 @@ TEST(JordanMatrixAlgebra, InfNormFromQuadRep) {
   EXPECT_TRUE(TestInfNorm<Octonions>());
 }
 
-} // namespace conex
-
+}  // namespace conex

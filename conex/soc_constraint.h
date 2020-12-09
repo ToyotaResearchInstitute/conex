@@ -3,32 +3,38 @@
 
 class SOCConstraint {
   using StorageType = DenseMatrix;
- public:
 
-  template<typename T>
-  SOCConstraint(const T& constraint_matrix, const T& constraint_affine) : 
-      workspace_(constraint_matrix.rows() - 1),
-      constraint_matrix_(constraint_matrix),
-      constraint_affine_(constraint_affine) {
-        assert(constraint_matrix_.rows() == constraint_affine_.rows());
+ public:
+  template <typename T>
+  SOCConstraint(const T& constraint_matrix, const T& constraint_affine)
+      : workspace_(constraint_matrix.rows() - 1),
+        constraint_matrix_(constraint_matrix),
+        constraint_affine_(constraint_affine) {
+    assert(constraint_matrix_.rows() == constraint_affine_.rows());
   }
 
   // Lorentz cone a subset of R^(n+1).
-  SOCConstraint(int n) : workspace_(n), n_(n)  {}
+  SOCConstraint(int n) : workspace_(n), n_(n) {}
 
   WorkspaceSOC* workspace() { return &workspace_; }
 
   int number_of_variables() { return constraint_matrix_.cols(); }
   friend int Rank(const SOCConstraint& o) { return 2; };
-  friend void SetIdentity(SOCConstraint* o) { o->workspace_.W0 = 1;  o->workspace_.W1.setZero(); }
-  friend void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* data);
-  friend void GetMuSelectionParameters(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p);
-  friend void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize, 
+  friend void SetIdentity(SOCConstraint* o) {
+    o->workspace_.W0 = 1;
+    o->workspace_.W1.setZero();
+  }
+  friend void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
+                       StepInfo* data);
+  friend void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
+                                       MuSelectionParameters* p);
+  friend void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
                                              SchurComplementSystem* sys);
 
-  friend bool UpdateLinearOperator(SOCConstraint* o,  double val, int var, int r, int c, int dim);
-  friend bool UpdateAffineTerm(SOCConstraint* o,  double val,  int r, int c, int dim);
-
+  friend bool UpdateLinearOperator(SOCConstraint* o, double val, int var, int r,
+                                   int c, int dim);
+  friend bool UpdateAffineTerm(SOCConstraint* o, double val, int r, int c,
+                               int dim);
 
  private:
   void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s);
@@ -40,8 +46,3 @@ class SOCConstraint {
   DenseMatrix constraint_affine_;
   int n_;
 };
-
-
-
-
- 

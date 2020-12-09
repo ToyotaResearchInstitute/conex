@@ -7,22 +7,24 @@
 
 #include "conex/debug_macros.h"
 
-using Eigen::MatrixXd;
 using Eigen::Map;
+using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 TEST(MatrixExponential, CompareWithEigen) {
   int n = 4;
-  MatrixXd A(n, n); 
+  MatrixXd A(n, n);
+  // clang-format off
   A << 3, 1, 0, 1,
        1, 3, 1, 0,
        0, 1, 4, 1,
        1, 0, 1, 5;
+  // clang-format on
   A = A / A.trace();
 
   MatrixXd reference = A.exp();
   MatrixXd calculated(n, n);
-      
+
   Map<MatrixXd, Eigen::Aligned> map(calculated.data(), n, n);
   MatrixExponential(A, &map);
   for (int i = 0; i < n; i++) {
@@ -31,4 +33,3 @@ TEST(MatrixExponential, CompareWithEigen) {
     }
   }
 }
-

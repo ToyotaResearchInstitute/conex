@@ -6,8 +6,8 @@ namespace jordan_algebra {
 using Eigen::MatrixXd;
 
 EigenvalueDecomposition eig(const Eigen::MatrixXd& x) {
-  //conex::jordan_algebra::SpectralDecompSymmetricMatrices<d> spec;
-  //spec.Compute(x);
+  // conex::jordan_algebra::SpectralDecompSymmetricMatrices<d> spec;
+  // spec.Compute(x);
   Eigen::EigenSolver<Eigen::MatrixXd> spec;
   spec.compute(x);
   EigenvalueDecomposition output;
@@ -21,7 +21,8 @@ Eigen::MatrixXd Log(const Eigen::MatrixXd& X) {
   Eigen::MatrixXd Y(X.rows(), X.rows());
   Y.setZero();
   for (int i = 0; i < d.eigenvectors.cols(); i++) {
-    Y += log(d.eigenvalues(i)) *  d.eigenvectors.col(i) *  d.eigenvectors.col(i).transpose();
+    Y += log(d.eigenvalues(i)) * d.eigenvectors.col(i) *
+         d.eigenvectors.col(i).transpose();
   }
   return Y;
 }
@@ -31,7 +32,8 @@ Eigen::MatrixXd ExpMap(const Eigen::MatrixXd& X) {
   Eigen::MatrixXd Y(X.rows(), X.rows());
   Y.setZero();
   for (int i = 0; i < d.eigenvectors.cols(); i++) {
-    Y += exp(d.eigenvalues(i)) *  d.eigenvectors.col(i) *  d.eigenvectors.col(i).transpose();
+    Y += exp(d.eigenvalues(i)) * d.eigenvectors.col(i) *
+         d.eigenvectors.col(i).transpose();
   }
   return Y;
 }
@@ -41,7 +43,8 @@ Eigen::MatrixXd Sqrt(const Eigen::MatrixXd& X) {
   Eigen::MatrixXd Y(X.rows(), X.rows());
   Y.setZero();
   for (int i = 0; i < d.eigenvectors.cols(); i++) {
-    Y += sqrt(d.eigenvalues(i)) *  d.eigenvectors.col(i) *  d.eigenvectors.col(i).transpose();
+    Y += sqrt(d.eigenvalues(i)) * d.eigenvectors.col(i) *
+         d.eigenvectors.col(i).transpose();
   }
   return Y;
 }
@@ -49,7 +52,7 @@ Eigen::MatrixXd Sqrt(const Eigen::MatrixXd& X) {
 Eigen::MatrixXd Mean(const Eigen::MatrixXd& S, const Eigen::MatrixXd& Z) {
   auto Zsqrt = Sqrt(Z);
   Eigen::MatrixXd Zsqrtinv = Zsqrt.inverse();
-  return Zsqrt * Sqrt(Zsqrtinv*S*Zsqrtinv) *Zsqrt;
+  return Zsqrt * Sqrt(Zsqrtinv * S * Zsqrtinv) * Zsqrt;
 }
 
 std::pair<double, double> SpectrumBounds(const Eigen::MatrixXd& X) {
@@ -69,12 +72,12 @@ double SpectralRadius(const Eigen::MatrixXd& X) {
   return n;
 }
 
-
 Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
   Eigen::MatrixXd c(x.rows(), x.rows());
   c.setZero();
   c.bottomRows(1) = -x.transpose();
-  c.topRightCorner(x.rows() - 1, x.rows() - 1) = MatrixXd::Identity(x.rows() - 1, x.rows() - 1);
+  c.topRightCorner(x.rows() - 1, x.rows() - 1) =
+      MatrixXd::Identity(x.rows() - 1, x.rows() - 1);
   return eig(c).eigenvalues;
 }
 

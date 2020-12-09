@@ -8,9 +8,9 @@
 
 namespace conex {
 
-using Eigen::VectorXd;
-using Eigen::MatrixXd;
 using conex::jordan_algebra::eig;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 using JordanTypes = testing::Types<Real, Complex, Quaternions, Octonions>;
 
@@ -20,7 +20,7 @@ VectorXd sort(const VectorXd& x) {
   return y;
 }
 
-template<typename T>
+template <typename T>
 class TestCases : public testing::Test {
  public:
   void DoMultiplyByIdentity() {
@@ -30,9 +30,11 @@ class TestCases : public testing::Test {
   }
   void VerifyJordanIdentity(int n) {
     using Matrix = typename T::Matrix;
-    Matrix A = T::Random(n, n); A = T::Add(A, T::ConjugateTranspose(A));
-    Matrix B = T::Random(n, n); B = T::Add(B, T::ConjugateTranspose(B));
-    auto W =  T::JordanMultiply(A, B);
+    Matrix A = T::Random(n, n);
+    A = T::Add(A, T::ConjugateTranspose(A));
+    Matrix B = T::Random(n, n);
+    B = T::Add(B, T::ConjugateTranspose(B));
+    auto W = T::JordanMultiply(A, B);
 
     EXPECT_TRUE(T::IsHermitian(B));
     EXPECT_TRUE(T::IsHermitian(A));
@@ -51,8 +53,10 @@ class TestCases : public testing::Test {
 
   void DoQuadraticRepresentationAssociativeTest(int d) {
     using Matrix = typename T::Matrix;
-    Matrix A = T::Random(d, d); A = T::Add(A, T::ConjugateTranspose(A));
-    Matrix B = T::Random(d, d); B = T::Add(B, T::ConjugateTranspose(B));
+    Matrix A = T::Random(d, d);
+    A = T::Add(A, T::ConjugateTranspose(A));
+    Matrix B = T::Random(d, d);
+    B = T::Add(B, T::ConjugateTranspose(B));
     Matrix Yref = T::QuadraticRepresentation(B, A);
 
     Matrix Y1 = T::Multiply(T::Multiply(B, A), B);
@@ -72,7 +76,8 @@ class TestCases : public testing::Test {
     double eps = 1e-9;
     using Matrix = typename T::Matrix;
     int n = 3;
-    Matrix Q = T::Random(n, n); Q = T::Add(Q, T::ConjugateTranspose(Q));
+    Matrix Q = T::Random(n, n);
+    Q = T::Add(Q, T::ConjugateTranspose(Q));
     Q = T::JordanMultiply(Q, Q);
 
     auto I = T::Identity(n);
@@ -100,7 +105,7 @@ class TestCases : public testing::Test {
     Q = T::Orthogonalize(Q);
 
     auto I = T::ScalarMultiply(T::Identity(d), -1);
-    auto res = T::Add(I,   T::Multiply(Q, T::ConjugateTranspose(Q)));
+    auto res = T::Add(I, T::Multiply(Q, T::ConjugateTranspose(Q)));
     EXPECT_TRUE(T::TraceInnerProduct(res, res) < eps);
   }
 
@@ -114,7 +119,7 @@ class TestCases : public testing::Test {
     Q = T::Orthogonalize(Q);
     HyperComplexMatrix D = T::Zero(d, d);
     for (int i = 0; i < d; i++) {
-      D.at(0)(i, i) = -d/2 + i;
+      D.at(0)(i, i) = -d / 2 + i;
     }
     auto X = T::Multiply(T::Multiply(Q, D), T::ConjugateTranspose(Q));
 
@@ -135,16 +140,19 @@ class TestCases : public testing::Test {
       return;
     }
     double eps = 1e-8;
-    auto Wsqrt = T::Random(d, d); Wsqrt = T::Add(Wsqrt, T::ConjugateTranspose(Wsqrt));
-    auto S = T::Random(d, d); S = T::Add(S, T::ConjugateTranspose(S));
+    auto Wsqrt = T::Random(d, d);
+    Wsqrt = T::Add(Wsqrt, T::ConjugateTranspose(Wsqrt));
+    auto S = T::Random(d, d);
+    S = T::Add(S, T::ConjugateTranspose(S));
 
-    auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt)); 
+    auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt));
 
     VectorXd ref = sort(T::Eigenvalues(T::QuadraticRepresentation(Wsqrt, S)));
 
     VectorXd calc;
-    calc = sort(T::EigenvaluesOfJacobiMatrix(T::Multiply(W, S), W, d ));
-    auto calc2 = sort(T::ApproximateEigenvalues(T::Multiply(W, S), W, T::Random(d, 1), d));
+    calc = sort(T::EigenvaluesOfJacobiMatrix(T::Multiply(W, S), W, d));
+    auto calc2 = sort(
+        T::ApproximateEigenvalues(T::Multiply(W, S), W, T::Random(d, 1), d));
     for (int i = 0; i < d; i++) {
       EXPECT_NEAR(calc(i), calc2(i), eps);
     }
@@ -161,25 +169,27 @@ class TestCases : public testing::Test {
 
     if (std::is_same<T, Octonions>::value) {
       // Lemma 14.90 Spinors and Calibrations By F. Reese Harvey shows
-      // that primitive idempotents of the Albert algebra 
+      // that primitive idempotents of the Albert algebra
       // are of the form w w^*, with associator [w_1 w_2 w_3] = 0.
       // This implies w_i are contained in a quaternion subalgebra.
-      auto WsqrtQ = Quaternions::Random(d, 1); 
+      auto WsqrtQ = Quaternions::Random(d, 1);
       Wsqrt = T::Zero(d, 1);
       for (int i = 0; i < 4; i++) {
         Wsqrt.at(i) = WsqrtQ.at(i);
       }
-    }  
+    }
 
-    Wsqrt = T::ScalarMultiply(Wsqrt, 1.0/Wsqrt.norm());
-    auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt)); 
+    Wsqrt = T::ScalarMultiply(Wsqrt, 1.0 / Wsqrt.norm());
+    auto W = T::Multiply(Wsqrt, T::ConjugateTranspose(Wsqrt));
 
     // Add noise to make eigenvalues distinct.
     W.at(0)(0, 0) += 0.00003 * eps;
     W.at(0)(1, 1) += 0.00001 * eps;
     W.at(0)(2, 2) += 0.00002 * eps;
 
-    VectorXd ref(d); ref.setZero(); ref(0) = 1; 
+    VectorXd ref(d);
+    ref.setZero();
+    ref(0) = 1;
     ref = sort(ref);
     VectorXd calc = sort(T::Eigenvalues(W));
     for (int i = 0; i < d; i++) {
@@ -193,33 +203,25 @@ TYPED_TEST(TestCases, MultiplyByIdentity) {
   TestFixture::DoMultiplyByIdentity();
 }
 
-TYPED_TEST(TestCases, JordanIdentity) {
-  TestFixture::VerifyJordanIdentity(3);
-}
+TYPED_TEST(TestCases, JordanIdentity) { TestFixture::VerifyJordanIdentity(3); }
 
 TYPED_TEST(TestCases, QuadraticRepresentationAssociativeTest) {
-   TestFixture::DoQuadraticRepresentationAssociativeTest(3);
+  TestFixture::DoQuadraticRepresentationAssociativeTest(3);
 }
 
-TYPED_TEST(TestCases, EigenvalueTests) {
-   TestFixture::DoEigenvalueTests();
-}
+TYPED_TEST(TestCases, EigenvalueTests) { TestFixture::DoEigenvalueTests(); }
 
-TYPED_TEST(TestCases, DoTestOrthogonal) {
-   TestFixture::DoTestOrthogonal(3);
-}
+TYPED_TEST(TestCases, DoTestOrthogonal) { TestFixture::DoTestOrthogonal(3); }
 
 TYPED_TEST(TestCases, DoAsymmetricEigenvaluesTest) {
-   TestFixture::DoAsymmetricEigenvaluesTest(3);
+  TestFixture::DoAsymmetricEigenvaluesTest(3);
 }
 
 TYPED_TEST(TestCases, DoEigenvaluesFromSpectralDecomp) {
-   TestFixture::DoEigenvaluesFromSpectralDecomp(3);
+  TestFixture::DoEigenvaluesFromSpectralDecomp(3);
 }
 
-TYPED_TEST(TestCases, RankOneTest) {
-   TestFixture::RankOneTest(3);
-}
+TYPED_TEST(TestCases, RankOneTest) { TestFixture::RankOneTest(3); }
 
 TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   using T = Real;
@@ -227,8 +229,8 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   auto Q = T::Random(n, n);
   Q = T::JordanMultiply(Q, Q);
 
-  EXPECT_TRUE((sort(T::Eigenvalues(Q)) - sort(eig(Q.at(0)).eigenvalues)).norm() < 1e-8);
+  EXPECT_TRUE(
+      (sort(T::Eigenvalues(Q)) - sort(eig(Q.at(0)).eigenvalues)).norm() < 1e-8);
 }
 
-} // namespace conex
-
+}  // namespace conex

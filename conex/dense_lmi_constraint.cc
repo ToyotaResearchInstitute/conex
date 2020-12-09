@@ -1,6 +1,5 @@
 #include "conex/dense_lmi_constraint.h"
 
-
 void MatrixLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
   MultByA(y, s);
   (*s) -= k * (constraint_affine_);
@@ -8,10 +7,9 @@ void MatrixLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
 
 void MatrixLMIConstraint::ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) {
   auto& constraint_matrix = constraint_matrices_.at(i);
-  AW->noalias() =  constraint_matrix * W;
-  WAW->noalias() =  W * (*AW);
+  AW->noalias() = constraint_matrix * W;
+  WAW->noalias() = W * (*AW);
 }
-
 
 double TraceInnerProduct(const Eigen::MatrixXd& X, const Ref& Y) {
   double val = 0;
@@ -41,41 +39,41 @@ void MatrixLMIConstraint::MultByA(const Ref& x, Ref* Y) {
   }
 }
 
-template<>
-void ConstructSchurComplementSystem(DenseLMIConstraint* o, 
-                                bool initialize,
-                                SchurComplementSystem* sys) {
+template <>
+void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,
+                                    SchurComplementSystem* sys) {
   auto workspace = o->workspace();
-  auto& W = workspace->W; auto& AW = workspace->temp_1;
+  auto& W = workspace->W;
+  auto& AW = workspace->temp_1;
   auto& WAW = workspace->temp_2;
-  int m = o->num_dual_constraints_;  
+  int m = o->num_dual_constraints_;
 
   if (initialize) {
-  int n = Rank(*o);
-  Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n*n);
-  START_TIMER(Mult)
-  for (int i = 0; i < m; i++) {
-    o->ComputeAW(i, W, &AW, &WAW);
-    //std::cerr << std::endl;
-    sys->G.row(i).head(i+1) = vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i+1);
-    sys->AW(i, 0) = AW.trace();
-    sys->AQc(i, 0) = o->EvalDualObjective(WAW);
-  }
-  END_TIMER
-  }  else {
-
-  int n = Rank(*o);
-  Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n*n);
-  //START_TIMER
-  for (int i = 0; i < m; i++) {
-    o->ComputeAW(i, W, &AW, &WAW);
-    sys->G.row(i).head(i+1) += vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i+1);
-    sys->AW(i, 0) += AW.trace();
-    sys->AQc(i, 0) += o->EvalDualObjective(WAW);
-  }
+    int n = Rank(*o);
+    Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n * n);
+    START_TIMER(Mult)
+    for (int i = 0; i < m; i++) {
+      o->ComputeAW(i, W, &AW, &WAW);
+      // std::cerr << std::endl;
+      sys->G.row(i).head(i + 1) =
+          vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i + 1);
+      sys->AW(i, 0) = AW.trace();
+      sys->AQc(i, 0) = o->EvalDualObjective(WAW);
+    }
+    END_TIMER
+  } else {
+    int n = Rank(*o);
+    Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n * n);
+    // START_TIMER
+    for (int i = 0; i < m; i++) {
+      o->ComputeAW(i, W, &AW, &WAW);
+      sys->G.row(i).head(i + 1) +=
+          vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i + 1);
+      sys->AW(i, 0) += AW.trace();
+      sys->AQc(i, 0) += o->EvalDualObjective(WAW);
+    }
   }
 }
 
-
 template void ConstructSchurComplementSystem<SparseLMIConstraint>(
-        SparseLMIConstraint* o, bool initialize, SchurComplementSystem* sys);
+    SparseLMIConstraint* o, bool initialize, SchurComplementSystem* sys);

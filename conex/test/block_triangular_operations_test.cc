@@ -1,4 +1,4 @@
-#include "conex/block_triangular_operations.h" 
+#include "conex/block_triangular_operations.h"
 #include "conex/supernodal_solver.h"
 
 #include "gtest/gtest.h"
@@ -8,9 +8,9 @@ using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
 
-int GetMax(const std::vector<Clique> &cliques) {
+int GetMax(const std::vector<Clique>& cliques) {
   int max = cliques.at(0).at(0);
-  for (const auto &c : cliques) {
+  for (const auto& c : cliques) {
     for (const auto ci : c) {
       if (ci > max) {
         max = ci;
@@ -20,9 +20,9 @@ int GetMax(const std::vector<Clique> &cliques) {
   return max;
 }
 
-void DoCholeskyTest(const std::vector<Clique> &cliques) {
+void DoCholeskyTest(const std::vector<Clique>& cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
-  for (auto &sn : mat.supernodes) {
+  for (auto& sn : mat.supernodes) {
     sn.diagonal().array() += 100;
   }
 
@@ -47,15 +47,14 @@ TEST(LowerTri, Cholesky) {
 
 // Pick root A
 // for all elements B
-//    ( A \cap B ) 
+//    ( A \cap B )
 //  Order A B C
-//    B \subseteq A \cap C 
+//    B \subseteq A \cap C
 //
 
-
-void DoInverseTest(const std::vector<Clique> &cliques) {
+void DoInverseTest(const std::vector<Clique>& cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
-  for (auto &sn : mat.supernodes) {
+  for (auto& sn : mat.supernodes) {
     sn.diagonal().array() += 10;
   }
 
@@ -74,9 +73,9 @@ TEST(LowerTri, InverseTest) {
   DoInverseTest({{0, 1, 2, 3}, {3, 4}, {4, 5, 6}});
 }
 
-void DoInverseOfTransposeTest(const std::vector<Clique> &cliques) {
+void DoInverseOfTransposeTest(const std::vector<Clique>& cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
-  for (auto &sn : mat.supernodes) {
+  for (auto& sn : mat.supernodes) {
     sn.diagonal().array() += 10;
   }
 
@@ -96,9 +95,8 @@ TEST(LowerTri, InverseOfTranspose) {
 }
 
 MatrixXd Submatrix(const MatrixXd& T, const Clique& c) {
-
   MatrixXd y(c.size(), c.size());
-  int i = 0; 
+  int i = 0;
   for (auto ci : c) {
     int j = 0;
     for (auto cj : c) {
@@ -112,10 +110,10 @@ MatrixXd Submatrix(const MatrixXd& T, const Clique& c) {
 
 void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
-  
+
   // Set to identity.
   int i = 1;
-  for (auto &sn : mat.workspace_.diagonal) {
+  for (auto& sn : mat.workspace_.diagonal) {
     if (diagonal) {
       sn.setZero();
     }
@@ -126,7 +124,7 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   }
 
   if (diagonal) {
-    for (auto &sn : mat.workspace_.off_diagonal) {
+    for (auto& sn : mat.workspace_.off_diagonal) {
       sn.setZero();
     }
   }
@@ -138,12 +136,12 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
 
   i = 0;
 
-  //int i = 0;
+  // int i = 0;
   for (auto ci : cliques) {
     Eigen::PermutationMatrix<-1> P(factorization.at(i).transpositionsP());
-  //  MatrixXd L = factorization.at(i).matrixL();
-  //  MatrixXd D = factorization.at(i).vectorD().asDiagonal();
-  //  i++;
+    //  MatrixXd L = factorization.at(i).matrixL();
+    //  MatrixXd D = factorization.at(i).vectorD().asDiagonal();
+    //  i++;
   }
 
   Eigen::VectorXd z = Eigen::VectorXd::Random(X.cols());
@@ -156,7 +154,6 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   B::ApplyBlockInverseOfMD(mat.workspace_, factorization, &y);
   B::ApplyBlockInverseOfMTranspose(mat.workspace_, factorization, &y);
   EXPECT_NEAR((z - y).norm(), 0, 1e-12);
-
 }
 
 TEST(LowerTri, LDLT) {
@@ -175,5 +172,3 @@ TEST(LowerTri, LDLT) {
   DoLDLTTest(diagonal, {{0, 1, 2}, {1, 2, 3}, {3, 4, 2}});
   DoLDLTTest(diagonal, {{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10}});
 }
-
-

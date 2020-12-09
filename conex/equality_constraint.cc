@@ -1,12 +1,13 @@
 #include "conex/equality_constraint.h"
 #include "conex/debug_macros.h"
 using T = EqualityConstraints;
-using std::vector;
 using Eigen::MatrixXd;
+using std::vector;
 
 namespace {
 
-std::vector<int> Relabel(const std::vector<int>& x, const std::vector<int>& labels) {
+std::vector<int> Relabel(const std::vector<int>& x,
+                         const std::vector<int>& labels) {
   std::vector<int> y;
   for (auto& xi : x) {
     y.push_back(labels.at(xi));
@@ -25,7 +26,7 @@ int Find(std::vector<int>& x, int v) {
   return -1;
 }
 
-} // namespace
+}  // namespace
 
 void T::Set(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
   int i = 0;
@@ -61,9 +62,7 @@ void T::SetOffDiagonal(Eigen::Map<MatrixXd>* data) {
   }
 }
 
-void T::SetSupernodeDiagonal(Eigen::Map<MatrixXd>* data) {
-  data->setZero();
-}
+void T::SetSupernodeDiagonal(Eigen::Map<MatrixXd>* data) { data->setZero(); }
 
 int T::GetCoeff(int i, int j) {
   int row = Find(dual_variables_, i);
@@ -73,7 +72,7 @@ int T::GetCoeff(int i, int j) {
   // part of KKT system.
   bool both_found = row != -1 && col != -1;
   bool both_not_found = row == -1 && col == -1;
-  if (both_found || both_not_found)  {
+  if (both_found || both_not_found) {
     return 0;
   }
 
@@ -86,9 +85,7 @@ int T::GetCoeff(int i, int j) {
   }
 }
 
-void T::BindDiagonalBlock(const DiagonalBlock* data) {
-  diag.push_back(*data);
-}
+void T::BindDiagonalBlock(const DiagonalBlock* data) { diag.push_back(*data); }
 
 void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   if (data->stride != -1) {
@@ -96,7 +93,7 @@ void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   }
 }
 
-template<typename T>
+template <typename T>
 vector<T> InitVector(T* data, int N) {
   vector<T> y;
   for (int i = 0; i < N; i++) {
@@ -109,17 +106,21 @@ void T::UpdateBlocks() {
   for (const auto& d : diag) {
     Eigen::Map<MatrixXd> data(d.data, d.num_vars, d.num_vars);
     if (d.assign) {
-      Set(InitVector(d.var_data, d.num_vars), InitVector(d.var_data, d.num_vars), &data);
+      Set(InitVector(d.var_data, d.num_vars),
+          InitVector(d.var_data, d.num_vars), &data);
     } else {
-      Increment(InitVector(d.var_data, d.num_vars), InitVector(d.var_data, d.num_vars), &data);
+      Increment(InitVector(d.var_data, d.num_vars),
+                InitVector(d.var_data, d.num_vars), &data);
     }
   }
   for (const auto& d : off_diag) {
     Eigen::Map<MatrixXd> data(d.data, d.num_rows, d.num_cols);
     if (d.assign) {
-      Set(InitVector(d.row_data, d.num_rows), InitVector(d.col_data, d.num_cols), &data);
+      Set(InitVector(d.row_data, d.num_rows),
+          InitVector(d.col_data, d.num_cols), &data);
     } else {
-      Increment(InitVector(d.row_data, d.num_rows), InitVector(d.col_data, d.num_cols), &data);
+      Increment(InitVector(d.row_data, d.num_rows),
+                InitVector(d.col_data, d.num_cols), &data);
     }
   }
 }

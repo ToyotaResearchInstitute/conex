@@ -1,11 +1,12 @@
-#include <Eigen/Dense>
 #include "conex/debug_macros.h"
+#include <Eigen/Dense>
 
 using Clique = std::vector<int>;
 using Eigen::MatrixXd;
 using std::vector;
 
-MatrixXd GetMatrix(int N, const std::vector<Clique>& c, std::vector<MatrixXd> m);
+MatrixXd GetMatrix(int N, const std::vector<Clique>& c,
+                   std::vector<MatrixXd> m);
 
 inline std::vector<float> Degree(int N, const std::vector<Clique>& x) {
   vector<float> degree(N);
@@ -27,25 +28,20 @@ inline std::vector<float> Degree(int N, const std::vector<Clique>& x) {
     k++;
   }
   for (int i = 0; i < N; i++) {
-    if (simplicial.at(i))  {
-      degree.at(i) -= 100*0;
+    if (simplicial.at(i)) {
+      degree.at(i) -= 100 * 0;
     }
   }
   return degree;
 }
 
-void SparseCholeskyDecomposition(const MatrixXd& A, 
-                  const std::vector<int>& start,
-                  const std::vector<int>& num_cols,
-                  const std::vector<std::vector<int>>& root_nodes,
-                  MatrixXd* R);
+void SparseCholeskyDecomposition(
+    const MatrixXd& A, const std::vector<int>& start,
+    const std::vector<int>& num_cols,
+    const std::vector<std::vector<int>>& root_nodes, MatrixXd* R);
 
+void IntersectionOfSorted(const std::vector<int>& v1,
+                          const std::vector<int>& v2, std::vector<int>* v3);
 
-void IntersectionOfSorted(const std::vector<int>& v1, 
-                  const std::vector<int>& v2,
-                  std::vector<int>* v3);
-
-void DifferenceOfSorted(const std::vector<int>& v1, 
-                  const std::vector<int>& v2,
-                  std::vector<int>* v3);
-
+void DifferenceOfSorted(const std::vector<int>& v1, const std::vector<int>& v2,
+                        std::vector<int>* v3);

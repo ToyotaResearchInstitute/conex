@@ -1,23 +1,23 @@
 #include "conex/soc_constraint.h"
-#include "conex/newton_step.h"
 #include "conex/error_checking_macros.h"
+#include "conex/newton_step.h"
 using EigenType = DenseMatrix;
 using Real = double;
 
-
 // Implements the spectral decomposition of the Spin Factor algebra.
-// See http://rutcor.rutgers.edu/~alizadeh/CLASSES/12fallSDP/Notes/Lecture08/lec08.pdf
+// See
+// http://rutcor.rutgers.edu/~alizadeh/CLASSES/12fallSDP/Notes/Lecture08/lec08.pdf
 // or "Analysis on Symmetric Cones" by Faraut and Koranyi.
-class SpectralDecompSpinFactor  {
+class SpectralDecompSpinFactor {
  public:
-  using EssentialVectorType = DenseMatrix; 
+  using EssentialVectorType = DenseMatrix;
 
   SpectralDecompSpinFactor(int n) : n_(n), q_(n, 1) {}
   int n_;
 
   struct PeirceDecompType {
-    PeirceDecompType(int n) : X00(n+1), X11(n+1), X01(n+1) {}
-    
+    PeirceDecompType(int n) : X00(n + 1), X11(n + 1), X01(n + 1) {}
+
     Eigen::VectorXd X00;
     Eigen::VectorXd X11;
     Eigen::VectorXd X01;
@@ -94,7 +94,9 @@ class SpectralDecompSpinFactor  {
     return peirce_decomp;
   }
 
-  EigenType TransformFromPeirceComponents(const PeirceDecompType& X) const { return X.X00 + X.X11 + X.X01; }
+  EigenType TransformFromPeirceComponents(const PeirceDecompType& X) const {
+    return X.X00 + X.X11 + X.X01;
+  }
 
   // If we have computed the spectral decomposition of (x0, x1), then the
   // essential unit vector is x1*1/|x1|.
@@ -110,7 +112,8 @@ class SpectralDecompSpinFactor  {
   //
   // Since z1 = (c0 - c1) q + p  and  <p , q> = 0, we compute this simply by
   // projecting the essential vector z1 onto the span of q.
-  EssentialVectorType EssentialVectorOfDiagonalPeirceComponents(const Eigen::VectorXd& z) const {
+  EssentialVectorType EssentialVectorOfDiagonalPeirceComponents(
+      const Eigen::VectorXd& z) const {
     const double inner_product = q_.tail(n_ - 1).dot(z);
     return q_ * inner_product;
   }
@@ -123,17 +126,17 @@ class SpectralDecompSpinFactor  {
 
 DenseMatrix QuadraticRepresentation(const Eigen::VectorXd& x,
                                     const Eigen::VectorXd& y) {
-    // We use the formula from Example 11.12 of "Formally Real Jordan Algebras
-    // and Their Applications to Optimization"  by Alizadeh, which states the quadratic
-    // representation of x equals the linear map
-    //                          2xx' - (det x) * R
-    // where R is the reflection operator R = diag(1, -1, ..., -1) and det x is the determinate
-    // of x = (x0, x1), i.e., det x = x0^2 - |x1|^2.
-    int order = x.rows();
-    double det_x = x(0) * x(0) - x.tail(order - 1).squaredNorm();
-    EigenType z = det_x * y;
-    z(0) *= -1;
-    return (2 * x.dot(y)) * x + z;
+  // We use the formula from Example 11.12 of "Formally Real Jordan Algebras
+  // and Their Applications to Optimization"  by Alizadeh, which states the
+  // quadratic representation of x equals the linear map
+  //                          2xx' - (det x) * R
+  // where R is the reflection operator R = diag(1, -1, ..., -1) and det x is
+  // the determinate of x = (x0, x1), i.e., det x = x0^2 - |x1|^2.
+  int order = x.rows();
+  double det_x = x(0) * x(0) - x.tail(order - 1).squaredNorm();
+  EigenType z = det_x * y;
+  z(0) *= -1;
+  return (2 * x.dot(y)) * x + z;
 }
 
 DenseMatrix Sqrt(double x0, const DenseMatrix& x) {
@@ -151,7 +154,7 @@ DenseMatrix Sqrt(double x0, const DenseMatrix& x) {
     assert(0);
   }
 
-  DenseMatrix zsqrt = std::sqrt(ev(0, 0)) * spec.Idempotent(0) + 
+  DenseMatrix zsqrt = std::sqrt(ev(0, 0)) * spec.Idempotent(0) +
                       std::sqrt(ev(1, 0)) * spec.Idempotent(1);
   return zsqrt;
 }
@@ -164,11 +167,10 @@ DenseMatrix Exp(double x0, const DenseMatrix& x) {
   SpectralDecompSpinFactor spec(n);
   spec.Compute(z);
   auto ev = spec.Eigenvalues();
-  DenseMatrix zsqrt = std::exp(ev(0, 0)) * spec.Idempotent(0) + 
+  DenseMatrix zsqrt = std::exp(ev(0, 0)) * spec.Idempotent(0) +
                       std::exp(ev(1, 0)) * spec.Idempotent(1);
   return zsqrt;
 }
-
 
 double NormInf(double x0, const DenseMatrix& x) {
   int n = x.rows();
@@ -185,13 +187,15 @@ double NormInf(double x0, const DenseMatrix& x) {
   }
 }
 
-void SOCConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s) {
+void SOCConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
+                                         Ref* minus_s) {
   minus_s->noalias() = (constraint_matrix_)*y;
-  minus_s->noalias() -= (constraint_affine_) * inv_sqrt_mu;
+  minus_s->noalias() -= (constraint_affine_)*inv_sqrt_mu;
 }
 
 // Combine this with TakeStep
-void GetMuSelectionParameters(SOCConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
+                              MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;
@@ -214,12 +218,12 @@ void GetMuSelectionParameters(SOCConstraint* o,  const Ref& y, MuSelectionParame
   if (p->gw_lambda_min > lamda_min) {
     p->gw_lambda_min = lamda_min;
   }
-  p->gw_norm_squared += Ws.squaredNorm(); 
+  p->gw_norm_squared += Ws.squaredNorm();
   p->gw_trace += -Ws.sum();
 }
 
-
-void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
+void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
+              StepInfo* info) {
   auto& minus_s = o->workspace_.temp_1;
   o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
 
@@ -229,17 +233,17 @@ void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
   auto d = QuadraticRepresentation(wsqrt, minus_s);
   d(0, 0) += 1;
 
-  info->norminfd = NormInf(d(0, 0), d.bottomRows(n-1));
+  info->norminfd = NormInf(d(0, 0), d.bottomRows(n - 1));
   info->normsqrd = d.squaredNorm();
 
   double scale = info->norminfd * info->norminfd;
   if (scale > 2.0) {
     d = 2 * d / scale;
-  } 
-  auto expd = Exp(d(0, 0), d.bottomRows(n-1));
+  }
+  auto expd = Exp(d(0, 0), d.bottomRows(n - 1));
   auto wn = QuadraticRepresentation(wsqrt, expd);
   o->workspace_.W0 = wn(0, 0);
-  o->workspace_.W1 = wn.bottomRows(n-1);
+  o->workspace_.W1 = wn.bottomRows(n - 1);
 
   if (o->workspace_.W1.norm() > o->workspace_.W0) {
     DUMP(o->workspace_.W1.norm());
@@ -247,19 +251,19 @@ void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
     assert(0);
   }
 
- // Q(w^{1/2}) exp Q(w^{1/2}) d
- //                (w w^T - det w R) d
- //  (w w^T  - det w R) exp  (w w^T - det w R) d
- //
- //  exp(ld1) lw1  d 
- //  exp(ld1) lw2  d 
+  // Q(w^{1/2}) exp Q(w^{1/2}) d
+  //                (w w^T - det w R) d
+  //  (w w^T  - det w R) exp  (w w^T - det w R) d
+  //
+  //  exp(ld1) lw1  d
+  //  exp(ld1) lw2  d
 }
 
-void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize, 
+void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
   int n = o->workspace_.n_;
   auto Wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
-  DenseMatrix W(n+1, 1);
+  DenseMatrix W(n + 1, 1);
   W(0, 0) = o->workspace_.W0;
   W.bottomRows(n) = o->workspace_.W1;
 
@@ -273,15 +277,15 @@ void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
   }
 
   if (initialize) {
-    (*G).noalias() = WA.transpose()*WA;
-    sys->AW.noalias()  = o->constraint_matrix_.transpose() * W;
-    sys->AQc.noalias() = WA.transpose() * WC; 
+    (*G).noalias() = WA.transpose() * WA;
+    sys->AW.noalias() = o->constraint_matrix_.transpose() * W;
+    sys->AQc.noalias() = WA.transpose() * WC;
     sys->QwCNorm = (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
     sys->QwCTrace = (W.cwiseProduct(o->constraint_affine_)).sum();
   } else {
-    (*G).noalias() += WA.transpose() * WA; 
-    sys->AW.noalias()  += o->constraint_matrix_.transpose() * W;
-    sys->AQc.noalias() += WA.transpose() * WC; 
+    (*G).noalias() += WA.transpose() * WA;
+    sys->AW.noalias() += o->constraint_matrix_.transpose() * W;
+    sys->AQc.noalias() += WA.transpose() * WC;
     sys->QwCNorm += (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
     sys->QwCTrace += (W.cwiseProduct(o->constraint_affine_)).sum();
   }
@@ -292,11 +296,12 @@ void ConservativeResizeHelper(T* constraint_matrix_, int var, int rows) {
   if (!(var < constraint_matrix_->cols())) {
     int cols_new = var + 1 - constraint_matrix_->cols();
     constraint_matrix_->conservativeResize(rows, var + 1);
-    constraint_matrix_->rightCols(cols_new).setZero(); 
+    constraint_matrix_->rightCols(cols_new).setZero();
   }
 }
 
-bool UpdateLinearOperator(SOCConstraint* o,  double val, int var, int r, int c, int dim) {
+bool UpdateLinearOperator(SOCConstraint* o, double val, int var, int r, int c,
+                          int dim) {
   CONEX_DEMAND(dim == 0, "Complex second-order cone not supported.");
   CONEX_DEMAND(c == 0, "Second-order constraint is not matrix valued.");
   CONEX_DEMAND(r <= o->n_, "Row index out of bounds.");
@@ -307,7 +312,7 @@ bool UpdateLinearOperator(SOCConstraint* o,  double val, int var, int r, int c, 
   return CONEX_SUCCESS;
 }
 
-bool UpdateAffineTerm(SOCConstraint* o,  double val,  int r, int c, int dim) {
+bool UpdateAffineTerm(SOCConstraint* o, double val, int r, int c, int dim) {
   CONEX_DEMAND(dim == 0, "Complex second-order cone not supported.");
   CONEX_DEMAND(c == 0, "Second-order constraint is not matrix valued.");
   CONEX_DEMAND(r <= o->n_, "Row index out of bounds.");
@@ -317,5 +322,3 @@ bool UpdateAffineTerm(SOCConstraint* o,  double val,  int r, int c, int dim) {
   o->constraint_affine_(r) = val;
   return CONEX_SUCCESS;
 }
-
-

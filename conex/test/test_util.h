@@ -2,8 +2,8 @@
 #include <map>
 #include <vector>
 #include <Eigen/Dense>
-using std::vector; 
 using std::map;
+using std::vector;
 using Tuple = std::pair<int, int>;
 using SparseMatrixTuple = std::vector<std::pair<int, int>>;
 using DenseMatrix = Eigen::MatrixXd;

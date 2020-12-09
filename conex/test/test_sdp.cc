@@ -1,11 +1,11 @@
+#include "conex/cone_program.h"
+#include "conex/constraint.h"
+#include "conex/dense_lmi_constraint.h"
+#include "conex/eigen_decomp.h"
+#include "conex/linear_constraint.h"
+#include "conex/test/test_util.h"
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
-#include "conex/linear_constraint.h"
-#include "conex/dense_lmi_constraint.h"
-#include "conex/constraint.h"
-#include "conex/cone_program.h"
-#include "conex/test/test_util.h"
-#include "conex/eigen_decomp.h"
 
 using DenseMatrix = Eigen::MatrixXd;
 #define TEST_OR_PROFILE 1
@@ -22,7 +22,6 @@ int TestDiagonalSDP() {
   DenseMatrix Alinear = DenseMatrix::Random(n, m);
   DenseMatrix Clinear(n, 1);
   Clinear.setConstant(1);
-
 
   std::vector<DenseMatrix> constraints2;
   for (int i = 0; i < m; i++) {
@@ -54,15 +53,11 @@ int TestDiagonalSDP() {
   return 0;
 }
 
-
-
-
 TEST(SDP, DiagonalSDP) {
   for (int i = 0; i < 1; i++) {
     TestDiagonalSDP();
   }
 }
-
 
 TEST(SDP, SparseAndDenseAgree) {
   SolverConfiguration config;
@@ -115,7 +110,6 @@ TEST(SDP, SparseAndDenseAgree) {
   sparse_prog.constraints.push_back(sparse_LMI1);
   sparse_prog.constraints.push_back(sparse_LMI2);
 
-
   DenseMatrix y_sparse(m1 + m2, 1);
   success = Solve(b, sparse_prog, config, y_sparse.data());
   EXPECT_EQ(success, 1);
@@ -123,7 +117,6 @@ TEST(SDP, SparseAndDenseAgree) {
   EXPECT_NEAR((y - y_sparse).norm(), 0, 1e-8);
 }
 #else
-
 
 int TestSDP(int i) {
   SolverConfiguration config;
@@ -137,7 +130,6 @@ int TestSDP(int i) {
   Program prog;
   DenseMatrix y(m, 1);
   prog.constraints.push_back(LMI);
-
 
   auto b = GetFeasibleObjective(m, prog.constraints);
   Solve(b, prog, config, y.data());
@@ -156,14 +148,14 @@ int TestSDP(int i) {
 
   EXPECT_TRUE(conex::jordan_algebra::eig(slack).eigenvalues.minCoeff() > 1e-8);
   EXPECT_TRUE(res.norm() < 1e-7);
-  EXPECT_TRUE((slack*x).trace() < 1e-4);
+  EXPECT_TRUE((slack * x).trace() < 1e-4);
 
   return 0;
 }
 
 TEST(SDP, ProfileSDP) {
   for (int i = 0; i < 1; i++) {
-    TestSDP(i); 
+    TestSDP(i);
   }
 }
 #endif

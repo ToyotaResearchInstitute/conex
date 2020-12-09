@@ -5,7 +5,7 @@
 namespace conex {
 namespace jordan_algebra {
 
-struct  EigenvalueDecomposition {
+struct EigenvalueDecomposition {
   Eigen::MatrixXd eigenvalues;
   Eigen::MatrixXd eigenvectors;
 };

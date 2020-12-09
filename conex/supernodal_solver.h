@@ -1,18 +1,18 @@
 #pragma once
-#include <vector>
 #include <numeric>
+#include <vector>
 
 #include <Eigen/Dense>
 
-#include "conex/triangular_matrix_workspace.h"
 #include "conex/kkt_system_assembler.h"
+#include "conex/triangular_matrix_workspace.h"
 
 using Clique = std::vector<int>;
 
 // TODO(FrankPermenter): Deprecate this class.
 
-std::vector<int> UnionOfSorted(const std::vector<int>& x1, const std::vector<int>& x2);
-
+std::vector<int> UnionOfSorted(const std::vector<int>& x1,
+                               const std::vector<int>& x2);
 
 struct MatrixData {
   std::vector<std::vector<int>> cliques;
@@ -31,55 +31,54 @@ struct MatrixData {
 
 MatrixData GetData(const std::vector<Clique>& cliques);
 
-inline void Bind(MatrixData& data, 
-          TriangularMatrixWorkspace& workspace,
-          std::vector<KKT_SystemAssembler>& eqs) {
-  auto& sn = data.supernodes_original_labels; 
+inline void Bind(MatrixData& data, TriangularMatrixWorkspace& workspace,
+                 std::vector<KKT_SystemAssembler>& eqs) {
+  auto& sn = data.supernodes_original_labels;
   auto& sep = data.separators_original_labels;
 
-  for (int e = static_cast<int>(eqs.size()) - 1; e >=0; e--) {
+  for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
 
-    auto block = BuildBlock(&sn.at(e), &sep.at(e), workspace.off_diagonal.at(e).data());
+    auto block =
+        BuildBlock(&sn.at(e), &sep.at(e), workspace.off_diagonal.at(e).data());
     eqs.at(i).BindOffDiagonalBlock(&block);
 
     auto blockD = BuildBlock(&sn.at(e), workspace.diagonal.at(e).data());
     eqs.at(i).BindDiagonalBlock(&blockD);
 
     if (workspace.seperator_diagonal.at(e).size() > 0) {
-      block = BuildBlock(&sep.at(e), &sep.at(e), &workspace.seperator_diagonal.at(e));
+      block = BuildBlock(&sep.at(e), &sep.at(e),
+                         &workspace.seperator_diagonal.at(e));
       eqs.at(i).BindOffDiagonalBlock(&block);
     }
   }
 }
 
 struct SparseTriangularMatrix {
-  SparseTriangularMatrix(int N_,
-                         const std::vector<Clique>& cliques, 
+  SparseTriangularMatrix(int N_, const std::vector<Clique>& cliques,
                          const std::vector<int>& supernode_size,
-                         const Eigen::VectorXd& memory) :
-                         N(N_), 
-                             workspace_(cliques, supernode_size), 
-                             memory_(memory),
-                             path(cliques),
-                             supernode_size(workspace_.supernode_size),
-                             supernodes(workspace_.diagonal),
-                             snodes(workspace_.snodes),
-                             separator(workspace_.off_diagonal) { 
+                         const Eigen::VectorXd& memory)
+      : N(N_),
+        workspace_(cliques, supernode_size),
+        memory_(memory),
+        path(cliques),
+        supernode_size(workspace_.supernode_size),
+        supernodes(workspace_.diagonal),
+        snodes(workspace_.snodes),
+        separator(workspace_.off_diagonal) {
     assert(memory_.size() >= SizeOf(workspace_));
     Initialize(&workspace_, memory_.data());
   }
- 
-  SparseTriangularMatrix(int N_,
-                         const std::vector<Clique>& cliques, 
-                         const std::vector<int>& supernode_size) :
-                         SparseTriangularMatrix(N_, cliques, supernode_size, 
-                                        Eigen::VectorXd::Zero(
-                                        SizeOf(TriangularMatrixWorkspace(cliques, supernode_size)))
-                                        ) { }
 
-  SparseTriangularMatrix(MatrixData& data) : SparseTriangularMatrix(data.N, data.cliques, 
-                                                                    data.supernode_size) {}
+  SparseTriangularMatrix(int N_, const std::vector<Clique>& cliques,
+                         const std::vector<int>& supernode_size)
+      : SparseTriangularMatrix(
+            N_, cliques, supernode_size,
+            Eigen::VectorXd::Zero(
+                SizeOf(TriangularMatrixWorkspace(cliques, supernode_size)))) {}
+
+  SparseTriangularMatrix(MatrixData& data)
+      : SparseTriangularMatrix(data.N, data.cliques, data.supernode_size) {}
 
   int N;
   TriangularMatrixWorkspace workspace_;
@@ -90,35 +89,37 @@ struct SparseTriangularMatrix {
   std::vector<std::vector<int>>& snodes;
   std::vector<Eigen::Map<Eigen::MatrixXd>>& separator;
 
-  SparseTriangularMatrix(const SparseTriangularMatrix& s) : 
-      SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_) { }
+  SparseTriangularMatrix(const SparseTriangularMatrix& s)
+      : SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_) {}
 
   SparseTriangularMatrix operator=(const SparseTriangularMatrix& s) {
     return SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_);
   }
 };
 
-
-std::vector<Clique> Permute(std::vector<Clique>& path, std::vector<int>& permutation);
+std::vector<Clique> Permute(std::vector<Clique>& path,
+                            std::vector<int>& permutation);
 void Sort(std::vector<Clique>* path);
 
 void IntersectionOfSorted(const std::vector<int>& v1,
-                  const std::vector<int>& v2,
-                  std::vector<int>* v3);
-
+                          const std::vector<int>& v2, std::vector<int>* v3);
 
 void RunningIntersectionClosure(std::vector<Clique>* path);
 SparseTriangularMatrix GetFillInPattern(int N, const std::vector<Clique>& path);
-SparseTriangularMatrix MakeSparseTriangularMatrix(int N, const std::vector<Clique>& path);
+SparseTriangularMatrix MakeSparseTriangularMatrix(
+    int N, const std::vector<Clique>& path);
 
 class TriangularMatrixOperations {
  public:
   using Matrix = SparseTriangularMatrix;
-  static Eigen::MatrixXd Multiply(SparseTriangularMatrix& mat, const Eigen::MatrixXd& x);
+  static Eigen::MatrixXd Multiply(SparseTriangularMatrix& mat,
+                                  const Eigen::MatrixXd& x);
   static void SetConstant(SparseTriangularMatrix* mat, double val);
   static Eigen::MatrixXd ToDense(const SparseTriangularMatrix& mat);
   static void RescaleColumn(Matrix* mat);
   static void CholeskyInPlace(SparseTriangularMatrix* mat);
-  static Eigen::VectorXd ApplyInverse(SparseTriangularMatrix* L, const Eigen::VectorXd& b);
-  static Eigen::VectorXd ApplyInverseOfTranspose(SparseTriangularMatrix* L, const Eigen::VectorXd& b);
+  static Eigen::VectorXd ApplyInverse(SparseTriangularMatrix* L,
+                                      const Eigen::VectorXd& b);
+  static Eigen::VectorXd ApplyInverseOfTranspose(SparseTriangularMatrix* L,
+                                                 const Eigen::VectorXd& b);
 };

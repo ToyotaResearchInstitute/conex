@@ -1,15 +1,16 @@
 #include <cmath>
 
-#include "conex/psd_constraint.h"
 #include "conex/approximate_eigenvalues.h"
 #include "conex/matrix_exponential.h"
+#include "conex/psd_constraint.h"
 
 using conex::jordan_algebra::SpectralRadius;
 using conex::jordan_algebra::SpectrumBounds;
 using Eigen::VectorXd;
 
 // Applies update  W^{1/2}( exp ( e + W^{1/2} S W^{1/2} ) W^{1/2}
-void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt, Ref* WS) {
+void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt,
+                                   Ref* WS) {
   auto& workspace = workspace_;
   auto& W = workspace.W;
   auto& expWS = workspace.temp_2;
@@ -40,7 +41,8 @@ void PsdConstraint::AffineUpdate(double w_e, Ref* WS) {
   }
 }
 
-void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
+void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y,
+              StepInfo* info) {
   auto& workspace = o->workspace_;
   auto& minus_s = workspace.temp_1;
   auto& W = workspace.W;
@@ -64,23 +66,23 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* 
   double norminf = SpectralRadius(WS + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
 #else
   // Heuristic choice for initial r.
-  int index = 0; WS.diagonal().maxCoeff(&index);
-  auto gw_eig = ApproximateEigenvalues(WS, workspace.W,  minus_s.col(index), n / 2, true);
-  const double lambda_1 = std::fabs(opt.e_weight+gw_eig.minCoeff());
-  const double lambda_2 = std::fabs(opt.e_weight+gw_eig.maxCoeff());
+  int index = 0;
+  WS.diagonal().maxCoeff(&index);
+  auto gw_eig =
+      ApproximateEigenvalues(WS, workspace.W, minus_s.col(index), n / 2, true);
+  const double lambda_1 = std::fabs(opt.e_weight + gw_eig.minCoeff());
+  const double lambda_2 = std::fabs(opt.e_weight + gw_eig.maxCoeff());
   double norminf = lambda_1;
   if (norminf < lambda_2) {
-    norminf = lambda_2; 
+    norminf = lambda_2;
   }
 #endif
 
-
-
-  WSWS = WS*WS;
-  double norm2 = WSWS.trace() + 2*WS.trace() + Rank(*o);
+  WSWS = WS * WS;
+  double norm2 = WSWS.trace() + 2 * WS.trace() + Rank(*o);
   double scale = 1;
   if (norminf * norminf > 2.0) {
-    scale = 2.0/(norminf * norminf);
+    scale = 2.0 / (norminf * norminf);
   }
 
   info->norminfd = norminf;
@@ -93,7 +95,8 @@ void SetIdentity(PsdConstraint* o) {
   o->workspace_.W.diagonal().setConstant(1);
 }
 
-void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
+                              MuSelectionParameters* p) {
   using conex::jordan_algebra::SpectralRadius;
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
@@ -101,13 +104,15 @@ void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParame
   auto& WS = workspace->temp_2;
   o->ComputeNegativeSlack(1, y, &minus_s);
 
-  WS.noalias() =  workspace->W * minus_s;
+  WS.noalias() = workspace->W * minus_s;
 
 #if 1
   int n = Rank(*o);
-  //VectorXd r = minus_s.col(0); 
-  int index = 0; WS.diagonal().maxCoeff(&index);
-  auto gw_eig = ApproximateEigenvalues(WS, workspace->W,  minus_s.col(index), n / 2, true);
+  // VectorXd r = minus_s.col(0);
+  int index = 0;
+  WS.diagonal().maxCoeff(&index);
+  auto gw_eig =
+      ApproximateEigenvalues(WS, workspace->W, minus_s.col(index), n / 2, true);
   // SWS
   const double lamda_max = -gw_eig.minCoeff();
   const double lamda_min = -gw_eig.maxCoeff();
@@ -123,7 +128,7 @@ void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParame
   if (p->gw_lambda_min > lamda_min) {
     p->gw_lambda_min = lamda_min;
   }
-  WSWS = WS*WS;
+  WSWS = WS * WS;
   p->gw_norm_squared += WSWS.trace();
   p->gw_trace += -WS.trace();
 }

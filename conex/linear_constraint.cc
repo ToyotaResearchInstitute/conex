@@ -2,12 +2,11 @@
 #include "linear_constraint.h"
 #include "newton_step.h"
 
-void SetIdentity(LinearConstraint* o) {
-  o->workspace_.W.setConstant(1);
-}
+void SetIdentity(LinearConstraint* o) { o->workspace_.W.setConstant(1); }
 
 // TODO: use e_weight and c_weight
-void TakeStep(LinearConstraint* o, const StepOptions& opt, const Ref& y, StepInfo* info) {
+void TakeStep(LinearConstraint* o, const StepOptions& opt, const Ref& y,
+              StepInfo* info) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   if (!opt.affine) {
@@ -22,7 +21,8 @@ void TakeStep(LinearConstraint* o, const StepOptions& opt, const Ref& y, StepInf
   }
 }
 
-void GetMuSelectionParameters(LinearConstraint* o,  const Ref& y, MuSelectionParameters* p) {
+void GetMuSelectionParameters(LinearConstraint* o, const Ref& y,
+                              MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;
@@ -38,13 +38,14 @@ void GetMuSelectionParameters(LinearConstraint* o,  const Ref& y, MuSelectionPar
   if (p->gw_lambda_min > lamda_min) {
     p->gw_lambda_min = lamda_min;
   }
-  p->gw_norm_squared += Ws.squaredNorm(); 
+  p->gw_norm_squared += Ws.squaredNorm();
   p->gw_trace += -Ws.sum();
 }
 
-void LinearConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s) {
+void LinearConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
+                                            Ref* minus_s) {
   minus_s->noalias() = (constraint_matrix_)*y.topRows(number_of_variables());
-  minus_s->noalias() -= (constraint_affine_) * inv_sqrt_mu;
+  minus_s->noalias() -= (constraint_affine_)*inv_sqrt_mu;
 }
 
 void LinearConstraint::GeodesicUpdate(const Ref& minus_s, StepInfo* info) {
@@ -56,26 +57,26 @@ void LinearConstraint::GeodesicUpdate(const Ref& minus_s, StepInfo* info) {
 
   int n = SW.rows();
 
-  d = SW  + DenseMatrix::Ones(n, 1);
+  d = SW + DenseMatrix::Ones(n, 1);
   double norminf = (d).array().abs().maxCoeff();
 
   info->norminfd = norminf;
   info->normsqrd = d.squaredNorm();
 
-  double scale = 1;  
+  double scale = 1;
   if (norminf * norminf > 2.0) {
-    scale = 2.0/(norminf * norminf);
-    SW = SW*scale;
+    scale = 2.0 / (norminf * norminf);
+    SW = SW * scale;
   }
 
-  // double scale = 1;  
+  // double scale = 1;
   // if (norminf > 2.0) {
   //   scale = 2.0/(norminf);
   //   SW = SW*scale;
   // }
 
   expSW = SW.array().exp();
-  W =  W.cwiseProduct(expSW);
+  W = W.cwiseProduct(expSW);
   W = std::exp(scale) * W;
 }
 
@@ -86,11 +87,10 @@ void LinearConstraint::AffineUpdate(const Ref& minus_s) {
   W += W.cwiseProduct(SW);
 }
 
-
 // WA = W * A -> Weight all the rows.
 // A' W W A   -> Compute dot product of columns.
 // Want random access to columns.
-void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize, 
+void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
   const auto& W = o->workspace_.W;
   auto G = &sys->G;
@@ -99,7 +99,7 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
   auto& WC = o->workspace_.temp_1;
   int m = o->number_of_variables();
 
-  WA = W.asDiagonal()*(o->constraint_matrix_);
+  WA = W.asDiagonal() * (o->constraint_matrix_);
   WC = W.cwiseProduct(o->constraint_affine_);
 
   if (initialize) {
@@ -108,13 +108,12 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
       sys->AW.setZero();
       sys->AQc.setZero();
     }
-    (*G).topLeftCorner(m, m).noalias() = WA.transpose()*WA;
+    (*G).topLeftCorner(m, m).noalias() = WA.transpose() * WA;
     sys->AW.topRows(m).noalias() = o->constraint_matrix_.transpose() * W;
-    sys->AQc.topRows(m).noalias() = WA.transpose() * WC; 
+    sys->AQc.topRows(m).noalias() = WA.transpose() * WC;
   } else {
-    (*G).topLeftCorner(m, m).noalias() += WA.transpose()*WA;
+    (*G).topLeftCorner(m, m).noalias() += WA.transpose() * WA;
     sys->AW.topRows(m).noalias() += o->constraint_matrix_.transpose() * W;
-    sys->AQc.topRows(m).noalias() += WA.transpose() * WC; 
+    sys->AQc.topRows(m).noalias() += WA.transpose() * WC;
   }
 }
-

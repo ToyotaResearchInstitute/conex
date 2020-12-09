@@ -10,33 +10,32 @@ using Eigen::VectorXd;
 
 using JordanTypes = testing::Types<Real, Complex, Quaternions>;
 
-template<typename T>
+template <typename T>
 HyperComplexMatrix RandomOrthogonal(int n) {
   return T::Orthogonalize(T::Random(n, n));
 }
 
-template<typename T>
-HyperComplexMatrix BuildMatrix(const VectorXd& eigenvalues, const HyperComplexMatrix& Q) {
+template <typename T>
+HyperComplexMatrix BuildMatrix(const VectorXd& eigenvalues,
+                               const HyperComplexMatrix& Q) {
   int n = eigenvalues.rows();
   assert(n = Q.at(0).rows());
-  auto D = T::Zero(n, n); 
+  auto D = T::Zero(n, n);
   D.at(0).diagonal() = eigenvalues;
-  return T::Multiply(T::Multiply(Q,  D), T::ConjugateTranspose(Q));
+  return T::Multiply(T::Multiply(Q, D), T::ConjugateTranspose(Q));
 }
 
 TEST(MatrixExponential, CompareWithEigen) {
   int n = 4;
-  MatrixXd A(n, n); 
-  A << 3, 1, 0, 1,
-       1, 3, 1, 0,
-       0, 1, 4, 1,
-       1, 0, 1, 5;
+  MatrixXd A(n, n);
+  A << 3, 1, 0, 1, 1, 3, 1, 0, 0, 1, 4, 1, 1, 0, 1, 5;
   A = A * .001;
 
   MatrixXd reference = A.exp();
   MatrixXd calculated(n, n);
-      
-  HyperComplexMatrix arg(1); arg.at(0) = A;
+
+  HyperComplexMatrix arg(1);
+  arg.at(0) = A;
   HyperComplexMatrix result(1);
   ExponentialMap(arg, &result);
   for (int i = 0; i < n; i++) {
@@ -46,7 +45,7 @@ TEST(MatrixExponential, CompareWithEigen) {
   }
 }
 
-template<typename T>
+template <typename T>
 class TestCases : public testing::Test {
  public:
   void CompareWithReference() {
@@ -56,7 +55,6 @@ class TestCases : public testing::Test {
     auto Q = RandomOrthogonal<T>(n);
     auto arg = BuildMatrix<T>(eigenvalues, Q);
     auto reference = BuildMatrix<T>(eigenvalues.array().exp(), Q);
-
 
     auto result = T::Zero(n, n);
     ExponentialMap(arg, &result);
@@ -75,7 +73,7 @@ TYPED_TEST(TestCases, MultiplyByIdentity) {
   TestFixture::CompareWithReference();
 }
 
-template<typename T>
+template <typename T>
 typename T::Matrix Symmetrize(const typename T::Matrix& x) {
   auto y = T::Add(x, T::ConjugateTranspose(x));
   y = T::ScalarMultiply(y, .5);
@@ -90,19 +88,19 @@ TEST(TestCases, GeodesicUpdateOctonions) {
   s = T::Add(w, T::ScalarMultiply(s, .1));
 
   auto y = GeodesicUpdate(w, s);
-  EXPECT_TRUE((VectorXd(T::Eigenvalues(s).array().exp()) - T::Eigenvalues(y)).norm() < 1e-3);
-
+  EXPECT_TRUE(
+      (VectorXd(T::Eigenvalues(s).array().exp()) - T::Eigenvalues(y)).norm() <
+      1e-3);
 
   auto d = T::Zero(order, order);
   for (int i = 0; i < 3; i++) {
     d.at(0)(i, i) = 1 + i * .02;
   }
-  y = GeodesicUpdate(T::Identity(order),  d);
+  y = GeodesicUpdate(T::Identity(order), d);
   for (int i = 0; i < order; i++) {
     EXPECT_NEAR(y.at(0)(i, i), d.at(0).diagonal().array().exp()(i), 1e-4);
   }
 }
-
 
 VectorXd sort(const VectorXd& x) {
   auto y = x;
@@ -120,7 +118,6 @@ TEST(TestCases, GeodesicUpdateRescaling) {
   s = T::Add(T::Identity(order), T::ScalarMultiply(s, .05));
   s = T::ScalarMultiply(s, -1);
 
-
   auto yref = T::ScalarMultiply(GeodesicUpdate(w, s), std::exp(1));
   auto ycalc = GeodesicUpdateScaled(w, s);
 
@@ -130,5 +127,4 @@ TEST(TestCases, GeodesicUpdateRescaling) {
     EXPECT_TRUE(eig_calc(i) >= 0);
     EXPECT_NEAR(eig_ref(i), eig_calc(i), 1e-2);
   }
-
 }

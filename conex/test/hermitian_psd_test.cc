@@ -10,9 +10,7 @@ using JordanTypes = testing::Types<Real, Complex, Quaternions, Octonions>;
 
 using Eigen::MatrixXd;
 
-MatrixXd ToMat(const Real::Matrix& x) {
-  return x.at(0);
-}
+MatrixXd ToMat(const Real::Matrix& x) { return x.at(0); }
 
 std::vector<MatrixXd> ToMat(const std::vector<Real::Matrix>& x) {
   std::vector<MatrixXd> y;
@@ -25,14 +23,15 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
   using T = Real;
   using Matrix = typename T::Matrix;
   SolverConfiguration config;
-  config.inv_sqrt_mu_max = std::sqrt(1.0/1e-4);
+  config.inv_sqrt_mu_max = std::sqrt(1.0 / 1e-4);
   int m = dim;
   std::vector<Matrix> constraint_matrices(m);
   Matrix constraint_affine = T::Identity(rank);
   for (int i = 0; i < m; i++) {
     constraint_matrices.at(i) = T::Random(rank, rank);
-    constraint_matrices.at(i) = T::Add(constraint_matrices.at(i), 
-                                       T::ConjugateTranspose(constraint_matrices.at(i)));
+    constraint_matrices.at(i) =
+        T::Add(constraint_matrices.at(i),
+               T::ConjugateTranspose(constraint_matrices.at(i)));
   }
   HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
 
@@ -54,7 +53,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
   return solved_1 && solved_2;
 }
 
-template<typename T>
+template <typename T>
 class TestCases : public testing::Test {
  public:
   using Type = T;
@@ -62,7 +61,7 @@ class TestCases : public testing::Test {
   void DoSolve(int rank, int m) {
     using Matrix = typename T::Matrix;
     SolverConfiguration config;
-    
+
     config.inv_sqrt_mu_max = 1000;
     config.final_centering_steps = 4;
     config.max_iterations = 100;
@@ -70,7 +69,10 @@ class TestCases : public testing::Test {
     std::vector<Matrix> constraint_matrices(m);
     Matrix constraint_affine = T::Identity(rank);
     for (int i = 0; i < m; i++) {
-      constraint_matrices.at(i) = T::Random(rank, rank); constraint_matrices.at(i) = T::Add(constraint_matrices.at(i), T::ConjugateTranspose(constraint_matrices.at(i)));
+      constraint_matrices.at(i) = T::Random(rank, rank);
+      constraint_matrices.at(i) =
+          T::Add(constraint_matrices.at(i),
+                 T::ConjugateTranspose(constraint_matrices.at(i)));
     }
     HermitianPsdConstraint<T> T2(rank, constraint_matrices, constraint_affine);
 
@@ -92,9 +94,9 @@ TYPED_TEST_CASE(TestCases, JordanTypes);
 TYPED_TEST(TestCases, SolveRandomInstances) {
   for (int i = 0; i < 3; i++) {
     if (!std::is_same<typename TestFixture::Type, Octonions>::value) {
-      TestFixture::SolveRandomInstances(3 + i*40, 2 + 3*i);
+      TestFixture::SolveRandomInstances(3 + i * 40, 2 + 3 * i);
     } else {
-      TestFixture::SolveRandomInstances(3, 2 + 3*i);
+      TestFixture::SolveRandomInstances(3, 2 + 3 * i);
     }
   }
 }

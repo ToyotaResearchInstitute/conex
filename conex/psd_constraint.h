@@ -1,30 +1,26 @@
 #pragma once
 #include <Eigen/Dense>
 
-#include "workspace.h"
 #include "eigen_decomp.h"
 #include "newton_step.h"
+#include "workspace.h"
 
 struct WorkspaceDensePSD {
- 
-  WorkspaceDensePSD(int n) : n_(n) {} 
-  WorkspaceDensePSD(int n, double *data) :  
-                                 W(data,  n, n),
-                                 temp_1(data + get_size_aligned(n*n),  n, n),
-                                 temp_2(data + get_size_aligned(n*n),  n, n)
-  {}
-  static constexpr int size_of(int n) { return 3*(get_size_aligned(n*n));  }
+  WorkspaceDensePSD(int n) : n_(n) {}
+  WorkspaceDensePSD(int n, double* data)
+      : W(data, n, n),
+        temp_1(data + get_size_aligned(n * n), n, n),
+        temp_2(data + get_size_aligned(n * n), n, n) {}
+  static constexpr int size_of(int n) { return 3 * (get_size_aligned(n * n)); }
 
-  friend int SizeOf(const WorkspaceDensePSD& o) {
-    return size_of(o.n_);
-  }
+  friend int SizeOf(const WorkspaceDensePSD& o) { return size_of(o.n_); }
 
-  friend void Initialize(WorkspaceDensePSD* o, double *data) {
+  friend void Initialize(WorkspaceDensePSD* o, double* data) {
     using Map = Eigen::Map<DenseMatrix, Eigen::Aligned>;
-     int n = o->n_;
-     new (&o->W)  Map(data, n, n);
-     new (&o->temp_1) Map(data + 1*get_size_aligned(n*n),  n, n);
-     new (&o->temp_2) Map(data + 2*get_size_aligned(n*n),  n, n);
+    int n = o->n_;
+    new (&o->W) Map(data, n, n);
+    new (&o->temp_1) Map(data + 1 * get_size_aligned(n * n), n, n);
+    new (&o->temp_2) Map(data + 2 * get_size_aligned(n * n), n, n);
   }
 
   friend void print(const WorkspaceDensePSD& o) {
@@ -39,24 +35,24 @@ struct WorkspaceDensePSD {
   int n_;
 };
 
-// To avoid overhead of virtual functions, we 
+// To avoid overhead of virtual functions, we
 // assume that classes that inherit PsdConstraint
 // will add a specialization of this template
 // as a "friend" function.
-template<typename T>
-void ConstructSchurComplementSystem(T* o, 
-                                bool initialize,
-                                SchurComplementSystem* sys) {
+template <typename T>
+void ConstructSchurComplementSystem(T* o, bool initialize,
+                                    SchurComplementSystem* sys) {
   auto workspace = o->workspace();
-  auto& W = workspace->W; auto& AW = workspace->temp_1;
+  auto& W = workspace->W;
+  auto& AW = workspace->temp_1;
   auto& WAW = workspace->temp_2;
-  int m = o->num_dual_constraints_;  
+  int m = o->num_dual_constraints_;
 
   if (initialize) {
     sys->G.setZero();
-    sys->AW.setZero(); 
+    sys->AW.setZero();
     sys->AQc.setZero();
-  } 
+  }
 
   for (int i = 0; i < m; i++) {
     o->ComputeAW(i, W, &AW, &WAW);
@@ -64,8 +60,8 @@ void ConstructSchurComplementSystem(T* o,
       sys->G(o->variable(j), o->variable(i)) += o->EvalDualConstraint(j, WAW);
     }
 
-    sys->AW(o->variable(i), 0)   += AW.trace();
-    sys->AQc(o->variable(i), 0)  += o->EvalDualObjective(WAW);
+    sys->AW(o->variable(i), 0) += AW.trace();
+    sys->AQc(o->variable(i), 0) += o->EvalDualObjective(WAW);
   }
 }
 
@@ -74,8 +70,10 @@ class PsdConstraint {
   friend void SetIdentity(PsdConstraint* o);
   friend int Rank(const PsdConstraint& o) { return o.workspace_.n_; };
   WorkspaceDensePSD* workspace() { return &workspace_; }
-  friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y, StepInfo*);
-  friend void GetMuSelectionParameters(PsdConstraint* o,  const Ref& y, MuSelectionParameters* p);
+  friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y,
+                       StepInfo*);
+  friend void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
+                                       MuSelectionParameters* p);
   int number_of_variables() { return num_dual_constraints_; }
 
  protected:

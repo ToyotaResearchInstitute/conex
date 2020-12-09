@@ -19,4 +19,3 @@ struct OffDiagonalBlock {
   int assign;
   int stride;
 };
-

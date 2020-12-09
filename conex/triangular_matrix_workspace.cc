@@ -1,7 +1,7 @@
 #include "conex/triangular_matrix_workspace.h"
 
 namespace {
-template<typename T>
+template <typename T>
 int LookupSuperNode(const T& o, int index, int start) {
   for (int j = static_cast<int>(o.snodes.size()) - 1; j >= 0; j--) {
     if (o.snodes.at(j).size() > 0) {
@@ -13,9 +13,8 @@ int LookupSuperNode(const T& o, int index, int start) {
   assert(0);
 }
 
-
-template<typename T>
-double* LookupAddress(T& o,  int r, int c) {
+template <typename T>
+double* LookupAddress(T& o, int r, int c) {
   int node = LookupSuperNode(o, c, 0);
   int j = 0;
   for (auto sj : o.snodes.at(node)) {
@@ -42,9 +41,9 @@ double* LookupAddress(T& o,  int r, int c) {
   assert(0);
 }
 
-} // namespace
+}  // namespace
 
-std::vector<double*>  TriangularMatrixWorkspace::S_S(int clique) {
+std::vector<double*> TriangularMatrixWorkspace::S_S(int clique) {
   std::vector<double*> y;
   auto& s = separators.at(clique);
   for (size_t j = 0; j < s.size(); j++) {
