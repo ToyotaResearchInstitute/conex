@@ -46,26 +46,14 @@ def PlotMuUpdateVsDivBound():
     hyper_complex_dim = 1
     mu = SolveRandomHermitianSDP(m, n, hyper_complex_dim, configs)
 
-def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, configs):
-    for config in configs: 
-        solution = prog.Maximize(b, config)
-        mu = []
-        mu = [stats.mu for stats in prog.GetIterationStats()]
-        mus.append(mu)
-        labels.append('divub ' + str(configs[i].divergence_upper_bound))
-
-    Plot(title, show_plot, mus, labels)
-
-
-
 def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
     m = 10
     config = Conex().DefaultConfiguration()
-    config.divergence_upper_bound = 1000
+    config.divergence_upper_bound = 100
     config.inv_sqrt_mu_max = 130000
     config.final_centering_steps = 1
-
     mu = []
+
     if 0:
         rank1 = 5
         rank2 = 10
@@ -100,7 +88,6 @@ def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
     labels.append("n = " + str(rank2));
     labels.append("n = " + str(rank3));
     labels.append("n = " + str(rank4));
-    print labels
 
     Plot(title, show_plot, mu, labels)
 
@@ -269,7 +256,6 @@ def SolveRandomHermitianSDP(num_variables, order, hyper_complex_dim, configs):
         mus = []
         if solution.status:
             mus = [stats.mu for stats in prog.GetIterationStats()]
-
     
     return mus
 
@@ -312,7 +298,7 @@ show_plot = True
 #PlotMuUpdate(1, "Real", show_plot)
 #PlotMuUpdate(2, "Complex", show_plot)
 #PlotMuUpdate(4, "Quaternion", show_plot)
-#PlotMuUpdate(-1, "special", show_plot)
+PlotMuUpdate(-1, "special", show_plot)
 #PlotMuUpdate(8, "exceptional", show_plot)
 #PlotMuUpdateVsDivBound()
 
