@@ -1,5 +1,8 @@
 #include "conex/cholesky_decomposition.h"
 
+namespace conex {
+
+
 namespace {
 
 // Given an ordering, we m
@@ -207,3 +210,5 @@ void DifferenceOfSorted(const std::vector<int>& v1, const std::vector<int>& v2,
   std::set_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
                       back_inserter(*v3));
 }
+
+} // namespace conex

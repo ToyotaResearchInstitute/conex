@@ -2,6 +2,9 @@
 #include "conex/supernodal_cholesky_data.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 class LinearInequality {
  public:
   LinearInequality(const Eigen::MatrixXd& A) : A_(A) {
@@ -42,3 +45,5 @@ class LinearInequality {
   std::vector<OffDiagonalBlock> off_diag;
   std::vector<OffDiagonalBlock> scatter_block;
 };
+
+} // namespace conex

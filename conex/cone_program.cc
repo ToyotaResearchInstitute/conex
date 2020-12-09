@@ -5,6 +5,9 @@
 #include "conex/divergence.h"
 #include "conex/newton_step.h"
 
+namespace conex {
+
+
 double CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
   const double kMaxNormInfD = p->limit;
   double inv_sqrt_mu = (1.0 + kMaxNormInfD) / (lambda_max + 1e-12);
@@ -266,3 +269,5 @@ DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints) {
   ConstructSchurComplementSystem(&constraints, true, &sys);
   return .5 * sys.AW;
 }
+
+} // namespace conex

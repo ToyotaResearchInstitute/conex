@@ -1,5 +1,8 @@
 #pragma once
 #include <vector>
+
+namespace conex {
+
 struct DiagonalBlock {
   int num_vars;
   int* var_data;
@@ -19,3 +22,5 @@ struct OffDiagonalBlock {
   int assign;
   int stride;
 };
+
+} // namespace conex

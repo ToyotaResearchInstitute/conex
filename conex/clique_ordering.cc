@@ -6,6 +6,9 @@
 #include "conex/debug_macros.h"
 #include "conex/supernodal_solver.h"
 
+namespace conex {
+
+
 using std::vector;
 using Cliques = vector<vector<int>>;
 
@@ -218,3 +221,5 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
     }
   }
 }
+
+} // namespace conex

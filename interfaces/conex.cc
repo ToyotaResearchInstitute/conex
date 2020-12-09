@@ -33,6 +33,11 @@
 
 
 using DenseMatrix = Eigen::MatrixXd;
+using conex::SolverConfiguration;
+using conex::DenseLMIConstraint;
+using conex::Program;
+using conex::HermitianPsdConstraint;
+
 int ConexSolve(void* prog_ptr, const double*b, int br, const ConexSolverConfiguration*
                config, double* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
@@ -129,7 +134,7 @@ int ConexAddSparseLMIConstraint(void* prog,
   InputMatrix Cmap(c, cr, cc);
 
 
-  SparseLMIConstraint T3{Avect, Cmap, variables};
+  conex::SparseLMIConstraint T3{Avect, Cmap, variables};
   auto& program = *reinterpret_cast<Program*>(prog);
   int constraint_id = program.constraints.size();
   program.constraints.push_back(T3);
@@ -144,7 +149,7 @@ int ConexAddDenseLinearConstraint(void* prog,
   int n = Ar;
   int m = Ac;
 
-  LinearConstraint T3{n, m, A, c};
+  conex::LinearConstraint T3{n, m, A, c};
   auto& program = *reinterpret_cast<Program*>(prog);
 
   int constraint_id = program.constraints.size();
@@ -222,17 +227,17 @@ CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order, int hyper_compl
 
   switch (hyper_complex_dim) {
     case 1:
-      prg->constraints.push_back(HermitianPsdConstraint<Real>(order));
+      prg->constraints.push_back(HermitianPsdConstraint<conex::Real>(order));
       break;
     case 2:
-      prg->constraints.push_back(HermitianPsdConstraint<Complex>(order));
+      prg->constraints.push_back(HermitianPsdConstraint<conex::Complex>(order));
       break;
     case 4:
-      prg->constraints.push_back(HermitianPsdConstraint<Quaternions>(order));
+      prg->constraints.push_back(HermitianPsdConstraint<conex::Quaternions>(order));
       break;
     case 8:
       CONEX_DEMAND(order <= 3, "Order of octonion algebra cannot be greater than 3.");
-      prg->constraints.push_back(HermitianPsdConstraint<Octonions>(order));
+      prg->constraints.push_back(HermitianPsdConstraint<conex::Octonions>(order));
   }
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
@@ -264,7 +269,7 @@ CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order, int* constraint_
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
 
-  prg->constraints.push_back(SOCConstraint(order));
+  prg->constraints.push_back(conex::SOCConstraint(order));
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
 }

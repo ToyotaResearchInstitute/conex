@@ -3,6 +3,9 @@
 #include "conex/eigen_decomp.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 class HyperComplexMatrix : public std::vector<Eigen::MatrixXd> {
  public:
   template <typename T>
@@ -158,3 +161,5 @@ using Octonions = MatrixAlgebra<8>;
 using Quaternions = MatrixAlgebra<4>;
 using Complex = MatrixAlgebra<2>;
 using Real = MatrixAlgebra<1>;
+
+} // namespace conex

@@ -3,6 +3,9 @@
 #include "conex/triangular_matrix_workspace.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 struct BlockTriangularOperations {
   static void ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& L,
                                        Eigen::VectorXd* b);
@@ -30,3 +33,5 @@ struct BlockTriangularOperations {
     ApplyBlockInverseOfMTranspose(mat, factorization, y);
   }
 };
+
+} // namespace conex

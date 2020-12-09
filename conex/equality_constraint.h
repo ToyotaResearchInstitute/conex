@@ -2,6 +2,9 @@
 #include "conex/supernodal_cholesky_data.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 class EqualityConstraints {
  public:
   EqualityConstraints(const Eigen::MatrixXd& A) : A_(A) {
@@ -51,3 +54,5 @@ class EqualityConstraints {
   std::vector<DiagonalBlock> diag;
   std::vector<OffDiagonalBlock> off_diag;
 };
+
+} // namespace conex

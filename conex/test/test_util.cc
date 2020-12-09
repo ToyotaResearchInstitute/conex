@@ -1,5 +1,10 @@
 #include "test_util.h"
 
+namespace conex {
+
+
+
+
 DenseMatrix Symmetrize(const DenseMatrix& X) {
   DenseMatrix Xt = X.transpose();
   return .5 * (X + Xt);
@@ -85,3 +90,6 @@ double min(double x, double y) {
 DenseMatrix QuadRep(const DenseMatrix& x, const DenseMatrix& y) {
   return x * y * x;
 }
+
+} // namespace conex
+

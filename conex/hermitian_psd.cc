@@ -1,6 +1,9 @@
 #include "conex/hermitian_psd.h"
 #include "conex/error_checking_macros.h"
 #include "conex/exponential_map.h"
+
+namespace conex {
+
 using Eigen::MatrixXd;
 
 template <typename T>
@@ -276,3 +279,5 @@ template bool UpdateAffineTerm(HermitianPsdConstraint<Quaternions>* o,
                                double val, int r, int c, int dim);
 template bool UpdateAffineTerm(HermitianPsdConstraint<Octonions>* o, double val,
                                int r, int c, int dim);
+
+} // namespace conex

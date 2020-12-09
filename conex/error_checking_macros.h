@@ -1,6 +1,9 @@
 #include <iostream>
 #include "conex/error_codes.h"
 
+namespace conex {
+
+
 // TODO(FrankPermenter): return conex error codes on failure.
 
 #if 0
@@ -16,3 +19,5 @@
     return 1;                                                                  \
   }
 #endif
+
+} // namespace conex

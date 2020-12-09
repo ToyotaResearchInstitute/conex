@@ -1,6 +1,9 @@
 #pragma once
 #include "newton_step.h"
 #include <Eigen/Dense>
+
+namespace conex {
+
 struct WorkspaceSOC {
   WorkspaceSOC(int n) : n_(n), W(n + 1, 1) {}
 
@@ -36,3 +39,5 @@ struct WorkspaceSOC {
   int n_;
   Eigen::MatrixXd W;
 };
+
+} // namespace conex

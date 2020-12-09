@@ -8,6 +8,11 @@
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
+
+
 using DenseMatrix = Eigen::MatrixXd;
 
 int DoMain() {
@@ -75,3 +80,6 @@ int DoMain() {
 }
 
 TEST(Constraints, SOCP) { DoMain(); }
+
+} // namespace conex
+

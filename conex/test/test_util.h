@@ -2,6 +2,11 @@
 #include <map>
 #include <vector>
 #include <Eigen/Dense>
+
+namespace conex {
+
+
+
 using std::map;
 using std::vector;
 using Tuple = std::pair<int, int>;
@@ -20,3 +25,6 @@ DenseMatrix QuadRep(const DenseMatrix& X, const DenseMatrix& Y);
 double NormFro(const DenseMatrix& x);
 double min(double x, double y);
 inline double max(double x, double y) { return -min(-x, -y); }
+
+} // namespace conex
+

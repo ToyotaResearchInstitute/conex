@@ -1,5 +1,8 @@
 #include "conex/linear_inequality.h"
 #include "conex/debug_macros.h"
+
+namespace conex {
+
 using T = LinearInequality;
 using Eigen::MatrixXd;
 using std::vector;
@@ -120,3 +123,5 @@ void T::UpdateBlocks() {
             InitVector(d.col_data, d.num_cols), d.data_pointers);
   }
 }
+
+} // namespace conex

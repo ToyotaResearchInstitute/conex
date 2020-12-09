@@ -1,6 +1,9 @@
 #include "newton_step.h"
 #include "workspace_soc.h"
 
+namespace conex {
+
+
 class QuadraticConstraint {
   using StorageType = DenseMatrix;
 
@@ -42,3 +45,5 @@ class QuadraticConstraint {
   const DenseMatrix constraint_matrix_;
   const DenseMatrix constraint_affine_;
 };
+
+} // namespace conex

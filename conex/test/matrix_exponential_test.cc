@@ -7,6 +7,11 @@
 
 #include "conex/debug_macros.h"
 
+namespace conex {
+
+
+
+
 using Eigen::Map;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -33,3 +38,6 @@ TEST(MatrixExponential, CompareWithEigen) {
     }
   }
 }
+
+} // namespace conex
+

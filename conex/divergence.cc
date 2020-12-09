@@ -4,6 +4,9 @@
 
 #include "conex/debug_macros.h"
 
+namespace conex {
+
+
 namespace {
 
 // Finds the largest (when a > 0) solution to
@@ -40,3 +43,5 @@ double DivergenceUpperBound(double k, double gw_norm_squared,
   double denom = 2 - k * gw_norm_inf;
   return numerator / denom;
 }
+
+} // namespace conex

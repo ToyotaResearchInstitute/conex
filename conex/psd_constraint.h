@@ -5,6 +5,9 @@
 #include "newton_step.h"
 #include "workspace.h"
 
+namespace conex {
+
+
 struct WorkspaceDensePSD {
   WorkspaceDensePSD(int n) : n_(n) {}
   WorkspaceDensePSD(int n, double* data)
@@ -88,3 +91,5 @@ class PsdConstraint {
   virtual void ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) = 0;
   virtual void ComputeNegativeSlack(double k, const Ref& y, Ref* s) = 0;
 };
+
+} // namespace conex

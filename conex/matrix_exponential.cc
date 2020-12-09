@@ -2,6 +2,9 @@
 #include <cmath>
 #include <complex>
 #include "debug_macros.h"
+
+namespace conex {
+
 using RealScalar = double;
 using Eigen::MatrixXd;
 /** \brief Compute the (3,3)-Pad&eacute; approximant to the exponential.
@@ -265,3 +268,5 @@ void MatrixExponential(const Eigen::Ref<const Eigen::MatrixXd>& arg,
   for (int i = 0; i < squarings; i++)
     (*result) *= (*result);  // undo scaling by repeated squaring
 }
+
+} // namespace conex

@@ -6,6 +6,11 @@
 #include "conex/linear_constraint.h"
 #include "conex/test/test_util.h"
 
+namespace conex {
+
+
+
+
 using Eigen::MatrixXd;
 
 TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
@@ -64,3 +69,6 @@ TEST(Warmstart, ObjectivePertubation) {
   config.initialization_mode = 1;
   Solve(b, prog, config, ywarm.data());
 }*/
+
+} // namespace conex
+

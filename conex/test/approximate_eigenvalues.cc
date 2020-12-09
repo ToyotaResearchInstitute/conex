@@ -7,6 +7,11 @@
 #include "conex/debug_macros.h"
 #include "conex/eigen_decomp.h"
 #include <Eigen/Dense>
+
+namespace conex {
+
+
+
 using conex::jordan_algebra::eig;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -109,3 +114,6 @@ TEST(Eigenvalues, Profile) {
     EXPECT_NEAR(eigWS.maxCoeff() / eigJ.maxCoeff(), 1, 1e-2);
   }
 }
+
+} // namespace conex
+

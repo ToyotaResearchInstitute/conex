@@ -1,5 +1,8 @@
 #include "conex/quadratic_cone_constraint.h"
 #include "conex/newton_step.h"
+
+namespace conex {
+
 using EigenType = DenseMatrix;
 using Real = double;
 
@@ -328,3 +331,5 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
 }
 
 // A Q A
+
+} // namespace conex

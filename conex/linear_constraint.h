@@ -1,5 +1,8 @@
 #include "conex/constraint.h"
 #include "conex/newton_step.h"
+
+namespace conex {
+
 struct WorkspaceLinear {
   WorkspaceLinear(int n, int num_vars) : n_(n), num_vars_(num_vars) {}
 
@@ -74,3 +77,5 @@ class LinearConstraint {
   const DenseMatrix constraint_matrix_;
   const DenseMatrix constraint_affine_;
 };
+
+} // namespace conex

@@ -11,6 +11,11 @@
 
 #include <chrono>
 
+namespace conex {
+
+
+
+
 using Cliques = std::vector<std::vector<int>>;
 using Eigen::MatrixXd;
 using std::vector;
@@ -433,3 +438,6 @@ TEST(LDLT, Benchmark2) {
   EXPECT_NEAR( (y-yref).norm(), 0, 1e-9);
 #endif
 }
+
+} // namespace conex
+

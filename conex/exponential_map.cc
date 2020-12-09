@@ -1,5 +1,8 @@
 #include "conex/exponential_map.h"
 
+namespace conex {
+
+
 namespace {
 inline int factorial(int n) {
   int y = 1;
@@ -172,3 +175,5 @@ HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x,
   // Unreachable
   return x;
 }
+
+} // namespace conex

@@ -2,6 +2,9 @@
 #include "linear_constraint.h"
 #include "newton_step.h"
 
+namespace conex {
+
+
 void SetIdentity(LinearConstraint* o) { o->workspace_.W.setConstant(1); }
 
 // TODO: use e_weight and c_weight
@@ -117,3 +120,5 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
     sys->AQc.topRows(m).noalias() += WA.transpose() * WC;
   }
 }
+
+} // namespace conex

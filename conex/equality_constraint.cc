@@ -1,5 +1,8 @@
 #include "conex/equality_constraint.h"
 #include "conex/debug_macros.h"
+
+namespace conex {
+
 using T = EqualityConstraints;
 using Eigen::MatrixXd;
 using std::vector;
@@ -124,3 +127,5 @@ void T::UpdateBlocks() {
     }
   }
 }
+
+} // namespace conex

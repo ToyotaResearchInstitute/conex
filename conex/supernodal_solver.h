@@ -7,6 +7,9 @@
 #include "conex/kkt_system_assembler.h"
 #include "conex/triangular_matrix_workspace.h"
 
+namespace conex {
+
+
 using Clique = std::vector<int>;
 
 // TODO(FrankPermenter): Deprecate this class.
@@ -123,3 +126,5 @@ class TriangularMatrixOperations {
   static Eigen::VectorXd ApplyInverseOfTranspose(SparseTriangularMatrix* L,
                                                  const Eigen::VectorXd& b);
 };
+
+} // namespace conex

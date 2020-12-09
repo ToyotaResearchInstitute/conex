@@ -2,6 +2,9 @@
 #include "conex/eigen_decomp.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 constexpr int d = 3;
 inline int LinIndex(int i, int j) { return j * d + i; }
 
@@ -133,3 +136,5 @@ using Octonions = JordanMatrixAlgebra<8>;
 using Quaternions = JordanMatrixAlgebra<4>;
 using Complex = JordanMatrixAlgebra<2>;
 using Real = JordanMatrixAlgebra<1>;
+
+} // namespace conex

@@ -3,6 +3,9 @@
 #include "memory_utils.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 using DenseMatrix = Eigen::MatrixXd;
 using Ref = Eigen::Map<DenseMatrix, Eigen::Aligned>;
 
@@ -71,3 +74,5 @@ struct WorkspaceSchurComplement {
 };
 
 using SchurComplementSystem = WorkspaceSchurComplement;
+
+} // namespace conex

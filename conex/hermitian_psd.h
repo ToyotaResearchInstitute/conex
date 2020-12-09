@@ -6,6 +6,9 @@
 #include "conex/vect_jordan_matrix_algebra.h"
 #include "conex/workspace.h"
 
+namespace conex {
+
+
 struct WorkspaceDenseHermitian {
   WorkspaceDenseHermitian(int n) : n_(n) {}
   WorkspaceDenseHermitian(int n, double* data)
@@ -104,3 +107,5 @@ using RealLMIConstraint = HermitianPsdConstraint<Real>;
 using ComplexLMIConstraint = HermitianPsdConstraint<Complex>;
 using QuaternicLMIConstraint = HermitianPsdConstraint<Quaternions>;
 using OctonicLMIConstraint = HermitianPsdConstraint<Octonions>;
+
+} // namespace conex

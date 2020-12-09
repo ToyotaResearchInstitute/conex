@@ -7,6 +7,11 @@
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
+
+
 using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
 TEST(message_test, content) {
@@ -46,3 +51,6 @@ TEST(message_test, content) {
     EXPECT_TRUE(slack.dot(x) <= sqrtmu * sqrtmu * n + eps);
   }
 }
+
+} // namespace conex
+

@@ -1,6 +1,9 @@
 #include "conex/newton_step.h"
 #include "conex/workspace_soc.h"
 
+namespace conex {
+
+
 class SOCConstraint {
   using StorageType = DenseMatrix;
 
@@ -46,3 +49,5 @@ class SOCConstraint {
   DenseMatrix constraint_affine_;
   int n_;
 };
+
+} // namespace conex

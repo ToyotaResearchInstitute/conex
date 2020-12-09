@@ -4,6 +4,11 @@
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
+
+
 using Eigen::MatrixXd;
 
 TEST(MuSelection, DivergenceBound) {
@@ -23,3 +28,6 @@ TEST(MuSelection, DivergenceBound) {
   EXPECT_TRUE(2 - k * gw_norm_inf >= 0);
   EXPECT_NEAR(hub, hub_desired, 1e-12);
 }
+
+} // namespace conex
+

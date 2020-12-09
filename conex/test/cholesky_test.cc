@@ -1,6 +1,11 @@
 #include "conex/cholesky_decomposition.h"
 #include "conex/elimination_ordering.h"
 #include "gtest/gtest.h"
+
+namespace conex {
+
+
+
 using Matrix = Eigen::MatrixXd;
 Matrix Ones(int n) {
   Matrix x(n, n);
@@ -330,3 +335,6 @@ TEST(Cholesky, Sizes) {
 }
 
 // *   *
+
+} // namespace conex
+

@@ -6,6 +6,11 @@
 
 #include "conex/cone_program.h"
 
+namespace conex {
+
+
+
+
 using JordanTypes = testing::Types<Real, Complex, Quaternions, Octonions>;
 
 using Eigen::MatrixXd;
@@ -106,3 +111,6 @@ TEST(Hermitian, CompareWithLMI) {
     EXPECT_TRUE(CompareRealHermitianWithLMI(3, 2));
   }
 }
+
+} // namespace conex
+

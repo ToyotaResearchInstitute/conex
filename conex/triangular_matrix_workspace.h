@@ -5,6 +5,9 @@
 #include <Eigen/Dense>
 
 #include "conex/debug_macros.h"
+
+namespace conex {
+
 using Clique = std::vector<int>;
 
 struct TriangularMatrixWorkspace {
@@ -94,3 +97,5 @@ struct TriangularMatrixWorkspace {
   // TODO(FrankPermenter): Remove this method.
   std::vector<double*> S_S(int clique);
 };
+
+} // namespace conex

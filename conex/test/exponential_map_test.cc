@@ -5,6 +5,11 @@
 
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
+
+namespace conex {
+
+
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -128,3 +133,6 @@ TEST(TestCases, GeodesicUpdateRescaling) {
     EXPECT_NEAR(eig_ref(i), eig_calc(i), 1e-2);
   }
 }
+
+} // namespace conex
+

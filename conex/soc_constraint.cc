@@ -1,6 +1,9 @@
 #include "conex/soc_constraint.h"
 #include "conex/error_checking_macros.h"
 #include "conex/newton_step.h"
+
+namespace conex {
+
 using EigenType = DenseMatrix;
 using Real = double;
 
@@ -322,3 +325,5 @@ bool UpdateAffineTerm(SOCConstraint* o, double val, int r, int c, int dim) {
   o->constraint_affine_(r) = val;
   return CONEX_SUCCESS;
 }
+
+} // namespace conex

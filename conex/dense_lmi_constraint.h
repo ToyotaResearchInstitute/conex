@@ -1,6 +1,9 @@
 #include "newton_step.h"
 #include "psd_constraint.h"
 
+namespace conex {
+
+
 // using InputRefType = Eigen::Map<const DenseMatrix>;
 using InputRefType = DenseMatrix;
 
@@ -65,3 +68,5 @@ class SparseLMIConstraint final : public MatrixLMIConstraint {
     return variables_.at(i);
   }
 };
+
+} // namespace conex

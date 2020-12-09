@@ -1,6 +1,8 @@
 #include "eigen_decomp.h"
 
 namespace conex {
+
+
 namespace jordan_algebra {
 
 using Eigen::MatrixXd;
@@ -82,4 +84,5 @@ Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
 }
 
 }  // namespace jordan_algebra
-}  // namespace conex
+
+} // namespace conex

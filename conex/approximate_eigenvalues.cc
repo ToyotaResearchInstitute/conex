@@ -1,4 +1,7 @@
 #include "conex/approximate_eigenvalues.h"
+
+namespace conex {
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -245,3 +248,5 @@ Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& WS,
     return EigenvaluesOfJacobiMatrix(WS, W, r, num_iterations);
   }
 }
+
+} // namespace conex

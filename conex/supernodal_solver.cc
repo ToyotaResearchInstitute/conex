@@ -6,6 +6,9 @@
 
 #include <Eigen/Dense>
 
+namespace conex {
+
+
 using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 using Eigen::VectorXd;
@@ -482,3 +485,5 @@ MatrixData GetData(const vector<vector<int>>& cliques) {
   }
   return d;
 }
+
+} // namespace conex

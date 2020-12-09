@@ -1,4 +1,7 @@
 #include "block_triangular_operations.h"
+
+namespace conex {
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -319,3 +322,5 @@ void T::BlockLDLTInPlace(
     }
   }
 }
+
+} // namespace conex

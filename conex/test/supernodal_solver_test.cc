@@ -5,6 +5,11 @@
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 
+namespace conex {
+
+
+
+
 using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
@@ -245,3 +250,6 @@ TEST(SupernodalSolver, TestFullSolver) {
   }
   DUMP(T::ToDense(mat));
 }
+
+} // namespace conex
+

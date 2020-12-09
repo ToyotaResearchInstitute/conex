@@ -1,4 +1,6 @@
 #pragma once
+
+namespace conex {
 constexpr unsigned int get_size_aligned(unsigned int n) {
   // Make a multiple of 4.
   int remainder = n % 4;
@@ -8,3 +10,4 @@ constexpr unsigned int get_size_aligned(unsigned int n) {
     return n;
   }
 }
+} // namespace conex

@@ -3,6 +3,9 @@
 #include <memory>
 #include <vector>
 
+namespace conex {
+
+
 template <typename T>
 int SizeOf(const std::vector<T>& x) {
   int y = 0;
@@ -93,3 +96,5 @@ struct WorkspaceStats {
   int num_iter;
   bool initialized = false;
 };
+
+} // namespace conex

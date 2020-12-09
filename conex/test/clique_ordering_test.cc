@@ -6,6 +6,11 @@
 #include "conex/block_triangular_operations.h"
 #include "conex/supernodal_solver.h"
 
+namespace conex {
+
+
+
+
 using Eigen::MatrixXd;
 using std::vector;
 
@@ -115,3 +120,6 @@ TEST(CliqueOrdering, OptimalOrdering) {
   DoVerifyPerfectEliminationOrdering(
       {{1, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {8, 9}, {1, 11}});
 }
+
+} // namespace conex
+

@@ -2,6 +2,9 @@
 #include "conex/debug_macros.h"
 #include "conex/eigen_decomp.h"
 
+namespace conex {
+
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -428,3 +431,5 @@ template class MatrixAlgebra<1>;
 template class MatrixAlgebra<2>;
 template class MatrixAlgebra<4>;
 template class MatrixAlgebra<8>;
+
+} // namespace conex
