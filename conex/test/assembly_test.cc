@@ -131,7 +131,10 @@ void BuildLQRProblem(int N, ConstraintManager* prg) {
   A0 << 1, 1, 0, 1, 0, 1;
 
   MatrixXd Ai(2, 5);
-  Ai << 1, 1, 1, 1, 0, 1, 1, 1, 0, 1;
+  // clang-format off
+  Ai << 1, 1, 1, 1, 0,
+        1, 1, 1, 0, 1;
+  // clang-format on
 
   int max_var = (N + 1) * (2 + 1);
 
@@ -161,9 +164,14 @@ TEST(LDLT, TestAssembly) {
   constexpr int n = 9;
   Eigen::MatrixXd A(m, n);
   // 0  1  2  3  4  5  6  7  8
-  A << 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0,
-      0, 0, 0, 0, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 0,
-      3, 3, 3, 0, 3;
+  // clang-format off
+  A << 1, 1, 0, 0, 0, 0, 0, 0, 0,
+       1, 0, 1, 0, 0, 0, 0, 0, 0,
+       0, 2, 2, 2, 2, 0, 0, 0, 0,
+       0, 2, 2, 2, 0, 2, 0, 0, 0,
+       0, 0, 0, 0, 3, 3, 3, 3, 0,
+       0, 0, 0, 0, 3, 3, 3, 0, 3;
+  // clang-format on
 
   Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(n, n) * 4;
   Eigen::MatrixXd Qi = Eigen::MatrixXd::Identity(3, 3) * 2;
