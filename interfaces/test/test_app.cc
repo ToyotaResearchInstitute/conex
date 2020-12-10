@@ -1,4 +1,4 @@
-#include "conex.h"
+#include "../conex.h"
 #include <iostream>
 
 
