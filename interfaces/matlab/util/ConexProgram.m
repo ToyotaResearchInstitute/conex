@@ -25,11 +25,12 @@ classdef ConexProgram < handle
  end
 
  methods
-    function self = ConexProgram(self)
+    function self = ConexProgram(num_vars)
       if ~libisloaded('libconex')
         loadlibrary libconex.so conex.h
       end
       self.p = calllib('libconex', 'ConexCreateConeProgram');
+      calllib('libconex', 'CONEX_SetNumberOfVariables', self.p, num_vars); 
       self.options = libstruct('ConexSolverConfiguration');
       % Force matlab to allocate memory for options
       self.options.divergence_upper_bound = 1;

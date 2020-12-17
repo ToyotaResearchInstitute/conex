@@ -9,9 +9,9 @@ function run_tests(path_to_conex_library)
 
 
 function LPTests()
-  p = ConexProgram();
-
   num_var = 2;
+  p = ConexProgram(num_var);
+
   num_constraint = 4;
 
   A = rand(num_constraint, num_var);
@@ -27,7 +27,7 @@ function LPTests()
 
   % Do infeasibility test.
   % 1 >= y1,  1 >= -y1
-  p = ConexProgram();
+  p = ConexProgram(num_var);
   A = [1, 0; ...
        0, 1; ...
       -1, 0; ...
@@ -41,9 +41,8 @@ function LPTests()
   end
 
 function SDPTests()
-  p = ConexProgram();
-
-  num_var = 1;
+  num_var = 2;
+  p = ConexProgram(num_var);
 
   n = 3;
   A = [1, 0, 0,  1, 1, 0;
@@ -67,8 +66,8 @@ function SDPTests()
 
 
 function SparseTests()
-  p = ConexProgram();
-  num_var = 1;
+  num_var = 3;
+  p = ConexProgram(num_var);
 
   n = 3;
   A = [1, 0, 0,  1, 1, 0;

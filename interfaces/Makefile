@@ -1,5 +1,5 @@
-COPTS=-O0  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
-COPTSI=-O0  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
+COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
+COPTSI=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
 
 EIGEN=$(EIGEN_DIR)
 CONEX=../
