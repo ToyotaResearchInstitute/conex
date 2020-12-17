@@ -73,6 +73,7 @@ CONEX_STATUS CONEX_UpdateAffineTerm(void* program, int constraint, double value,
                                         int row, int col, int hyper_complex_dim);
 
 CONEX_STATUS CONEX_NewLorentzConeConstraint(void* program, int order, int *constraint_id);
+CONEX_STATUS CONEX_SetNumberOfVariables(void* program, int m);
 
 #ifdef __cplusplus
 } // extern "C"

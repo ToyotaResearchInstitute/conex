@@ -60,11 +60,13 @@ def randominstance():
     return A, b, c
 
 def TestRandomInstance():
-    prog = Conex()
 
     A1, b, c1 = randominstance()
     A2, b, c2 = randominstance()
     m = A1.shape[1]
+
+    prog = Conex(m)
+
     prog.AddLinearInequality(A1, c1)
     prog.AddLinearInequality(A2, c2)
 
@@ -110,10 +112,10 @@ def TestSparseInstance():
     return sol.status == 1
 
 def TestLMI():
-    prog = Conex()
+    m = 3
+    prog = Conex(m)
 
     n = 4
-    m = 3
     Amat = np.ones((n, n, m))
     cmat = np.eye(n, n)
 
@@ -152,9 +154,9 @@ def TestLMI():
     return CheckErrors(sol.err) and sol.status
 
 def TestBothInfeasLP():
-    prog = Conex()
-
     m = 1;
+    prog = Conex(m)
+
     n = 3;
     A = randn(n, 1)
     c = np.array( (0, 1, -1))
@@ -169,9 +171,9 @@ def TestBothInfeasLP():
     prog.Maximize(-b)
 
 def TestBlowUp():
-    prog = Conex()
-
     m = 1;
+    prog = Conex(m)
+
     n = 2;
     A = randn(n, 1)
     c = np.array((0, 1))
@@ -188,9 +190,9 @@ def TestBlowUp():
     print y
 
 def DualInfeas():
-    prog = Conex()
-
     m = 2;
+    prog = Conex(m)
+
     n = 2*m
     A = zeros(n, m)
     A[0:m, :] = eye(m)
@@ -207,9 +209,9 @@ def DualInfeas():
     return sol.status == 0 
 
 def DualFailsSlater():
-    prog = Conex()
-
     m = 2;
+    prog = Conex(m)
+
     n = m
     A = eye(m)
     c = np.squeeze(np.ones((n, 1)))
@@ -227,9 +229,9 @@ def DualFailsSlater():
     return CheckErrors(sol.err) and sol.status
 
 def PrimalInfeas():
-    prog = Conex()
-
     m = 2;
+    prog = Conex(m)
+
     n = 2*m
     A = zeros(n, m)
     A[0:m, :] = eye(m)
@@ -246,9 +248,9 @@ def PrimalInfeas():
     return sol.status == 0 
 
 def VerifyMuIsNonIncreasing():
-    prog = Conex()
-
     m = 2;
+    prog = Conex(m)
+
     n = 2*m
     A = zeros(n, m)
     A[0:m, :] = eye(m)
@@ -280,7 +282,8 @@ def VerifyMuIsNonIncreasing():
     return True
 
 def HermitianLMIInterface():
-    prog = Conex()
+    num_vars = 2
+    prog = Conex(num_vars)
     try:
         prog.NewLinearMatrixInequality(2, 2);
         return True
@@ -341,7 +344,6 @@ def SolveRandomSOCP():
     sol = prog.Maximize(b)
 
     return sol.status
-
 
 class UnitTests(unittest.TestCase):
     def test1(self):

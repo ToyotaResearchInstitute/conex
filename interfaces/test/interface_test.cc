@@ -30,13 +30,21 @@ TEST(TestArguments, UpdateLMI) {
 
   int status;
   int constraint_id = 0;
+  int constraint_id_2 = 0;
   int order = 2;
   int hyper_complex_dim = 2;
 
   status = CONEX_NewLinearMatrixInequality(p, order, hyper_complex_dim, 
                                               &constraint_id);
   EXPECT_EQ(CONEX_SUCCESS, status);
-  
+
+  status = CONEX_NewLinearMatrixInequality(p, order, hyper_complex_dim, 
+                                              &constraint_id_2);
+  EXPECT_EQ(CONEX_SUCCESS, status);
+
+  DUMP(constraint_id_2);
+
+  DUMP(constraint_id);
   status = CONEX_UpdateLinearOperator(p, constraint_id, .3, 2, order - 1, order - 2, hyper_complex_dim -1);
   EXPECT_EQ(CONEX_SUCCESS, status);
 

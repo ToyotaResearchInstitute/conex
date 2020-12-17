@@ -66,11 +66,13 @@ class Program {
   template <typename T>
   void AddConstraint(T&& d) {
     kkt_system_manager_.AddConstraint(d);
+    constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
   }
 
   template <typename T>
   void AddConstraint(T&& d, const std::vector<int>& variables) {
     kkt_system_manager_.AddConstraint(d, variables);
+    constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
   }
 
   int NumberOfConstraints() { return kkt_system_manager_.eqs.size(); }

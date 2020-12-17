@@ -20,7 +20,7 @@
     CONEX_DEMAND(x, "Program pointer is null.");\
     prog = static_cast<Program*>(x); \
     if (prog->is_initialized) { \
-      if (prog->constraints.size() + 2 != prog->workspaces.size()) { \
+      if (prog->NumberOfConstraints() + 2 != static_cast<int>(prog->workspaces.size())) { \
         CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
       } \
     } else { \
@@ -62,11 +62,11 @@ int ConexSolve(void* prog_ptr, const double*b, int br, const ConexSolverConfigur
 
 void ConexGetDualVariable(void* prog_ptr, int i, double* x, int xr,  int xc) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
-  assert(prog.constraints.at(i).dual_variable_size() == xr * xc);
+  assert(prog.constraints.at(i)->dual_variable_size() == xr * xc);
 
   using InputMatrix = Eigen::Map<DenseMatrix>;
 
-  prog.constraints.at(i).get_dual_variable(x);
+  prog.constraints.at(i)->get_dual_variable(x);
 
   InputMatrix xmap(x, xr, xc);
   xmap.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
@@ -74,11 +74,11 @@ void ConexGetDualVariable(void* prog_ptr, int i, double* x, int xr,  int xc) {
 
 int ConexGetDualVariableSize(void* prog_ptr, int i) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
-  return prog.constraints.at(i).dual_variable_size();
+  return prog.constraints.at(i)->dual_variable_size();
 }
 
 void* ConexCreateConeProgram() {
-  return reinterpret_cast<void*>(new Program);
+  return reinterpret_cast<void*>(new Program(0));
 }
 
 void ConexDeleteConeProgram(void* prog) {
@@ -106,8 +106,8 @@ int ConexAddDenseLMIConstraint(void* prog,
 
   DenseLMIConstraint T3{n,  Avect, Cmap};
   auto& program = *reinterpret_cast<Program*>(prog);
-  int constraint_id = program.constraints.size();
-  program.constraints.push_back(T3);
+  int constraint_id = program.NumberOfConstraints();
+  program.AddConstraint(T3);
   return constraint_id;
 }
 
@@ -136,8 +136,8 @@ int ConexAddSparseLMIConstraint(void* prog,
 
   conex::SparseLMIConstraint T3{Avect, Cmap, variables};
   auto& program = *reinterpret_cast<Program*>(prog);
-  int constraint_id = program.constraints.size();
-  program.constraints.push_back(T3);
+  int constraint_id = program.NumberOfConstraints();
+  program.AddConstraint(T3);
   return constraint_id;
 }
 
@@ -152,8 +152,8 @@ int ConexAddDenseLinearConstraint(void* prog,
   conex::LinearConstraint T3{n, m, A, c};
   auto& program = *reinterpret_cast<Program*>(prog);
 
-  int constraint_id = program.constraints.size();
-  program.constraints.push_back(T3);
+  int constraint_id = program.NumberOfConstraints();
+  program.AddConstraint(T3);
   return constraint_id;
 }
 
@@ -210,12 +210,6 @@ int CONEX_UpdateLinearOperator(void* p, int constraint, int variable, int
   return CONEX_SUCCESS;
 }
 
-class Test {
- public:
-  virtual void blah()  { std::cout << m_; };
-  int m_ = 3;
-};
-
 CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order, int hyper_complex_dim, int* constraint_id) {
   CONEX_DEMAND(order >= 1, "Invalid LMI dimensions.");
   CONEX_DEMAND(constraint_id, "Received output null pointer.");
@@ -227,17 +221,17 @@ CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order, int hyper_compl
 
   switch (hyper_complex_dim) {
     case 1:
-      prg->constraints.push_back(HermitianPsdConstraint<conex::Real>(order));
+      prg->AddConstraint(HermitianPsdConstraint<conex::Real>(order));
       break;
     case 2:
-      prg->constraints.push_back(HermitianPsdConstraint<conex::Complex>(order));
+      prg->AddConstraint(HermitianPsdConstraint<conex::Complex>(order));
       break;
     case 4:
-      prg->constraints.push_back(HermitianPsdConstraint<conex::Quaternions>(order));
+      prg->AddConstraint(HermitianPsdConstraint<conex::Quaternions>(order));
       break;
     case 8:
       CONEX_DEMAND(order <= 3, "Order of octonion algebra cannot be greater than 3.");
-      prg->constraints.push_back(HermitianPsdConstraint<conex::Octonions>(order));
+      prg->AddConstraint(HermitianPsdConstraint<conex::Octonions>(order));
   }
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
@@ -248,8 +242,8 @@ CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value, i
                                         int row, int col, int hyper_complex_dim) {
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
-  CONEX_DEMAND(constraint < prg->constraints.size(), "Invalid Constraint.");
-  return UpdateLinearOperator(&prg->constraints.at(constraint), value, variable, 
+  CONEX_DEMAND(constraint < prg->NumberOfConstraints(), "Invalid Constraint.");
+  return UpdateLinearOperator(prg->constraints.at(constraint), value, variable, 
                               row, col, hyper_complex_dim);
 
 }
@@ -258,8 +252,8 @@ CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value,
                                         int row, int col, int hyper_complex_dim) {
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
-  CONEX_DEMAND(constraint < prg->constraints.size(), "Invalid Constraint.");
-  return UpdateAffineTerm(&prg->constraints.at(constraint), value, row, col, hyper_complex_dim);
+  CONEX_DEMAND(constraint < static_cast<int>(prg->constraints.size()), "Invalid Constraint.");
+  return UpdateAffineTerm(prg->constraints.at(constraint), value, row, col, hyper_complex_dim);
 }
 
 CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order, int* constraint_id) {
@@ -269,8 +263,16 @@ CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order, int* constraint_
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
 
-  prg->constraints.push_back(conex::SOCConstraint(order));
+  prg->AddConstraint(conex::SOCConstraint(order));
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
 }
 
+CONEX_STATUS CONEX_SetNumberOfVariables(void* p, int number_of_variables) {
+  CONEX_DEMAND(number_of_variables >= 1, "Number of variables must be > 0.");
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+  CONEX_DEMAND(prg->GetNumberOfVariables() == 0, "Number of variables already set.");
+  prg-> SetNumberOfVariables(number_of_variables);
+  return CONEX_SUCCESS;
+}

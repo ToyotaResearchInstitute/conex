@@ -8,8 +8,10 @@ int main() {
   int status;
   int constraint_id = 0;
   int hyper_complex_dim = 1;
-  int num_vars = 200;
+  int num_vars = 10;
   int order = num_vars;
+
+  status = CONEX_SetNumberOfVariables(p, num_vars);
 
   status = CONEX_NewLinearMatrixInequality(p, order, hyper_complex_dim, 
                                               &constraint_id);

@@ -1,52 +1,46 @@
-COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
-COPTSI=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
+COPTS=-O0  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
+COPTSI=-O0  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
 
 EIGEN=$(EIGEN_DIR)
 CONEX=../
 
+CPPFLAGS=$(COPTS) -I $(EIGEN) -I $(CONEX)
 all: libconex.so
 
-cone_program.o: ../conex/cone_program.cc 
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/cone_program.cc 
+SOURCES = approximate_eigenvalues.cc \
+	  block_triangular_operations.cc \
+	  clique_ordering.cc \
+	  cone_program.cc \
+	  dense_lmi_constraint.cc \
+	  divergence.cc \
+	  eigen_decomp.cc \
+	  elimination_ordering.cc \
+	  exponential_map.cc \
+	  hermitian_psd.cc \
+	  jordan_matrix_algebra.cc \
+	  kkt_assembler.cc \
+	  kkt_solver.cc \
+	  linear_constraint.cc \
+	  matrix_exponential.cc \
+	  psd_constraint.cc \
+	  quadratic_cone_constraint.cc \
+	  soc_constraint.cc \
+	  supernodal_solver.cc \
+	  triangular_matrix_workspace.cc \
+	  vect_jordan_matrix_algebra.cc \
 
-linear_constraint.o: ../conex/linear_constraint.cc  
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/linear_constraint.cc 
+OBJECTS := $(SOURCES:.cc=.o)
 
-divergence.o: ../conex/divergence.cc 
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/divergence.cc
+%.o : ../conex/%.cc
+	$(CXX) -c $(CPPFLAGS) $< 
 
-dense_lmi_constraint.o: ../conex/dense_lmi_constraint.cc  ../conex/psd_constraint.h 
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/dense_lmi_constraint.cc 
-
-psd_constraint.o: ../conex/psd_constraint.cc ../conex/psd_constraint.h 
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/psd_constraint.cc 
-
-hermitian_psd.o: ../conex/hermitian_psd.cc
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/hermitian_psd.cc
-
-soc_constraint.o: ../conex/soc_constraint.cc
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/soc_constraint.cc
-
-eigen_decomp.o: ../conex/eigen_decomp.cc 
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/eigen_decomp.cc
-
-matrix_exponential.o: ../conex/matrix_exponential.cc
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/matrix_exponential.cc
-
-exponential_map.o: ../conex/exponential_map.cc
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/exponential_map.cc
-
-approximate_eigenvalues.o: ../conex/approximate_eigenvalues.cc
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/approximate_eigenvalues.cc
-
-vect_jordan_matrix_algebra.o: ../conex/vect_jordan_matrix_algebra.cc
-	$(CXX) -c  $(COPTS) -I $(EIGEN) -I $(CONEX) ../conex/vect_jordan_matrix_algebra.cc
+libsource: $(SOURCES:.cc=.o)
 
 conex.o: conex.h conex.cc
 	g++ -c $(COPTSI)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
 
-libconex.so:  conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o soc_constraint.o
-	g++ -static-libstdc++ -Wl,--exclude-libs,ALL -Wl,--gc-sections -shared -o libconex.so conex.o dense_lmi_constraint.o linear_constraint.o psd_constraint.o eigen_decomp.o cone_program.o divergence.o approximate_eigenvalues.o matrix_exponential.o hermitian_psd.o exponential_map.o vect_jordan_matrix_algebra.o soc_constraint.o -lblas 
+libconex.so:  conex.o libsource
+	g++ -static-libstdc++ -Wl,--exclude-libs,ALL -Wl,--gc-sections -shared -o libconex.so conex.o $(OBJECTS) -lblas 
 
 main: libconex.so
 	g++ test/test_app.cc libconex.so
