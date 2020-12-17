@@ -3,7 +3,6 @@
 
 namespace conex {
 
-
 // using InputRefType = Eigen::Map<const DenseMatrix>;
 using InputRefType = DenseMatrix;
 
@@ -69,4 +68,4 @@ class SparseLMIConstraint final : public MatrixLMIConstraint {
   }
 };
 
-} // namespace conex
+}  // namespace conex

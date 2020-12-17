@@ -7,7 +7,6 @@
 
 namespace conex {
 
-
 struct WorkspaceDensePSD {
   WorkspaceDensePSD(int n) : n_(n) {}
   WorkspaceDensePSD(int n, double* data)
@@ -92,4 +91,4 @@ class PsdConstraint {
   virtual void ComputeNegativeSlack(double k, const Ref& y, Ref* s) = 0;
 };
 
-} // namespace conex
+}  // namespace conex

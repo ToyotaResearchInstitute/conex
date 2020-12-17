@@ -2,7 +2,6 @@
 
 namespace conex {
 
-
 void MatrixLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
   MultByA(y, s);
   (*s) -= k * (constraint_affine_);
@@ -81,4 +80,4 @@ void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,
 template void ConstructSchurComplementSystem<SparseLMIConstraint>(
     SparseLMIConstraint* o, bool initialize, SchurComplementSystem* sys);
 
-} // namespace conex
+}  // namespace conex

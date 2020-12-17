@@ -3,7 +3,6 @@
 
 namespace conex {
 
-
 using Clique = std::vector<int>;
 using Eigen::MatrixXd;
 using std::vector;
@@ -49,4 +48,4 @@ void IntersectionOfSorted(const std::vector<int>& v1,
 void DifferenceOfSorted(const std::vector<int>& v1, const std::vector<int>& v2,
                         std::vector<int>* v3);
 
-} // namespace conex
+}  // namespace conex

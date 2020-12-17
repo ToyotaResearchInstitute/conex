@@ -8,9 +8,6 @@
 
 namespace conex {
 
-
-
-
 using Eigen::MatrixXd;
 using std::vector;
 
@@ -121,5 +118,4 @@ TEST(CliqueOrdering, OptimalOrdering) {
       {{1, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {8, 9}, {1, 11}});
 }
 
-} // namespace conex
-
+}  // namespace conex

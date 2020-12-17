@@ -128,4 +128,4 @@ void T::UpdateBlocks() {
   }
 }
 
-} // namespace conex
+}  // namespace conex

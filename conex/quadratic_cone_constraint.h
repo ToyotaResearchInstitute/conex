@@ -3,7 +3,6 @@
 
 namespace conex {
 
-
 class QuadraticConstraint {
   using StorageType = DenseMatrix;
 
@@ -46,4 +45,4 @@ class QuadraticConstraint {
   const DenseMatrix constraint_affine_;
 };
 
-} // namespace conex
+}  // namespace conex

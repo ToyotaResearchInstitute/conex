@@ -10,4 +10,3 @@ bool IsPerfectlyOrdered(const Matrix& G);
 Eigen::VectorXd MaximumDegreeVertices(const Matrix& G);
 Eigen::PermutationMatrix<-1, -1> EliminationOrdering(const Matrix& G);
 }  // namespace conex
-

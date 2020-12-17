@@ -9,9 +9,6 @@
 
 namespace conex {
 
-
-
-
 using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
 TEST(message_test, content) {
@@ -52,5 +49,4 @@ TEST(message_test, content) {
   }
 }
 
-} // namespace conex
-
+}  // namespace conex

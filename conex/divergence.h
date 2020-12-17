@@ -5,4 +5,4 @@ double DivergenceUpperBoundInverse(double divergence_upper_bound,
 
 double DivergenceUpperBound(double k, double gw_norm, double gw_norm_inf,
                             double gw_trace, int n);
-} // namespace conex
+}  // namespace conex

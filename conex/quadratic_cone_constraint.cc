@@ -332,4 +332,4 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
 
 // A Q A
 
-} // namespace conex
+}  // namespace conex

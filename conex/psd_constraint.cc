@@ -6,7 +6,6 @@
 
 namespace conex {
 
-
 using conex::jordan_algebra::SpectralRadius;
 using conex::jordan_algebra::SpectrumBounds;
 using Eigen::VectorXd;
@@ -136,4 +135,4 @@ void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
   p->gw_trace += -WS.trace();
 }
 
-} // namespace conex
+}  // namespace conex

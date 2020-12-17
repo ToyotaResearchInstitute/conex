@@ -14,7 +14,6 @@
 
 namespace conex {
 
-
 template <typename T>
 inline T Submatrix(const T& X, const std::vector<int>& indices) {
   T S(indices.size(), indices.size());
@@ -300,4 +299,3 @@ Eigen::VectorXd MaximumDegreeVertices(const Matrix& G) {
   return output;
 }
 }  // namespace conex
-

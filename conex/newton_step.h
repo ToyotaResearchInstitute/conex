@@ -5,7 +5,6 @@
 
 namespace conex {
 
-
 using DenseMatrix = Eigen::MatrixXd;
 using Ref = Eigen::Map<DenseMatrix, Eigen::Aligned>;
 
@@ -75,4 +74,4 @@ struct WorkspaceSchurComplement {
 
 using SchurComplementSystem = WorkspaceSchurComplement;
 
-} // namespace conex
+}  // namespace conex

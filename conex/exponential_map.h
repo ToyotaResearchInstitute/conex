@@ -11,4 +11,4 @@ Octonions::Matrix GeodesicUpdate(const Octonions::Matrix& w,
 HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& w,
                                         const HyperComplexMatrix& s);
 
-} // namespace conex
+}  // namespace conex

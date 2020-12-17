@@ -2,7 +2,6 @@
 
 namespace conex {
 
-
 namespace {
 inline int factorial(int n) {
   int y = 1;
@@ -176,4 +175,4 @@ HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x,
   return x;
 }
 
-} // namespace conex
+}  // namespace conex

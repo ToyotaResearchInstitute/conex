@@ -6,10 +6,6 @@
 
 namespace conex {
 
-
-
-
-
 using conex::jordan_algebra::eig;
 using conex::jordan_algebra::Roots;
 using Eigen::MatrixXd;
@@ -186,4 +182,3 @@ TEST(JordanMatrixAlgebra, InfNormFromQuadRep) {
 }
 
 }  // namespace conex
-

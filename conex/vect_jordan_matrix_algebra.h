@@ -5,7 +5,6 @@
 
 namespace conex {
 
-
 class HyperComplexMatrix : public std::vector<Eigen::MatrixXd> {
  public:
   template <typename T>
@@ -162,4 +161,4 @@ using Quaternions = MatrixAlgebra<4>;
 using Complex = MatrixAlgebra<2>;
 using Real = MatrixAlgebra<1>;
 
-} // namespace conex
+}  // namespace conex

@@ -10,4 +10,4 @@ constexpr unsigned int get_size_aligned(unsigned int n) {
     return n;
   }
 }
-} // namespace conex
+}  // namespace conex

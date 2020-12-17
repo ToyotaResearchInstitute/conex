@@ -8,7 +8,6 @@
 
 namespace conex {
 
-
 struct WorkspaceDenseHermitian {
   WorkspaceDenseHermitian(int n) : n_(n) {}
   WorkspaceDenseHermitian(int n, double* data)
@@ -108,4 +107,4 @@ using ComplexLMIConstraint = HermitianPsdConstraint<Complex>;
 using QuaternicLMIConstraint = HermitianPsdConstraint<Quaternions>;
 using OctonicLMIConstraint = HermitianPsdConstraint<Octonions>;
 
-} // namespace conex
+}  // namespace conex

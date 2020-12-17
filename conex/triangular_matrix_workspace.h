@@ -98,4 +98,4 @@ struct TriangularMatrixWorkspace {
   std::vector<double*> S_S(int clique);
 };
 
-} // namespace conex
+}  // namespace conex

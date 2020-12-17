@@ -6,9 +6,6 @@
 
 namespace conex {
 
-
-
-
 using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
@@ -178,5 +175,4 @@ TEST(LowerTri, LDLT) {
   DoLDLTTest(diagonal, {{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10}});
 }
 
-} // namespace conex
-
+}  // namespace conex

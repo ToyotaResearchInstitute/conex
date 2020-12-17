@@ -10,9 +10,6 @@
 
 namespace conex {
 
-
-
-
 using DenseMatrix = Eigen::MatrixXd;
 
 int DoMain() {
@@ -81,5 +78,4 @@ int DoMain() {
 
 TEST(Constraints, SOCP) { DoMain(); }
 
-} // namespace conex
-
+}  // namespace conex

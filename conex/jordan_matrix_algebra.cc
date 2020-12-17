@@ -2,7 +2,6 @@
 
 namespace conex {
 
-
 template <int n>
 DivisionAlgebra<n>::DivisionAlgebra() {
   M << 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1, -1, -1, -1, -1,
@@ -259,4 +258,4 @@ template class DivisionAlgebra<2>;
 template class DivisionAlgebra<4>;
 template class DivisionAlgebra<8>;
 
-} // namespace conex
+}  // namespace conex

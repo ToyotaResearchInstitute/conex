@@ -4,7 +4,6 @@
 
 namespace conex {
 
-
 //  Allocates memory for internal computations.
 
 struct SolverConfiguration {
@@ -71,4 +70,4 @@ DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints);
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config, double* primal_variable);
 
-} // namespace conex
+}  // namespace conex

@@ -3,7 +3,6 @@
 
 namespace conex {
 
-
 // TODO(FrankPermenter): return conex error codes on failure.
 
 #if 0
@@ -20,4 +19,4 @@ namespace conex {
   }
 #endif
 
-} // namespace conex
+}  // namespace conex

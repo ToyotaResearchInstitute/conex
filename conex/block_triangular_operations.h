@@ -5,7 +5,6 @@
 
 namespace conex {
 
-
 struct BlockTriangularOperations {
   static void ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& L,
                                        Eigen::VectorXd* b);
@@ -34,4 +33,4 @@ struct BlockTriangularOperations {
   }
 };
 
-} // namespace conex
+}  // namespace conex

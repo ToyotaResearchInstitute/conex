@@ -280,4 +280,4 @@ template bool UpdateAffineTerm(HermitianPsdConstraint<Quaternions>* o,
 template bool UpdateAffineTerm(HermitianPsdConstraint<Octonions>* o, double val,
                                int r, int c, int dim);
 
-} // namespace conex
+}  // namespace conex

@@ -7,7 +7,6 @@
 
 namespace conex {
 
-
 #define DUMP(x)                                                \
   do {                                                         \
     std::cerr << __FILE__ << " line " << __LINE__ << std::endl \
@@ -85,4 +84,4 @@ Eigen::MatrixXd Sparsity(const T& x) {
     std::cout << "Status: " << x << "\n\n"; \
   } while (false)
 
-} // namespace conex
+}  // namespace conex

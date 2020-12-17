@@ -94,7 +94,7 @@ void matrix_exp_pade9(const MatA& A, MatU& U, MatV& V) {
   // V += b[8] * A8;
 
   ////const MatrixType tmp = b[9] * A8 + b[7] * A6 + b[5] * A4 + b[3] * A2 +
-  ///b[1] * MatrixType::Identity(A.rows(), A.cols());
+  /// b[1] * MatrixType::Identity(A.rows(), A.cols());
 
   // U.noalias() = A * tmp;
   // V = b[8] * A8 + b[6] * A6 + b[4] * A4 + b[2] * A2 + b[0] *
@@ -269,4 +269,4 @@ void MatrixExponential(const Eigen::Ref<const Eigen::MatrixXd>& arg,
     (*result) *= (*result);  // undo scaling by repeated squaring
 }
 
-} // namespace conex
+}  // namespace conex

@@ -9,7 +9,6 @@
 
 namespace conex {
 
-
 using Clique = std::vector<int>;
 
 // TODO(FrankPermenter): Deprecate this class.
@@ -127,4 +126,4 @@ class TriangularMatrixOperations {
                                                  const Eigen::VectorXd& b);
 };
 
-} // namespace conex
+}  // namespace conex

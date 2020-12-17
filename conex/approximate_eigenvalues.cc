@@ -249,4 +249,4 @@ Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& WS,
   }
 }
 
-} // namespace conex
+}  // namespace conex

@@ -8,10 +8,6 @@
 
 namespace conex {
 
-
-
-
-
 using conex::jordan_algebra::eig;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -238,5 +234,3 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
 }
 
 }  // namespace conex
-
-

@@ -23,4 +23,4 @@ struct OffDiagonalBlock {
   int stride;
 };
 
-} // namespace conex
+}  // namespace conex

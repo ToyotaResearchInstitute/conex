@@ -23,4 +23,4 @@ Eigen::VectorXd Roots(const Eigen::VectorXd& x);
 
 }  // namespace jordan_algebra
 
-} // namespace conex
+}  // namespace conex

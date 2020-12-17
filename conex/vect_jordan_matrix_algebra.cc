@@ -4,7 +4,6 @@
 
 namespace conex {
 
-
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -432,4 +431,4 @@ template class MatrixAlgebra<2>;
 template class MatrixAlgebra<4>;
 template class MatrixAlgebra<8>;
 
-} // namespace conex
+}  // namespace conex

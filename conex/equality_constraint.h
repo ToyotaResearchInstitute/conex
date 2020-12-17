@@ -4,7 +4,6 @@
 
 namespace conex {
 
-
 class EqualityConstraints {
  public:
   EqualityConstraints(const Eigen::MatrixXd& A) : A_(A) {
@@ -55,4 +54,4 @@ class EqualityConstraints {
   std::vector<OffDiagonalBlock> off_diag;
 };
 
-} // namespace conex
+}  // namespace conex

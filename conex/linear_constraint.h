@@ -78,4 +78,4 @@ class LinearConstraint {
   const DenseMatrix constraint_affine_;
 };
 
-} // namespace conex
+}  // namespace conex

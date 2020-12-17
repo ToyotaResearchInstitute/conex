@@ -323,4 +323,4 @@ void T::BlockLDLTInPlace(
   }
 }
 
-} // namespace conex
+}  // namespace conex

@@ -40,4 +40,4 @@ struct WorkspaceSOC {
   Eigen::MatrixXd W;
 };
 
-} // namespace conex
+}  // namespace conex

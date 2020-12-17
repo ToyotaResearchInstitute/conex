@@ -13,9 +13,6 @@
 
 namespace conex {
 
-
-
-
 using Cliques = std::vector<std::vector<int>>;
 using Eigen::MatrixXd;
 using std::vector;
@@ -255,15 +252,15 @@ TEST(LDLT, TestAssembly) {
   b.setConstant(1);
   Eigen::LDLT<MatrixXd> ldlt;
   VectorXd yref;
-  ldlt.compute(T); yref = ldlt.solve(b);
+  ldlt.compute(T);
+  yref = ldlt.solve(b);
   DUMP(MatrixXd(ldlt.matrixL()));
 
   VectorXd y = b;
   std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
-       BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
-                                                   &factorization);
-       BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_,
-                                                   factorization, &y);
+  BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_, &factorization);
+  BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
+                                              &y);
 
   EXPECT_NEAR((Pt * y - yref).norm(), 0, 1e-9);
   // EXPECT_NEAR( (y-yref).norm(), 0, 1e-9);
@@ -417,10 +414,9 @@ TEST(LDLT, Benchmark2) {
   b.setConstant(1);
   VectorXd y = b;
   std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
-       BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
-                                                   &factorization);
-       BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_,
-                                                   factorization, &y);
+  BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_, &factorization);
+  BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
+                                              &y);
 #if 0
   MatrixXd G = TriangularMatrixOperations::ToDense(mat).selfadjointView<Eigen::Lower>();
 
@@ -447,5 +443,4 @@ TEST(LDLT, Benchmark2) {
 #endif
 }
 
-} // namespace conex
-
+}  // namespace conex

@@ -4,8 +4,6 @@
 
 namespace conex {
 
-
-
 using Matrix = Eigen::MatrixXd;
 Matrix Ones(int n) {
   Matrix x(n, n);
@@ -172,7 +170,7 @@ TEST(Cholesky, TestDecomp) {
        0, 0, 0, 0, 1, 4, 1,
        0, 0, 0, 0, 1, 1, 8;
   // clang-format on
-  
+
   std::vector<int> cliquestart{0, 1, 2, 4};
   std::vector<int> rows{3, 3, 3, 3};
   std::vector<int> cols{1, 1, 3, 3};
@@ -336,5 +334,4 @@ TEST(Cholesky, Sizes) {
 
 // *   *
 
-} // namespace conex
-
+}  // namespace conex

@@ -4,7 +4,6 @@
 
 namespace conex {
 
-
 void SetIdentity(LinearConstraint* o) { o->workspace_.W.setConstant(1); }
 
 // TODO: use e_weight and c_weight
@@ -121,4 +120,4 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
   }
 }
 
-} // namespace conex
+}  // namespace conex

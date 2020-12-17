@@ -2,7 +2,6 @@
 
 namespace conex {
 
-
 namespace {
 template <typename T>
 int LookupSuperNode(const T& o, int index, int start) {
@@ -58,4 +57,4 @@ std::vector<double*> TriangularMatrixWorkspace::S_S(int clique) {
   return y;
 }
 
-} // namespace conex
+}  // namespace conex

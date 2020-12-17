@@ -3,7 +3,6 @@
 
 namespace conex {
 
-
 class SOCConstraint {
   using StorageType = DenseMatrix;
 
@@ -50,4 +49,4 @@ class SOCConstraint {
   int n_;
 };
 
-} // namespace conex
+}  // namespace conex

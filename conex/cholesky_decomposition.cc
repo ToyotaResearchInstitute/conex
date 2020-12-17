@@ -2,7 +2,6 @@
 
 namespace conex {
 
-
 namespace {
 
 // Given an ordering, we m
@@ -211,4 +210,4 @@ void DifferenceOfSorted(const std::vector<int>& v1, const std::vector<int>& v2,
                       back_inserter(*v3));
 }
 
-} // namespace conex
+}  // namespace conex

@@ -7,4 +7,4 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
                      std::vector<std::vector<int>>* supernodes,
                      std::vector<std::vector<int>>* separators);
 
-} // namespace conex
+}  // namespace conex

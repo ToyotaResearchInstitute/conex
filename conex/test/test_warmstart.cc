@@ -8,9 +8,6 @@
 
 namespace conex {
 
-
-
-
 using Eigen::MatrixXd;
 
 TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
@@ -70,5 +67,4 @@ TEST(Warmstart, ObjectivePertubation) {
   Solve(b, prog, config, ywarm.data());
 }*/
 
-} // namespace conex
-
+}  // namespace conex

@@ -8,7 +8,6 @@
 
 namespace conex {
 
-
 using std::vector;
 using Cliques = vector<vector<int>>;
 
@@ -222,4 +221,4 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
   }
 }
 
-} // namespace conex
+}  // namespace conex

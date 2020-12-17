@@ -10,7 +10,6 @@
 
 namespace conex {
 
-
 template <typename T>
 bool UpdateLinearOperator(T* obj, double val, int var, int row, int col,
                           int hyper_complex_dim) {
@@ -155,4 +154,4 @@ class Constraint {
   std::unique_ptr<Concept> model;
 };
 
-} // namespace conex
+}  // namespace conex

@@ -326,4 +326,4 @@ bool UpdateAffineTerm(SOCConstraint* o, double val, int r, int c, int dim) {
   return CONEX_SUCCESS;
 }
 
-} // namespace conex
+}  // namespace conex

@@ -6,7 +6,6 @@
 
 namespace conex {
 
-
 namespace {
 
 // Finds the largest (when a > 0) solution to
@@ -44,4 +43,4 @@ double DivergenceUpperBound(double k, double gw_norm_squared,
   return numerator / denom;
 }
 
-} // namespace conex
+}  // namespace conex
