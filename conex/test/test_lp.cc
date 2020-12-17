@@ -197,9 +197,7 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
   vector<MatrixXd> C(number_of_constraints);
 
   srand(1);
-  int vars_per_constraint = 2;
   int rows_per_constraint = 3;
-  int var_start = 0;
 
   for (int i = 0; i < number_of_constraints; i++) {
     MatrixXd Ai = DenseMatrix::Random(rows_per_constraint, 

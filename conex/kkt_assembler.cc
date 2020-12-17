@@ -9,15 +9,13 @@ using std::vector;
 
 namespace {
 
-int Find(std::vector<int>& x, int v) {
-  int i = 0;
-  for (auto xi : x) {
-    if (v == xi) {
-      return i;
-    }
-    i++;
+template <typename T>
+vector<T> InitVector(T* data, int N) {
+  vector<T> y;
+  for (int i = 0; i < N; i++) {
+    y.push_back(data[i]);
   }
-  return -1;
+  return y;
 }
 
 }  // namespace
@@ -102,19 +100,11 @@ void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   Initialize(&schur_complement_data, memory.data());
 }
 
-template <typename T>
-vector<T> InitVector(T* data, int N) {
-  vector<T> y;
-  for (int i = 0; i < N; i++) {
-    y.push_back(data[i]);
-  }
-  return y;
-}
 
 void T::Scatter(int* r, int sizer, int* c, int sizec, double** data) {
   int cnt = 0;
-  for (size_t j = 0; j < sizec; j++) {
-    for (size_t i = j; i < sizer; i++) {
+  for (int j = 0; j < sizec; j++) {
+    for (int i = j; i < sizer; i++) {
       *data[cnt++] += GetCoeff(*(r + i), *(c + j));
     }
   }
