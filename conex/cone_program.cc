@@ -89,7 +89,25 @@ void ConstructSchurComplementSystem(std::vector<T*>* c, bool initialize,
 
 void Initialize(Program& prog, const SolverConfiguration& config) {
   if (config.initialization_mode == 0) {
+    auto& solver = prog.solver;
+    auto& kkt = prog.kkt;
     prog.InitializeWorkspace();
+    SetIdentity(&prog.constraints);
+
+    solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
+                                      prog.kkt_system_manager_.dual_vars);
+
+    kkt.clear();
+    for (auto& c : prog.kkt_system_manager_.eqs) {
+      c.kkt_assembler.Reset();
+    }
+
+    for (auto& c : prog.kkt_system_manager_.eqs) {
+      c.kkt_assembler.workspace_ = &c.constraint;
+      kkt.push_back(&c.kkt_assembler);
+    }
+    solver->Bind(&kkt);
+
   } else {
     if (!prog.is_initialized) {
       std::cerr << "Cannot warmstart without coldstart.";
@@ -97,17 +115,14 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
     }
   }
 
-  if (config.initialization_mode == 0) {
-    SetIdentity(&prog.constraints);
-  }
   return;
 }
-double UpdateMu(ConstraintManager<Container>& constraints, Solver& solver,
-                const DenseMatrix& AQc, const DenseMatrix& b,
-                const SolverConfiguration& config, int rankK,
-                Ref* temporary_memory) {
+double UpdateMu(ConstraintManager<Container>& constraints,
+                std::unique_ptr<Solver>& solver, const DenseMatrix& AQc,
+                const DenseMatrix& b, const SolverConfiguration& config,
+                int rankK, Ref* temporary_memory) {
   MuSelectionParameters mu_param;
-  *temporary_memory = solver.Solve(AQc - b);
+  *temporary_memory = solver->Solve(AQc - b);
   GetMuSelectionParameters(&constraints, *temporary_memory, &mu_param);
 
   return DivergenceUpperBoundInverse(
@@ -130,29 +145,26 @@ bool Solve(const DenseMatrix& b, Program& prog,
   std::cout << "CONEX: MKL Enabled";
 #endif
 
-  for (auto& ci : prog.kkt_system_manager_.eqs) {
-    prog.constraints.push_back(&ci.constraint);
-  }
-
   auto& constraints = prog.constraints;
   auto& sys = prog.sys;
+  auto& solver = prog.solver;
 
   bool solved = 1;
 
   std::cout.precision(2);
   std::cout << std::scientific;
 
-  int m = b.rows();
-  prog.SetNumberOfVariables(m);
+  CONEX_DEMAND(prog.GetNumberOfVariables() == b.rows(),
+               "Cost vector dimension does not equal number of variables");
 
+  int m = b.rows();
   // Empty program
-  if (prog.constraints.size() == 0) {
+  if (prog.NumberOfConstraints() == 0) {
     Eigen::Map<DenseMatrix> ynan(primal_variable, m, 1);
     solved = 0;
     ynan.array() = b.array() * std::numeric_limits<double>::infinity();
     return solved;
   }
-
   Initialize(prog, config);
 
   Eigen::MatrixXd ydata(m, 1);
@@ -170,14 +182,6 @@ bool Solve(const DenseMatrix& b, Program& prog,
   int rankK = Rank(constraints);
   int centering_steps = 0;
 
-  Solver solver(prog.kkt_system_manager_.cliques,
-                prog.kkt_system_manager_.dual_vars);
-  std::vector<KKT_SystemAssembler> kkt;
-  for (auto& c : prog.kkt_system_manager_.eqs) {
-    c.kkt_assembler.workspace_ = &c.constraint;
-    kkt.push_back(&c.kkt_assembler);
-  }
-  solver.Bind(&kkt);
   Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
 
@@ -190,10 +194,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
-    solver.Assemble(&AW, &AQc);
+    solver->Assemble(&AW, &AQc);
 
     START_TIMER(Factor)
-    solver.Factor();
+    solver->Factor();
     END_TIMER
 
     if (update_mu) {
@@ -220,7 +224,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
     y = newton_step_parameters.inv_sqrt_mu * (b + AQc) - 2 * AW;
     START_TIMER(Solve)
-    solver.SolveInPlace(&y);
+    solver->SolveInPlace(&y);
     END_TIMER
 
     newton_step_parameters.e_weight = 1;
@@ -261,10 +265,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
         y2 += llt.solve(bres - L * L.transpose() * y2);
       }
     } else {
-      solver.Assemble(&AW, &AQc);
-      solver.Factor();
+      solver->Assemble(&AW, &AQc);
+      solver->Factor();
       DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * AW;
-      y2 = solver.Solve(bres);
+      y2 = solver->Solve(bres);
     }
 
     newton_step_parameters.affine = true;
@@ -281,22 +285,25 @@ bool Solve(const DenseMatrix& b, Program& prog,
   return solved;
 }
 
-DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint*>& constraints) {
-  std::vector<Workspace> workspaces;
-  for (auto& constraint : constraints) {
-    workspaces.push_back(constraint->workspace());
+DenseMatrix GetFeasibleObjective(Program* prg) {
+  auto& prog = *prg;
+  Initialize(prog, SolverConfiguration());
+  Solver solver(prog.kkt_system_manager_.cliques,
+                prog.kkt_system_manager_.dual_vars);
+  std::vector<KKT_SystemAssembler> kkt;
+  std::list<LinearKKTAssembler> kkt_;
+  for (auto& c : prog.kkt_system_manager_.eqs) {
+    kkt_.push_back(LinearKKTAssembler());
+    kkt_.back().workspace_ = &c.constraint;
+    kkt.push_back(&kkt_.back());
   }
+  solver.Bind(&kkt);
 
-  WorkspaceSchurComplement sys{m};
-  workspaces.push_back(Workspace{&sys});
-  int size_constraints = SizeOf(workspaces);
+  Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
+  Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
+  solver.Assemble(&AW, &AQc);
 
-  Eigen::VectorXd memory(size_constraints);
-  Initialize(&workspaces, &memory[0]);
-
-  SetIdentity(&constraints);
-  ConstructSchurComplementSystem(&constraints, true, &sys);
-  return .5 * sys.AW;
+  return .5 * AW;
 }
 
 }  // namespace conex

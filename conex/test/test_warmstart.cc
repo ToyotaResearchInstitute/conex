@@ -25,11 +25,11 @@ TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
   DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
   DenseLMIConstraint LMI{n, constraints2, affine2};
 
-  Program prog;
+  Program prog(m);
   DenseMatrix y(m, 1);
-  prog.constraints.push_back(LMI);
+  prog.AddConstraint(LMI);
 
-  auto b = GetFeasibleObjective(m, prog.constraints);
+  auto b = GetFeasibleObjective(&prog);
   config.max_iterations = num_iters;
   Solve(b, prog, config, y.data());
 
@@ -58,7 +58,7 @@ TEST(Warmstart, ObjectivePertubation) {
 
   Program prog;
   DenseMatrix y(m, 1);
-  prog.constraints.push_back(LMI);
+  prog.AddConstraint(LMI);
 
   auto b = GetFeasibleObjective(m, prog.constraints);
   config.max_iterations = num_iters;

@@ -16,6 +16,7 @@ using DenseMatrix = Eigen::MatrixXd;
 #define TEST_OR_PROFILE 1
 #if TEST_OR_PROFILE
 int TestDiagonalSDP() {
+  srand(1);
   int n = 5;
   int m = 2;
   SolverConfiguration config;
@@ -36,21 +37,25 @@ int TestDiagonalSDP() {
   DenseLMIConstraint LMI{n, constraints2, affine2};
   LinearConstraint Linear{n, &Alinear, &Clinear};
 
-  Program prog;
-  prog.constraints.push_back(LMI);
-  auto b = GetFeasibleObjective(m, prog.constraints);
+
+  Program prog(m);
+  Eigen::VectorXd b(m);
+  prog.AddConstraint(LMI, {0,1});
+  b = GetFeasibleObjective(&prog);
+  //b << 1.22, -.36;  
   DenseMatrix y1(m, 1);
   Solve(b, prog, config, y1.data());
 
-  Program prog2;
-  prog2.constraints.push_back(Linear);
+  Program prog2(m);
+  prog2.AddConstraint(Linear, {0,1});
+  b = GetFeasibleObjective(&prog2);
   DenseMatrix y2(m, 1);
   Solve(b, prog2, config, y2.data());
 
-  Program prog3;
+  Program prog3(m);
   DenseMatrix y3(m, 1);
-  prog3.constraints.push_back(Linear);
-  prog3.constraints.push_back(Linear);
+  prog3.AddConstraint(Linear);
+  prog3.AddConstraint(Linear);
   Solve(b, prog3, config, y3.data());
 
   EXPECT_TRUE((y2 - y1).norm() < 1e-6);
@@ -98,11 +103,11 @@ TEST(SDP, SparseAndDenseAgree) {
   DenseLMIConstraint LMI1{n1, constraints_1, affine_1};
   DenseLMIConstraint LMI2{n2, constraints_2, affine_2};
 
-  Program prog;
-  prog.constraints.push_back(LMI1);
-  prog.constraints.push_back(LMI2);
+  Program prog(m);
+  prog.AddConstraint(LMI1);
+  prog.AddConstraint(LMI2);
 
-  auto b = GetFeasibleObjective(m, prog.constraints);
+  auto b = GetFeasibleObjective(&prog);
 
   DenseMatrix y(m1 + m2, 1);
   int success = Solve(b, prog, config, y.data());
@@ -111,9 +116,9 @@ TEST(SDP, SparseAndDenseAgree) {
   SparseLMIConstraint sparse_LMI1{sparse_constraints_1, affine_1, variables_1};
   SparseLMIConstraint sparse_LMI2{sparse_constraints_2, affine_2, variables_2};
 
-  Program sparse_prog;
-  sparse_prog.constraints.push_back(sparse_LMI1);
-  sparse_prog.constraints.push_back(sparse_LMI2);
+  Program sparse_prog(m);
+  sparse_prog.AddConstraint(sparse_LMI1);
+  sparse_prog.AddConstraint(sparse_LMI2);
 
   DenseMatrix y_sparse(m1 + m2, 1);
   success = Solve(b, sparse_prog, config, y_sparse.data());

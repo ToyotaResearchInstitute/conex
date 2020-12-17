@@ -161,6 +161,7 @@ TEST(LDLT, TestAssembly) {
        0, 0, 0, 0, 3, 3, 3, 0, 3;
 
   Eigen::VectorXd b(n+m);
+  b.setZero();
   b.bottomRows(m) << 1, 2, 
                      2, 4,
                      3, 6;
@@ -328,4 +329,5 @@ TEST(LDLT, Benchmark2) {
     EXPECT_NEAR((T * y - b).norm(), 0, 1e-9);
   }
 }
+
 }  // namespace conex

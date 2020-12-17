@@ -15,6 +15,11 @@ class LinearKKTAssemblerBase {
  public:
   void BindDiagonalBlock(const DiagonalBlock* data);
   void BindOffDiagonalBlock(const OffDiagonalBlock* data);
+  void Reset() {
+    diag.clear();
+    off_diag.clear();
+    scatter_block.clear();
+  }
 
   void UpdateBlocks();
   virtual void SetDenseData() = 0;

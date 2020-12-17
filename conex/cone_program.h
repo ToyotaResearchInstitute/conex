@@ -1,6 +1,7 @@
 #pragma once
 #include "conex/constraint_manager.h"
 #include "conex/kkt_assembler.h"
+#include "conex/kkt_solver.h"
 #include "constraint.h"
 #include "workspace.h"
 
@@ -32,10 +33,18 @@ class Container {
 
 class Program {
  public:
+  Program(int number_of_variables) {
+    SetNumberOfVariables(number_of_variables);
+  }
+
   void SetNumberOfVariables(int m) {
     kkt_system_manager_.SetNumberOfVariables(m);
     sys.m_ = m;
   }
+
+  int GetNumberOfVariables() { return sys.m_; }
+
+  int SetNumberOfConstraints() const { return kkt_system_manager_.eqs.size(); }
 
   void InitializeWorkspace() {
     for (auto& constraint : kkt_system_manager_.eqs) {
@@ -46,23 +55,23 @@ class Program {
     memory.resize(SizeOf(workspaces));
     Initialize(&workspaces, &memory[0]);
 
+    constraints.clear();
+    for (auto& ci : kkt_system_manager_.eqs) {
+      constraints.push_back(&ci.constraint);
+    }
+
     is_initialized = true;
   }
 
   template <typename T>
   void AddConstraint(T&& d) {
-    // constraints.push_back(d);
-    // kkt_system_manager_.AddConstraint(d.kkt_assembler());
     kkt_system_manager_.AddConstraint(d);
   }
 
   template <typename T>
   void AddConstraint(T&& d, const std::vector<int>& variables) {
     kkt_system_manager_.AddConstraint(d, variables);
-    // constraints.push_back(d);
   }
-
-  // std::vector<Constraint> constraints;
 
   int NumberOfConstraints() { return kkt_system_manager_.eqs.size(); }
 
@@ -71,11 +80,13 @@ class Program {
   SchurComplementSystem sys;
   WorkspaceStats stats;
   std::vector<Workspace> workspaces;
+  std::unique_ptr<Solver> solver;
+  std::vector<KKT_SystemAssembler> kkt;
   Eigen::VectorXd memory;
   bool is_initialized = false;
 };
 
-DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint*>& constraints);
+DenseMatrix GetFeasibleObjective(Program* prog);
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config, double* primal_variable);
 

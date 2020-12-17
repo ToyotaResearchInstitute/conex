@@ -51,13 +51,13 @@ int DoMain() {
   for (int i = -2; i < 2; i++) {
     b.setConstant(i);
 
-    Program prog2;
-    prog2.constraints.push_back(T);
+    Program prog2(n);
+    prog2.AddConstraint(T);
     DenseMatrix y2(n, 1);
     Solve(b, prog2, config, y2.data());
 
-    Program prog;
-    prog.constraints.push_back(T2);
+    Program prog(n);
+    prog.AddConstraint(T2);
     DenseMatrix y1(n, 1);
     Solve(b, prog, config, y1.data());
 
@@ -69,8 +69,8 @@ int DoMain() {
     Aq.bottomRightCorner(n, n).setIdentity();
 
     QuadraticConstraint Tq(Q, Aq, Cs);
-    Program prog3;
-    prog3.constraints.push_back(Tq);
+    Program prog3(n);
+    prog3.AddConstraint(Tq);
     DenseMatrix y3(n, 1);
     Solve(b, prog3, config, y3.data());
     EXPECT_TRUE((y1 - y3).norm() < 1e-4);

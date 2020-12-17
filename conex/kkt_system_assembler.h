@@ -24,6 +24,7 @@ class KKT_SystemAssembler {
   }
 
   void UpdateBlocks() { model->UpdateBlocks(); }
+  void Reset() { model->Reset(); }
 
   SchurComplementSystem* GetWorkspace() { return model->GetWorkspace(); }
 
@@ -33,6 +34,7 @@ class KKT_SystemAssembler {
     virtual void BindDiagonalBlock(const DiagonalBlock* data) = 0;
     virtual void BindOffDiagonalBlock(const OffDiagonalBlock* data) = 0;
     virtual void UpdateBlocks() = 0;
+    virtual void Reset() = 0;
     virtual SchurComplementSystem* GetWorkspace() = 0;
     virtual ~KKT_SystemAssemblerDispatcher(){};
   };
@@ -48,6 +50,7 @@ class KKT_SystemAssembler {
       implementation->BindOffDiagonalBlock(data);
     }
     void UpdateBlocks() override { implementation->UpdateBlocks(); }
+    void Reset() override { implementation->Reset(); }
 
     WorkspaceSchurComplement* GetWorkspace() override {
       return &implementation->schur_complement_data;

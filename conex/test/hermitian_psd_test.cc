@@ -40,16 +40,16 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
   }
   HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
 
-  Program prog;
+  Program prog(m);
   DenseMatrix y(m, 1);
-  prog.constraints.push_back(T2);
+  prog.AddConstraint(T2);
 
-  auto b = GetFeasibleObjective(m, prog.constraints);
+  auto b = GetFeasibleObjective(&prog);
   bool solved_1 = Solve(b, prog, config, y.data());
 
-  Program prog2;
+  Program prog2(m);
   DenseMatrix y2(m, 1);
-  prog2.constraints.push_back(DenseLMIConstraint(3, ToMat(constraint_matrices),
+  prog2.AddConstraint(DenseLMIConstraint(3, ToMat(constraint_matrices),
                                                  ToMat(constraint_affine)));
 
   bool solved_2 = Solve(b, prog2, config, y2.data());
@@ -81,11 +81,11 @@ class TestCases : public testing::Test {
     }
     HermitianPsdConstraint<T> T2(rank, constraint_matrices, constraint_affine);
 
-    Program prog;
+    Program prog(m);
     DenseMatrix y(m, 1);
-    prog.constraints.push_back(T2);
+    prog.AddConstraint(T2);
 
-    auto b = GetFeasibleObjective(m, prog.constraints);
+    auto b = GetFeasibleObjective(&prog);
     EXPECT_TRUE(Solve(b, prog, config, y.data()));
   }
   void SolveRandomInstances(int n, int m) {

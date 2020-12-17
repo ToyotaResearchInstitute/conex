@@ -130,8 +130,7 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
     }
   }
 
-  Program prog;
-  prog.SetNumberOfVariables(number_of_variables);
+  Program prog(number_of_variables);
 
   MatrixXd y(number_of_variables, 1);
   if (sparse) {
@@ -219,8 +218,7 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
     }
   }
 
-  Program prog;
-  prog.SetNumberOfVariables(number_of_variables);
+  Program prog(number_of_variables);
 
   MatrixXd y(number_of_variables, 1);
   if (sparse) {

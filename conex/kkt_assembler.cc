@@ -100,7 +100,6 @@ void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   Initialize(&schur_complement_data, memory.data());
 }
 
-
 void T::Scatter(int* r, int sizer, int* c, int sizec, double** data) {
   int cnt = 0;
   for (int j = 0; j < sizec; j++) {

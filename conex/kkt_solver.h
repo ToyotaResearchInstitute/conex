@@ -16,6 +16,7 @@ class Solver {
   std::vector<KKT_SystemAssembler*> assembler;
   Solver(const std::vector<std::vector<int>>& cliques,
          const std::vector<std::vector<int>>& dual_vars);
+
   void Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler);
 
   void Bind(std::vector<KKT_SystemAssembler>* kkt_assembler) {
