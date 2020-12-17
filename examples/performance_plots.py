@@ -54,15 +54,24 @@ def PlotMuUpdate(hyper_complex_dim, title, show_plot = False):
     config.final_centering_steps = 1
     mu = []
 
-    if 0:
+    if hyper_complex_dim == -2:
         rank1 = 5
-        rank2 = 10
+        rank2 = 25
         rank3 = 50
         rank4 = 100
+
+        config.divergence_upper_bound = 100
+        config.inv_sqrt_mu_max = 110000
         mu.append(SolveRandomSDP(m, rank1, config))
         mu.append(SolveRandomSDP(m, rank2, config))
         mu.append(SolveRandomSDP(m, rank3, config))
         mu.append(SolveRandomSDP(m, rank4, config))
+        #rank1 = 5; rank2 = 10; rank3 = 50; rank4 = 100;
+        #config.divergence_upper_bound = 10000
+        #mu.append(SolveRandomHermitianSDP(m, rank1, 1, config))
+        #mu.append(SolveRandomHermitianSDP(m, rank2, 1, config))
+        #mu.append(SolveRandomHermitianSDP(m, rank3, 1, config))
+        #mu.append(SolveRandomHermitianSDP(m, rank4, 1, config))
     else:
         if hyper_complex_dim > 0:
             if hyper_complex_dim == 8:
@@ -102,6 +111,7 @@ def Plot(filename, showplot, mu, labels):
     plt.legend()
     plt.xlabel('Newton steps')
     plt.ylabel('log(mu)')
+    plt.subplots_adjust(left=0.15)
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.savefig(filename + "mu_update.eps")
     if show_plot:
@@ -298,7 +308,9 @@ show_plot = True
 #PlotMuUpdate(1, "Real", show_plot)
 #PlotMuUpdate(2, "Complex", show_plot)
 #PlotMuUpdate(4, "Quaternion", show_plot)
-PlotMuUpdate(-1, "special", show_plot)
+#PlotMuUpdate(-1, "special", show_plot)
+
+PlotMuUpdate(-2, "sdp", show_plot)
 #PlotMuUpdate(8, "exceptional", show_plot)
 #PlotMuUpdateVsDivBound()
 

@@ -6,6 +6,9 @@
 
 namespace conex {
 
+
+
+
 using Eigen::MatrixXd;
 
 TEST(MuSelection, DivergenceBound) {
@@ -26,4 +29,5 @@ TEST(MuSelection, DivergenceBound) {
   EXPECT_NEAR(hub, hub_desired, 1e-12);
 }
 
-}  // namespace conex
+} // namespace conex
+

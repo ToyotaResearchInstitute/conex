@@ -2,6 +2,8 @@
 
 namespace conex {
 
+using T = TriangularMatrixWorkspace;
+
 namespace {
 template <typename T>
 int LookupSuperNode(const T& o, int index, int start) {
@@ -57,4 +59,37 @@ std::vector<double*> TriangularMatrixWorkspace::S_S(int clique) {
   return y;
 }
 
+// Given supernode N and separator S, returns (i, j) pairs for which
+// S(i) == N(j).
+using Match = std::pair<int, int>;
+std::vector<Match> T::IntersectionOfSupernodeAndSeparator(int supernode,
+                                                          int seperator) const {
+  std::vector<Match> y;
+  int i = 0;
+  for (auto si : snodes.at(supernode)) {
+    int j = 0;
+    for (auto sj : separators.at(seperator)) {
+      if (si == sj) {
+        y.emplace_back(i, j);
+      }
+      j++;
+    }
+    i++;
+  }
+  return y;
+}
+
+void T::SetIntersections() {
+  column_intersections.resize(snodes.size() - 1);
+  intersection_position.resize(snodes.size() - 1);
+  for (int i = static_cast<int>(diagonal.size() - 2); i >= 0; i--) {
+    for (int j = i; j >= 0; j--) {
+      const auto& temp = IntersectionOfSupernodeAndSeparator(i + 1, j);
+      if (temp.size() > 0) {
+        column_intersections.at(i).push_back(j);
+        intersection_position.at(i).push_back(temp);
+      }
+    }
+  }
+}
 }  // namespace conex

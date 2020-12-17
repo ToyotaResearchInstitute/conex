@@ -9,6 +9,9 @@
 
 namespace conex {
 
+
+
+
 using DenseMatrix = Eigen::MatrixXd;
 #define TEST_OR_PROFILE 1
 #if TEST_OR_PROFILE
@@ -162,4 +165,5 @@ TEST(SDP, ProfileSDP) {
 }
 #endif
 
-}  // namespace conex
+} // namespace conex
+

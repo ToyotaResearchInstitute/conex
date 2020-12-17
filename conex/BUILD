@@ -10,7 +10,7 @@ cc_test(
     name = "lp",
     srcs = glob(["test/test_lp.cc"]),
     copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib"],
+    deps = ["@gtest//:main", "conex_lib", "supernodal_solver"],
 )
 
 cc_test(
@@ -178,11 +178,16 @@ cc_test(
     deps = ["@gtest//:main", "supernodal_solver"],
 )
 
-
 cc_library(
     name = "supernodal_solver",
-    hdrs = ["linear_inequality.h", "kkt_system_assembler.h", "supernodal_cholesky_data.h", "equality_constraint.h", "supernodal_solver.h", "triangular_matrix_workspace.h", "block_triangular_operations.h",  "clique_ordering.h"],
-    srcs = ["linear_inequality.cc", "equality_constraint.cc", "supernodal_solver.cc", "triangular_matrix_workspace.cc", "debug_macros.h", "block_triangular_operations.cc", 
+    hdrs = ["kkt_solver.h", "constraint.h", "debug_macros.h", "workspace.h", "newton_step.h",
+            "error_checking_macros.h", "error_codes.h", "constraint_manager.h",
+            "kkt_assembler.h", "linear_workspace.h", "memory_utils.h",
+            "kkt_system_assembler.h", "supernodal_cholesky_data.h",
+            "equality_constraint.h", "supernodal_solver.h",
+            "triangular_matrix_workspace.h", "block_triangular_operations.h",
+            "clique_ordering.h"],
+    srcs = ["kkt_solver.cc","kkt_assembler.cc", "supernodal_solver.cc", "triangular_matrix_workspace.cc", "debug_macros.h", "block_triangular_operations.cc", 
             "clique_ordering.cc"],
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
@@ -219,5 +224,5 @@ cc_library(
             "quadratic_cone_constraint.cc",
             "soc_constraint.cc"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "approximate_eigenvalues", "matrix_exponential", "exponential_map", "vect_jordan_matrix_algebra", "eigen_decomp" ],
+    deps = [ "@eigen", "supernodal_solver", "approximate_eigenvalues", "matrix_exponential", "exponential_map", "vect_jordan_matrix_algebra", "eigen_decomp" ],
 )

@@ -5,6 +5,8 @@
 
 namespace conex {
 
+
+
 using std::map;
 using std::vector;
 using Tuple = std::pair<int, int>;
@@ -24,4 +26,5 @@ double NormFro(const DenseMatrix& x);
 double min(double x, double y);
 inline double max(double x, double y) { return -min(-x, -y); }
 
-}  // namespace conex
+} // namespace conex
+

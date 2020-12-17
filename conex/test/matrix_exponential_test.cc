@@ -9,6 +9,9 @@
 
 namespace conex {
 
+
+
+
 using Eigen::Map;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -36,4 +39,5 @@ TEST(MatrixExponential, CompareWithEigen) {
   }
 }
 
-}  // namespace conex
+} // namespace conex
+

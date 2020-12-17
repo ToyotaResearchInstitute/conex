@@ -11,8 +11,13 @@
 namespace conex {
 
 template <typename T>
-bool UpdateLinearOperator(T* obj, double val, int var, int row, int col,
-                          int hyper_complex_dim) {
+bool Permute(T*, std::vector<int> P) {
+  CONEX_DEMAND(false,
+               "Constraint does not support updates of linear operator.");
+}
+
+template <typename T>
+bool UpdateLinearOperator(T*, double, int, int, int, int) {
   CONEX_DEMAND(false,
                "Constraint does not support updates of linear operator.");
 }
@@ -40,7 +45,7 @@ bool UpdateAffineTerm(T*, double, int, int, int) {
 class Constraint {
  public:
   template <typename Implementation>
-  Constraint(const Implementation& t)
+  Constraint(Implementation* t)
       : model(std::make_unique<Model<Implementation>>(t)) {}
 
   friend void ConstructSchurComplementSystem(Constraint* o, bool initialize,
@@ -103,53 +108,55 @@ class Constraint {
 
   template <typename Implementation>
   struct Model final : Concept {
-    Model(const Implementation& t) : data(t) {}
+    Model(Implementation* t) : data(t) {}
 
     void do_schur_complement(bool initialize,
                              SchurComplementSystem* sys) override {
-      ConstructSchurComplementSystem(&data, initialize, sys);
+      ConstructSchurComplementSystem(data, initialize, sys);
     }
 
-    void do_set_identity() override { SetIdentity(&data); }
+    void do_set_identity() override { SetIdentity(data); }
 
     void do_min_mu(const Ref& y, MuSelectionParameters* p) override {
-      GetMuSelectionParameters(&data, y, p);
+      GetMuSelectionParameters(data, y, p);
     }
 
-    int do_rank() override { return Rank(data); }
+    int do_rank() override { return Rank(*data); }
 
-    int do_number_of_variables() override { return data.number_of_variables(); }
+    int do_number_of_variables() override {
+      return data->number_of_variables();
+    }
 
     Workspace do_get_workspace() override {
-      return Workspace(data.workspace());
+      return Workspace(data->workspace());
     }
 
     void do_get_dual_variable(double* var) override {
       memcpy(static_cast<void*>(var),
-             static_cast<void*>(data.workspace()->W.data()),
+             static_cast<void*>(data->workspace()->W.data()),
              sizeof(double) * do_dual_variable_size());
     }
 
     int do_dual_variable_size() override {
-      return data.workspace()->W.rows() * data.workspace()->W.cols();
+      return data->workspace()->W.rows() * data->workspace()->W.cols();
     }
 
     bool do_update_linear_operator(double val, int var, int row, int col,
                                    int hyper_complex_dim) override {
-      return UpdateLinearOperator(&data, val, var, row, col, hyper_complex_dim);
+      return UpdateLinearOperator(data, val, var, row, col, hyper_complex_dim);
     }
 
     bool do_update_affine_term(double val, int row, int col,
                                int hyper_complex_dim) override {
-      return UpdateAffineTerm(&data, val, row, col, hyper_complex_dim);
+      return UpdateAffineTerm(data, val, row, col, hyper_complex_dim);
     }
 
     void do_take_step(const StepOptions& opt, const Ref& y,
                       StepInfo* info) override {
-      TakeStep(&data, opt, y, info);
+      TakeStep(data, opt, y, info);
     }
 
-    Implementation data;
+    Implementation* data;
   };
   std::unique_ptr<Concept> model;
 };

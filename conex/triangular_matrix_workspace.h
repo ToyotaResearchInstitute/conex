@@ -91,9 +91,23 @@ struct TriangularMatrixWorkspace {
     for (size_t j = 0; j < o->snodes.size(); j++) {
       o->seperator_diagonal.push_back(o->S_S(j));
     }
+    o->SetIntersections();
   }
 
+  // Find the points in both separator(j) and supernode(i) for i + 1 > j.
+  // For each point, returns the position in the separator and the
+  // position in the supernode.
+  std::vector<std::pair<int, int>> IntersectionOfSupernodeAndSeparator(
+      int supernode, int separator) const;
+  // A cache of IntersectionOfSupernodeAndSeparator. The first records
+  // the j for which IntersectionOfSupernodeAndSeparator(i+1, j) is nonempty.
+  // The second returns the output.
+  std::vector<std::vector<int>> column_intersections;
+  std::vector<std::vector<std::vector<std::pair<int, int>>>>
+      intersection_position;
+
  private:
+  void SetIntersections();
   // TODO(FrankPermenter): Remove this method.
   std::vector<double*> S_S(int clique);
 };

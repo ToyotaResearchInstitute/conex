@@ -2,6 +2,9 @@
 
 namespace conex {
 
+
+
+
 DenseMatrix Symmetrize(const DenseMatrix& X) {
   DenseMatrix Xt = X.transpose();
   return .5 * (X + Xt);
@@ -88,4 +91,5 @@ DenseMatrix QuadRep(const DenseMatrix& x, const DenseMatrix& y) {
   return x * y * x;
 }
 
-}  // namespace conex
+} // namespace conex
+

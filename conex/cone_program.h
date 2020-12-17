@@ -1,4 +1,6 @@
 #pragma once
+#include "conex/constraint_manager.h"
+#include "conex/kkt_assembler.h"
 #include "constraint.h"
 #include "workspace.h"
 
@@ -19,12 +21,25 @@ struct SolverConfiguration {
   double infeasibility_threshold = 1e5;
 };
 
+class Container {
+ public:
+  template <typename T>
+  Container(const T& x) : obj(x), constraint(std::any_cast<T>(&obj)) {}
+  std::any obj;
+  Constraint constraint;
+  LinearKKTAssembler kkt_assembler;
+};
+
 class Program {
  public:
-  void SetNumberOfVariables(int m) { sys.m_ = m; }
+  void SetNumberOfVariables(int m) {
+    kkt_system_manager_.SetNumberOfVariables(m);
+    sys.m_ = m;
+  }
+
   void InitializeWorkspace() {
-    for (auto& constraint : constraints) {
-      workspaces.push_back(constraint.workspace());
+    for (auto& constraint : kkt_system_manager_.eqs) {
+      workspaces.push_back(constraint.constraint.workspace());
     }
     workspaces.push_back(Workspace{&stats});
     workspaces.push_back(Workspace{&sys});
@@ -34,10 +49,25 @@ class Program {
     is_initialized = true;
   }
 
-  std::vector<Constraint> constraints;
+  template <typename T>
+  void AddConstraint(T&& d) {
+    // constraints.push_back(d);
+    // kkt_system_manager_.AddConstraint(d.kkt_assembler());
+    kkt_system_manager_.AddConstraint(d);
+  }
 
-  int NumberOfConstraints() { return constraints.size(); }
+  template <typename T>
+  void AddConstraint(T&& d, const std::vector<int>& variables) {
+    kkt_system_manager_.AddConstraint(d, variables);
+    // constraints.push_back(d);
+  }
 
+  // std::vector<Constraint> constraints;
+
+  int NumberOfConstraints() { return kkt_system_manager_.eqs.size(); }
+
+  ConstraintManager<Container> kkt_system_manager_;
+  std::vector<Constraint*> constraints;
   SchurComplementSystem sys;
   WorkspaceStats stats;
   std::vector<Workspace> workspaces;
@@ -45,28 +75,7 @@ class Program {
   bool is_initialized = false;
 };
 
-class ConvexProgram {
-  void AddQuadraticCost() { num_epigraph++; }
-
-  void AddLinearCost() {}
-
- private:
-  Program prog;
-  int num_epigraph;
-};
-
-class PolynomialProgram {
-  void SetBasis(int m);
-  void IsSumOfSquares(int c);
-
-  // f = m^T Q m
-  // (a, a, b)
-  // a x^2 + a x + b
-  // Fa + b = A(Q)
-  // F^T y = 0
-};
-
-DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints);
+DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint*>& constraints);
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config, double* primal_variable);
 

@@ -31,6 +31,12 @@ struct BlockTriangularOperations {
     ApplyBlockInverseOfMD(mat, factorization, y);
     ApplyBlockInverseOfMTranspose(mat, factorization, y);
   }
+
+  static void SolveInPlaceCholesky(const TriangularMatrixWorkspace& mat,
+                                   Eigen::VectorXd* y) {
+    ApplyBlockInverseInPlace(mat, y);
+    ApplyBlockInverseOfTransposeInPlace(mat, y);
+  }
 };
 
 }  // namespace conex

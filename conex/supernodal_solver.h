@@ -33,25 +33,28 @@ struct MatrixData {
 
 MatrixData GetData(const std::vector<Clique>& cliques);
 
-inline void Bind(MatrixData& data, TriangularMatrixWorkspace& workspace,
-                 std::vector<KKT_SystemAssembler>& eqs) {
+inline void DoBind(MatrixData& data, TriangularMatrixWorkspace& workspace,
+                   const std::vector<KKT_SystemAssembler*>& eqs) {
   auto& sn = data.supernodes_original_labels;
   auto& sep = data.separators_original_labels;
 
   for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
 
-    auto block =
-        BuildBlock(&sn.at(e), &sep.at(e), workspace.off_diagonal.at(e).data());
-    eqs.at(i).BindOffDiagonalBlock(&block);
-
-    auto blockD = BuildBlock(&sn.at(e), workspace.diagonal.at(e).data());
-    eqs.at(i).BindDiagonalBlock(&blockD);
+    if (sep.at(e).size() > 0 && sn.at(e).size() > 0) {
+      auto block = BuildBlock(&sn.at(e), &sep.at(e),
+                              workspace.off_diagonal.at(e).data());
+      eqs.at(i)->BindOffDiagonalBlock(&block);
+    }
+    if (sn.at(e).size() > 0) {
+      auto blockD = BuildBlock(&sn.at(e), workspace.diagonal.at(e).data());
+      eqs.at(i)->BindDiagonalBlock(&blockD);
+    }
 
     if (workspace.seperator_diagonal.at(e).size() > 0) {
-      block = BuildBlock(&sep.at(e), &sep.at(e),
-                         &workspace.seperator_diagonal.at(e));
-      eqs.at(i).BindOffDiagonalBlock(&block);
+      auto block = BuildBlock(&sep.at(e), &sep.at(e),
+                              &workspace.seperator_diagonal.at(e));
+      eqs.at(i)->BindOffDiagonalBlock(&block);
     }
   }
 }

@@ -8,6 +8,9 @@
 
 namespace conex {
 
+
+
+
 using JordanTypes = testing::Types<Real, Complex, Quaternions, Octonions>;
 
 using Eigen::MatrixXd;
@@ -109,4 +112,5 @@ TEST(Hermitian, CompareWithLMI) {
   }
 }
 
-}  // namespace conex
+} // namespace conex
+

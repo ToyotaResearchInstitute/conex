@@ -1,4 +1,5 @@
 #include "conex/cone_program.h"
+#include "conex/kkt_solver.h"
 
 #include <vector>
 
@@ -17,52 +18,71 @@ double CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
 }
 
 template <typename T>
-void SetIdentity(std::vector<T>* c) {
+void SetIdentity(std::vector<T*>* c) {
   for (auto& ci : *c) {
-    SetIdentity(&ci);
+    SetIdentity(ci);
   }
 }
 
-template <typename T>
-void TakeStep(std::vector<T>* c, const StepOptions& newton_step_parameters,
-              const Ref& y, StepInfo* info) {
+Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
+  Eigen::VectorXd z(indices.size());
+  int cnt = 0;
+  for (auto i : indices) {
+    z(cnt++) = x(i);
+  }
+  return z;
+}
+
+void TakeStep(ConstraintManager<Container>* kkt,
+              const StepOptions& newton_step_parameters, const Ref& y,
+              StepInfo* info) {
   StepInfo info_i;
   info->normsqrd = 0;
   info->norminfd = -1;
-  for (auto& ci : *c) {
-    TakeStep(&ci, newton_step_parameters, y, &info_i);
+  int i = 0;
+  for (auto& ci : kkt->eqs) {
+    // TODO(FrankPermenter): Remove creation of these maps.
+    auto ysegment = Vars(y, kkt->cliques.at(i));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Aligned> z(ysegment.data(),
+                                                  ysegment.size(), 1);
+    TakeStep(&ci.constraint, newton_step_parameters, z, &info_i);
     if (info_i.norminfd > info->norminfd) {
       info->norminfd = info_i.norminfd;
     }
     info->normsqrd += info_i.normsqrd;
+    i++;
   }
 }
 
-template <typename T>
-void GetMuSelectionParameters(std::vector<T>* c, const Ref& y,
-                              MuSelectionParameters* p) {
+void GetMuSelectionParameters(ConstraintManager<Container>* constraints,
+                              const Ref& y, MuSelectionParameters* p) {
   p->gw_norm_squared = 0;
   p->gw_lambda_max = -1000;
-  for (auto& ci : *c) {
-    GetMuSelectionParameters(&ci, y, p);
+  int i = 0;
+  for (auto& ci : constraints->eqs) {
+    auto ysegment = Vars(y, constraints->cliques.at(i));
+    Eigen::Map<Eigen::MatrixXd, Eigen::Aligned> z(ysegment.data(),
+                                                  ysegment.size(), 1);
+    GetMuSelectionParameters(&ci.constraint, z, p);
+    i++;
   }
 }
 
 template <typename T>
-int Rank(const std::vector<T>& c) {
+int Rank(const std::vector<T*>& c) {
   int rank = 0;
   for (const auto& ci : c) {
-    rank += Rank(ci);
+    rank += Rank(*ci);
   }
   return rank;
 }
 
 template <typename T>
-void ConstructSchurComplementSystem(std::vector<T>* c, bool initialize,
+void ConstructSchurComplementSystem(std::vector<T*>* c, bool initialize,
                                     SchurComplementSystem* sys) {
   bool init = initialize;
   for (auto& ci : *c) {
-    ConstructSchurComplementSystem(&ci, init, sys);
+    ConstructSchurComplementSystem(ci, init, sys);
     init = false;
   }
 }
@@ -82,14 +102,12 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
   }
   return;
 }
-double UpdateMu(std::vector<Constraint>& constraints,
-                const Eigen::LLT<Eigen::Ref<DenseMatrix>>& llt,
-                const SchurComplementSystem& sys, const DenseMatrix& b,
+double UpdateMu(ConstraintManager<Container>& constraints, Solver& solver,
+                const DenseMatrix& AQc, const DenseMatrix& b,
                 const SolverConfiguration& config, int rankK,
                 Ref* temporary_memory) {
   MuSelectionParameters mu_param;
-  (*temporary_memory) = sys.AQc - b;
-  llt.solveInPlace(*temporary_memory);
+  *temporary_memory = solver.Solve(AQc - b);
   GetMuSelectionParameters(&constraints, *temporary_memory, &mu_param);
 
   return DivergenceUpperBoundInverse(
@@ -111,6 +129,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
 #ifdef EIGEN_USE_MKL_ALL
   std::cout << "CONEX: MKL Enabled";
 #endif
+
+  for (auto& ci : prog.kkt_system_manager_.eqs) {
+    prog.constraints.push_back(&ci.constraint);
+  }
 
   auto& constraints = prog.constraints;
   auto& sys = prog.sys;
@@ -148,6 +170,17 @@ bool Solve(const DenseMatrix& b, Program& prog,
   int rankK = Rank(constraints);
   int centering_steps = 0;
 
+  Solver solver(prog.kkt_system_manager_.cliques,
+                prog.kkt_system_manager_.dual_vars);
+  std::vector<KKT_SystemAssembler> kkt;
+  for (auto& c : prog.kkt_system_manager_.eqs) {
+    c.kkt_assembler.workspace_ = &c.constraint;
+    kkt.push_back(&c.kkt_assembler);
+  }
+  solver.Bind(&kkt);
+  Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
+  Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
+
   for (int i = 0; i < config.max_iterations; i++) {
     bool update_mu =
         (i == 0) || ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) &&
@@ -157,20 +190,15 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
-    ConstructSchurComplementSystem(&constraints, true /*init*/, &sys);
+    solver.Assemble(&AW, &AQc);
 
-    Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
-    if (llt.info() != Eigen::Success) {
-      PRINTSTATUS("LLT FAILURE.");
-      return false;
-      break;
-    }
+    START_TIMER(Factor)
+    solver.Factor();
+    END_TIMER
 
     if (update_mu) {
-      START_TIMER(Mu)
       newton_step_parameters.inv_sqrt_mu =
-          UpdateMu(constraints, llt, sys, b, config, rankK, &y);
-      END_TIMER
+          UpdateMu(prog.kkt_system_manager_, solver, AQc, b, config, rankK, &y);
     } else {
       centering_steps++;
     }
@@ -190,14 +218,17 @@ bool Solve(const DenseMatrix& b, Program& prog,
       }
     }
 
-    y = newton_step_parameters.inv_sqrt_mu * (b + sys.AQc) - 2 * sys.AW;
-    llt.solveInPlace(y);
+    y = newton_step_parameters.inv_sqrt_mu * (b + AQc) - 2 * AW;
+    START_TIMER(Solve)
+    solver.SolveInPlace(&y);
+    END_TIMER
+
     newton_step_parameters.e_weight = 1;
     newton_step_parameters.c_weight = newton_step_parameters.inv_sqrt_mu;
 
     StepInfo info;
     START_TIMER(Step)
-    TakeStep(&constraints, newton_step_parameters, y, &info);
+    TakeStep(&prog.kkt_system_manager_, newton_step_parameters, y, &info);
     END_TIMER
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
@@ -230,10 +261,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
         y2 += llt.solve(bres - L * L.transpose() * y2);
       }
     } else {
-      ConstructSchurComplementSystem(&constraints, true, &sys);
-      Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
-      DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * sys.AW;
-      y2 = llt.solve(bres);
+      solver.Assemble(&AW, &AQc);
+      solver.Factor();
+      DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * AW;
+      y2 = solver.Solve(bres);
     }
 
     newton_step_parameters.affine = true;
@@ -241,20 +272,19 @@ bool Solve(const DenseMatrix& b, Program& prog,
     newton_step_parameters.c_weight = 0;
     Ref y2map(y2.data(), y2.rows(), y2.cols());
     StepInfo info;
-    TakeStep(&constraints, newton_step_parameters, y2map, &info);
+    TakeStep(&prog.kkt_system_manager_, newton_step_parameters, y2map, &info);
   }
   y /= newton_step_parameters.inv_sqrt_mu;
   yout = y;
   solved = 1;
-
   PRINTSTATUS("Solved.");
   return solved;
 }
 
-DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint>& constraints) {
+DenseMatrix GetFeasibleObjective(int m, std::vector<Constraint*>& constraints) {
   std::vector<Workspace> workspaces;
   for (auto& constraint : constraints) {
-    workspaces.push_back(constraint.workspace());
+    workspaces.push_back(constraint->workspace());
   }
 
   WorkspaceSchurComplement sys{m};

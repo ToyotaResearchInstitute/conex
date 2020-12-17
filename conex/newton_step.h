@@ -49,14 +49,17 @@ struct WorkspaceSchurComplement {
     using Map = Eigen::Map<DenseMatrix, Eigen::Aligned>;
     int m = o->m_;
     new (&o->G) Map(data, m, m);
+    // TODO(FrankPermenter): Remove b.
     new (&o->b) Map(data + get_size_aligned(m * m), m, 1);
     new (&o->AW)
         Map(data + get_size_aligned(m * m) + get_size_aligned(m), m, 1);
     new (&o->AQc)
         Map(data + get_size_aligned(m * m) + 2 * get_size_aligned(m), m, 1);
+    o->initialized = true;
   }
 
   friend void print(const WorkspaceSchurComplement& o) {
+    DUMP(o.initialized);
     DUMP(o.G);
     DUMP(o.b);
     DUMP(o.AW);
@@ -70,6 +73,7 @@ struct WorkspaceSchurComplement {
   Eigen::Map<DenseMatrix, Eigen::Aligned> AW{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> AQc{NULL, 0, 0};
   int m_;
+  bool initialized = false;
 };
 
 using SchurComplementSystem = WorkspaceSchurComplement;

@@ -8,6 +8,8 @@
 
 namespace conex {
 
+
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -132,4 +134,5 @@ TEST(TestCases, GeodesicUpdateRescaling) {
   }
 }
 
-}  // namespace conex
+} // namespace conex
+

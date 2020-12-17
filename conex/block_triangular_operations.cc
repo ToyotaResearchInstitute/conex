@@ -1,4 +1,5 @@
-#include "block_triangular_operations.h"
+#include "conex/block_triangular_operations.h"
+#include "conex/debug_macros.h"
 
 namespace conex {
 
@@ -7,32 +8,6 @@ using Eigen::VectorXd;
 
 using T = BlockTriangularOperations;
 namespace {
-
-// Returns the supernode subindex and the separator subindex for
-// the intersection of supernode and separator.
-//
-//  N1
-//  S1  N2
-//  S1  S2  N3
-//
-//  Given Si and Nj, returns rows of Si and Sj that are nonzero.
-using Match = std::pair<int, int>;
-std::vector<Match> IntersectionOfSupernodeAndSeparator(
-    const TriangularMatrixWorkspace& mat, int supernode, int seperator) {
-  std::vector<Match> y;
-  int i = 0;
-  for (auto si : mat.snodes.at(supernode)) {
-    int j = 0;
-    for (auto sj : mat.separators.at(seperator)) {
-      if (si == sj) {
-        y.emplace_back(i, j);
-      }
-      j++;
-    }
-    i++;
-  }
-  return y;
-}
 
 class PartitionVectorForwardIterator {
  public:
@@ -130,26 +105,35 @@ class PartitionVectorIterator {
 void T::ApplyBlockInverseOfTransposeInPlace(
     const TriangularMatrixWorkspace& mat, VectorXd* y) {
   PartitionVectorIterator ypart(*y, mat.N, mat.supernode_size);
-  mat.diagonal.back().triangularView<Eigen::Lower>().transpose().solveInPlace(
-      ypart.b_i());
+  mat.diagonal.back()
+      .triangularView<Eigen::Lower>()
+      .solveInPlace<Eigen::OnTheRight>(ypart.b_i().transpose());
 
   for (int i = static_cast<int>(mat.diagonal.size() - 2); i >= 0; i--) {
     ypart.Decrement();
 
     // Loop over partition {B_j} of c_{i+1}
     PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
-    for (int j = i; j >= 0; j--) {
+    int jcnt = 0;
+    for (auto j : mat.column_intersections.at(i)) {
       residual.Set(j);
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
       // > i.
-      auto index_and_column_list =
-          IntersectionOfSupernodeAndSeparator(mat, i + 1, j);
+      auto index_and_column_list = mat.intersection_position.at(i).at(jcnt++);
       for (const auto& pair : index_and_column_list) {
         residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
                           ypart.b_i_plus_1()(pair.first);
       }
     }
+    // for (const auto& match : mat.index_and_column_list.at(i)) {
+    //   residual.Set(match.first);
+    //   for (const auto& pair : match.second) {
+    //     residual.b_i() -= mat.off_diagonal.at(match.first).col(pair.second) *
+    //                       ypart.b_i_plus_1()(pair.first);
+    //   }
+    //}
+
     mat.diagonal.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(
         ypart.b_i());
   }
@@ -183,20 +167,23 @@ void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat,
 }
 
 void T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
+  assert(C->diagonal.size() == C->off_diagonal.size());
   std::vector<Eigen::LLT<Eigen::Ref<MatrixXd>>> llts;
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
     llts.emplace_back(C->diagonal.at(i));
 
     // Construction of [n, s] block
-    llts.back().matrixL().solveInPlace(C->off_diagonal.at(i));
-    auto& temp = C->off_diagonal.at(i);
+    if (C->off_diagonal.at(i).size() > 0) {
+      llts.back().matrixL().solveInPlace(C->off_diagonal.at(i));
+      auto& temp = C->off_diagonal.at(i);
 
-    int index = 0;
-    auto s_s = C->seperator_diagonal.at(i);
-    for (int k = 0; k < temp.cols(); k++) {
-      for (int j = k; j < temp.cols(); j++) {
-        *s_s.at(index++) -= temp.col(k).dot(temp.col(j));
+      int index = 0;
+      const auto& s_s = C->seperator_diagonal.at(i);
+      for (int k = 0; k < temp.cols(); k++) {
+        for (int j = k; j < temp.cols(); j++) {
+          *s_s.at(index++) -= temp.col(k).dot(temp.col(j));
+        }
       }
     }
   }
@@ -218,13 +205,21 @@ void T::ApplyBlockInverseOfMTranspose(
 
     // Loop over partition {B_j} of c_{i+1}
     PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
-    for (int j = i; j >= 0; j--) {
+
+    int jcnt = 0;
+    for (auto j : mat.column_intersections.at(i)) {
       residual.Set(j);
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
       // > i.
-      auto index_and_column_list =
-          IntersectionOfSupernodeAndSeparator(mat, i + 1, j);
+      // auto index_and_column_list =
+      //    IntersectionOfSupernodeAndSeparator(mat, i + 1, j);
+      // for (const auto& pair : index_and_column_list) {
+      //  residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
+      //                    ypart.b_i_plus_1()(pair.first);
+      //}
+
+      auto index_and_column_list = mat.intersection_position.at(i).at(jcnt++);
       for (const auto& pair : index_and_column_list) {
         residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
                           ypart.b_i_plus_1()(pair.first);

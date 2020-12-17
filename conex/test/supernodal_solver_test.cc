@@ -7,6 +7,9 @@
 
 namespace conex {
 
+
+
+
 using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
@@ -233,7 +236,6 @@ TEST(SupernodalSolver, TestFullSolver) {
   for (auto& sn : mat.supernodes) {
     sn.diagonal().array() += 10;
   }
-  DUMP(T::ToDense(mat));
   int val = 0;
   for (size_t i = 0; i < cliques.size(); i++) {
     auto SS = mat.workspace_.seperator_diagonal.at(i);
@@ -245,7 +247,7 @@ TEST(SupernodalSolver, TestFullSolver) {
     data.num_separators = mat.separator.at(i).cols();
     val = Set(val, &data);
   }
-  DUMP(T::ToDense(mat));
 }
 
-}  // namespace conex
+} // namespace conex
+

@@ -79,7 +79,7 @@ struct WorkspaceStats {
     o->initialized = true;
   }
 
-  friend int SizeOf(const WorkspaceStats& o) { return max_iter * num_items; }
+  friend int SizeOf(const WorkspaceStats&) { return max_iter * num_items; }
 
   friend void print(const WorkspaceStats& o) {
     for (int i = 0; i < max_iter; i++) {

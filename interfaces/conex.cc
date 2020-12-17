@@ -274,5 +274,3 @@ CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order, int* constraint_
   return CONEX_SUCCESS;
 }
 
-
-
