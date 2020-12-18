@@ -82,7 +82,7 @@ class Conex:
         return stat_array
 
     def GetIterationNumberStats(self, num):
-        stats = self.wrapper.ConexIterationStats()
+        stats = self.wrapper.CONEX_IterationStats()
         self.wrapper.CONEX_GetIterationStats(self.a, stats, num)
         return stats
 
@@ -95,7 +95,7 @@ class Conex:
         self.num_constraints = self.num_constraints + 1
 
     def DefaultConfiguration(self):
-        config = self.wrapper.ConexSolverConfiguration()
+        config = self.wrapper.CONEX_SolverConfiguration()
         self.wrapper.CONEX_SetDefaultOptions(config);
         config.inv_sqrt_mu_max = 1000
         config.maximum_mu = 1e20
@@ -120,7 +120,7 @@ class Conex:
             raise NameError("Cost vector dimension does not match number of variables.")
 
         sol.y = np.ones((self.m)).astype(real)
-        sol.status = self.wrapper.ConexSolve(self.a, np.squeeze(np.array(b), 1), config, sol.y)
+        sol.status = self.wrapper.CONEX_Solve(self.a, np.squeeze(np.array(b), 1), config, sol.y)
 
         return sol
 

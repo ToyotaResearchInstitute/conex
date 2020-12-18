@@ -18,16 +18,16 @@ typedef struct {
   double infeasibility_threshold;
   double initialization_mode;
   int collect_statistics;
-} ConexSolverConfiguration;
+} CONEX_SolverConfiguration;
 
 typedef struct {
   double mu;
   int iteration_number;
-} ConexIterationStats;
+} CONEX_IterationStats;
 
 typedef struct {
   int iterations;
-} ConexSolutionStats;
+} CONEX_SolutionStats;
 
 void* CONEX_CreateConeProgram();
 void CONEX_DeleteConeProgram(void*);
@@ -46,17 +46,17 @@ int CONEX_AddSparseLMIConstraint(void* prog, const double* Aarray, int Aarrayr,
                                  int Aarrayc, int m, const double* cmat, int cr,
                                  int cc, const long* vars, int vars_c);
 
-int ConexSolve(void* prog, const double* b, int br,
-               const ConexSolverConfiguration* config, double* y, int yr);
+int CONEX_Solve(void* prog, const double* b, int br,
+               const CONEX_SolverConfiguration* config, double* y, int yr);
 
 void CONEX_GetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
 int CONEX_GetDualVariableSize(void* prog_ptr, int i);
 
 // TODO(FrankPermenter): Rename Options to Configuration
-void CONEX_SetDefaultOptions(ConexSolverConfiguration* config);
+void CONEX_SetDefaultOptions(CONEX_SolverConfiguration* config);
 
-void CONEX_GetIterationStats(void* prog, ConexIterationStats* stats,
+void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,
                              int iter_num);
 
 CONEX_STATUS CONEX_UpdateLinearOperator(void* program, int constraint,

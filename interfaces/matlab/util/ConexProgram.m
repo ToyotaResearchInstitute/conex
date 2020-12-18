@@ -31,7 +31,7 @@ classdef ConexProgram < handle
       end
       self.p = calllib('libconex', 'CONEX_CreateConeProgram');
       calllib('libconex', 'CONEX_SetNumberOfVariables', self.p, num_vars); 
-      self.options = libstruct('ConexSolverConfiguration');
+      self.options = libstruct('CONEX_SolverConfiguration');
       % Force matlab to allocate memory for options
       self.options.divergence_upper_bound = 1;
       calllib('libconex', 'CONEX_SetDefaultOptions', self.options);
@@ -90,7 +90,7 @@ classdef ConexProgram < handle
       num_var = length(b);
       bptr = libpointer('doublePtr', full(b));
       yptr = libpointer('doublePtr', zeros(num_var, 1));
-      status = calllib('libconex', 'ConexSolve', self.p, bptr, length(b), self.options, yptr, num_var);
+      status = calllib('libconex', 'CONEX_Solve', self.p, bptr, length(b), self.options, yptr, num_var);
 
       x = {};
       for i = 1:length(self.constraints)

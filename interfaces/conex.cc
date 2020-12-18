@@ -37,8 +37,8 @@ using conex::HermitianPsdConstraint;
 using conex::Program;
 using conex::SolverConfiguration;
 
-int ConexSolve(void* prog_ptr, const double* b, int br,
-               const ConexSolverConfiguration* config, double* y, int yr) {
+int CONEX_Solve(void* prog_ptr, const double* b, int br,
+               const CONEX_SolverConfiguration* config, double* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);
   DenseMatrix blinear = bmap;
@@ -152,7 +152,7 @@ int CONEX_AddDenseLinearConstraint(void* prog, const double* A, int Ar, int Ac,
   return constraint_id;
 }
 
-void CONEX_SetDefaultOptions(ConexSolverConfiguration* c) {
+void CONEX_SetDefaultOptions(CONEX_SolverConfiguration* c) {
   if (c == NULL) {
     std::cerr << "Received null pointer.";
     return;
@@ -169,7 +169,7 @@ void CONEX_SetDefaultOptions(ConexSolverConfiguration* c) {
   c->initialization_mode = config.initialization_mode;
 }
 
-void CONEX_GetIterationStats(void* prog, ConexIterationStats* stats,
+void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,
                              int iter_num_circular) {
   if ((prog == NULL) || (stats == NULL)) {
     std::cerr << "Received null pointer.";

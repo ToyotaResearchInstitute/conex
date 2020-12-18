@@ -26,9 +26,9 @@ int main() {
   status = CONEX_UpdateAffineTerm(p, constraint_id, .3,  0, 0, 0);
 
   std::cout << status;
-  ConexSolverConfiguration config;
+  CONEX_SolverConfiguration config;
   CONEX_SetDefaultOptions(&config);
-  ConexSolve(p, &b[0], num_vars, &config, &y[0], num_vars);
+  CONEX_Solve(p, &b[0], num_vars, &config, &y[0], num_vars);
 
   CONEX_DeleteConeProgram(p);
 }
