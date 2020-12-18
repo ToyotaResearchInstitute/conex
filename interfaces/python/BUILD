@@ -5,16 +5,16 @@
 #    visibility = ["//visibility:public"],
 #)
 #
-#cc_library(name="libconex", 
+#cc_library(name="libconex",
 #           deps = ["//conex:conex_lib", "api"],
-#           alwayslink = 1, 
+#           alwayslink = 1,
 #           copts = ["-fPIC"],
-#           srcs = ["conex.cc"], 
+#           srcs = ["conex.cc"],
 #           hdrs = ["conex.h"])
 #
-#cc_binary(name="libconex.so", 
+#cc_binary(name="libconex.so",
 #          linkopts = ["-static-libstdc++"],
-#          deps=[":libconex"], 
+#          deps=[":libconex"],
 #          linkshared=1,
 #          linkstatic=1,
 #          )

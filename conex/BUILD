@@ -1,217 +1,332 @@
 cc_library(
     name = "test_util",
     srcs = glob(["test/test_util.cc"]),
-    hdrs = glob(["test/test_util.h", "debug_macros.h"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib"],
+    hdrs = glob([
+        "test/test_util.h",
+        "debug_macros.h",
+    ]),
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "lp",
     srcs = glob(["test/test_lp.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib", "supernodal_solver"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "supernodal_solver",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "hermitian_psd_test",
     srcs = glob(["test/hermitian_psd_test.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib", "test_util"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "test_util",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "sdp",
     srcs = glob(["test/test_sdp.cc"]),
-    copts = ["-Iexternal/gtest/include -fno-omit-frame-pointer"], 
-    deps = ["@gtest//:main", "conex_lib", "test_util"],
+    copts = ["-Iexternal/gtest/include -fno-omit-frame-pointer"],
+    deps = [
+        "conex_lib",
+        "test_util",
+        "@gtest//:main",
+    ],
 )
 
 cc_binary(
     name = "psdp",
     srcs = glob(["test/profile_sdp.cc"]),
-    deps = ["@gtest//:main", "conex_lib", "test_util"],
+    deps = [
+        "conex_lib",
+        "test_util",
+        "@gtest//:main",
+    ],
 )
-
 
 cc_test(
     name = "socp",
     srcs = glob(["test/test_socp.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "conex_lib"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "divergence",
     srcs = glob(["test/test_divergence.cc"]),
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "conex_lib"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "warmstart",
     srcs = glob(["test/test_warmstart.cc"]),
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "conex_lib", "test_util"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "conex_lib",
+        "test_util",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "approximate_eigenvalues_test",
-    srcs = glob(["test/approximate_eigenvalues.cc", "debug_macros.h"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "@eigen", "approximate_eigenvalues", "conex_lib"],
+    srcs = glob([
+        "test/approximate_eigenvalues.cc",
+        "debug_macros.h",
+    ]),
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "approximate_eigenvalues",
+        "conex_lib",
+        "@eigen",
+        "@gtest//:main",
+    ],
 )
 
 cc_library(
     name = "approximate_eigenvalues",
-    hdrs = [ "approximate_eigenvalues.h"],
     srcs = ["approximate_eigenvalues.cc"],
+    hdrs = ["approximate_eigenvalues.h"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen" ],
+    deps = ["@eigen"],
 )
 
 cc_test(
     name = "matrix_exponential_test",
     srcs = glob(["test/matrix_exponential_test.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "@eigen", "matrix_exponential"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "matrix_exponential",
+        "@eigen",
+        "@gtest//:main",
+    ],
 )
 
 cc_library(
     name = "matrix_exponential",
-    hdrs = [ "matrix_exponential.h"],
-    srcs = ["matrix_exponential.cc", "debug_macros.h"],
+    srcs = [
+        "debug_macros.h",
+        "matrix_exponential.cc",
+    ],
+    hdrs = ["matrix_exponential.h"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen" ],
+    deps = ["@eigen"],
 )
 
 cc_library(
     name = "jordan_matrix_algebra",
-    hdrs = [ "jordan_matrix_algebra.h"],
-    srcs = ["jordan_matrix_algebra.cc", "debug_macros.h"],
+    srcs = [
+        "debug_macros.h",
+        "jordan_matrix_algebra.cc",
+    ],
+    hdrs = ["jordan_matrix_algebra.h"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "eigen_decomp" ],
+    deps = [
+        "eigen_decomp",
+        "@eigen",
+    ],
 )
 
 cc_test(
     name = "jordan_matrix_algebra_test",
     srcs = ["test/jordan_matrix_algebra_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "jordan_matrix_algebra", "conex_lib"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "conex_lib",
+        "jordan_matrix_algebra",
+        "@gtest//:main",
+    ],
 )
 
 cc_library(
     name = "vect_jordan_matrix_algebra",
-    hdrs = [ "vect_jordan_matrix_algebra.h"],
-    srcs = ["vect_jordan_matrix_algebra.cc", "debug_macros.h"],
+    srcs = [
+        "debug_macros.h",
+        "vect_jordan_matrix_algebra.cc",
+    ],
+    hdrs = ["vect_jordan_matrix_algebra.h"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "eigen_decomp" ],
+    deps = [
+        "eigen_decomp",
+        "@eigen",
+    ],
 )
 
 cc_test(
     name = "vect_jordan_matrix_algebra_test",
     srcs = ["test/vect_jordan_matrix_algebra_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "vect_jordan_matrix_algebra"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "vect_jordan_matrix_algebra",
+        "@gtest//:main",
+    ],
 )
+
 cc_library(
     name = "eigen_decomp",
-    hdrs = [ "eigen_decomp.h"],
-    srcs = ["eigen_decomp.cc", "eigen_decomp.h"],
+    srcs = [
+        "eigen_decomp.cc",
+        "eigen_decomp.h",
+    ],
+    hdrs = ["eigen_decomp.h"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen" ],
+    deps = ["@eigen"],
 )
 
 cc_test(
     name = "exponential_map_test",
     srcs = ["test/exponential_map_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "exponential_map"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "exponential_map",
+        "@gtest//:main",
+    ],
 )
+
 cc_library(
     name = "exponential_map",
-    hdrs = ["exponential_map.h"],
     srcs = ["exponential_map.cc"],
+    hdrs = ["exponential_map.h"],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "vect_jordan_matrix_algebra" ],
+    deps = [
+        "vect_jordan_matrix_algebra",
+        "@eigen",
+    ],
 )
 
 cc_test(
     name = "supernodal_solver_test",
     srcs = ["test/supernodal_solver_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "supernodal_solver"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "supernodal_solver",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "block_triangular_operations_test",
     srcs = ["test/block_triangular_operations_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "supernodal_solver"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "supernodal_solver",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "clique_ordering_test",
     srcs = ["test/clique_ordering_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"], 
-    deps = ["@gtest//:main", "supernodal_solver"],
+    copts = ["-Iexternal/gtest/include -O0"],
+    deps = [
+        "supernodal_solver",
+        "@gtest//:main",
+    ],
 )
 
 cc_test(
     name = "assembly_test",
     srcs = ["test/assembly_test.cc"],
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "supernodal_solver"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "supernodal_solver",
+        "@gtest//:main",
+    ],
 )
 
 cc_library(
     name = "supernodal_solver",
-    hdrs = ["kkt_solver.h", "constraint.h", "debug_macros.h", "workspace.h", "newton_step.h",
-            "error_checking_macros.h", "error_codes.h", "constraint_manager.h",
-            "kkt_assembler.h", "linear_workspace.h", "memory_utils.h",
-            "kkt_system_assembler.h", "supernodal_cholesky_data.h",
-            "equality_constraint.h", "supernodal_solver.h",
-            "triangular_matrix_workspace.h", "block_triangular_operations.h",
-            "clique_ordering.h"],
-    srcs = ["kkt_solver.cc", 
-            "kkt_assembler.cc", 
-            "supernodal_solver.cc", 
-            "triangular_matrix_workspace.cc", 
-            "debug_macros.h", 
-            "block_triangular_operations.cc", 
-            "clique_ordering.cc"],
+    srcs = [
+        "block_triangular_operations.cc",
+        "clique_ordering.cc",
+        "debug_macros.h",
+        "kkt_assembler.cc",
+        "kkt_solver.cc",
+        "supernodal_solver.cc",
+        "triangular_matrix_workspace.cc",
+    ],
+    hdrs = [
+        "block_triangular_operations.h",
+        "clique_ordering.h",
+        "constraint.h",
+        "constraint_manager.h",
+        "debug_macros.h",
+        "equality_constraint.h",
+        "error_checking_macros.h",
+        "error_codes.h",
+        "kkt_assembler.h",
+        "kkt_solver.h",
+        "kkt_system_assembler.h",
+        "linear_workspace.h",
+        "memory_utils.h",
+        "newton_step.h",
+        "supernodal_cholesky_data.h",
+        "supernodal_solver.h",
+        "triangular_matrix_workspace.h",
+        "workspace.h",
+    ],
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
 
 cc_library(
     name = "conex_lib",
-    hdrs = ["cone_program.h",
-            "constraint.h",
-            "debug_macros.h",
-            "dense_lmi_constraint.h",
-            "divergence.h",
-            "elimination_ordering.h",
-            "hermitian_psd.h",
-            "linear_constraint.h",
-            "error_checking_macros.h",
-            "error_codes.h",
-            "memory_utils.h",
-            "newton_step.h",
-            "psd_constraint.h",
-            "quadratic_cone_constraint.h",
-            "soc_constraint.h",
-            "workspace.h",
-            "workspace_soc.h"],
-    srcs = ["cone_program.cc",
-            "dense_lmi_constraint.cc",
-            "divergence.cc",
-            "elimination_ordering.cc",
-            "hermitian_psd.cc",
-            "linear_constraint.cc",
-            "psd_constraint.cc",
-            "quadratic_cone_constraint.cc",
-            "soc_constraint.cc"],
+    srcs = [
+        "cone_program.cc",
+        "dense_lmi_constraint.cc",
+        "divergence.cc",
+        "elimination_ordering.cc",
+        "hermitian_psd.cc",
+        "linear_constraint.cc",
+        "psd_constraint.cc",
+        "quadratic_cone_constraint.cc",
+        "soc_constraint.cc",
+    ],
+    hdrs = [
+        "cone_program.h",
+        "constraint.h",
+        "debug_macros.h",
+        "dense_lmi_constraint.h",
+        "divergence.h",
+        "elimination_ordering.h",
+        "error_checking_macros.h",
+        "error_codes.h",
+        "hermitian_psd.h",
+        "linear_constraint.h",
+        "memory_utils.h",
+        "newton_step.h",
+        "psd_constraint.h",
+        "quadratic_cone_constraint.h",
+        "soc_constraint.h",
+        "workspace.h",
+        "workspace_soc.h",
+    ],
     visibility = ["//visibility:public"],
-    deps = [ "@eigen", "supernodal_solver", "approximate_eigenvalues", "matrix_exponential", "exponential_map", "vect_jordan_matrix_algebra", "eigen_decomp" ],
+    deps = [
+        "approximate_eigenvalues",
+        "eigen_decomp",
+        "exponential_map",
+        "matrix_exponential",
+        "supernodal_solver",
+        "vect_jordan_matrix_algebra",
+        "@eigen",
+    ],
 )
