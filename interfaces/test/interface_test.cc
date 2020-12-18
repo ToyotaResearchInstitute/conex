@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 
 TEST(TestArguments, AddLMI) {
-  void* p = ConexCreateConeProgram();
+  void* p = CONEX_CreateConeProgram();
   int constraint_id = 0;
   EXPECT_TRUE(CONEX_NewLinearMatrixInequality(p, 2, 2, &constraint_id) == CONEX_SUCCESS);
   EXPECT_EQ(0, constraint_id);
@@ -22,11 +22,11 @@ TEST(TestArguments, AddLMI) {
 
   int bad_order = 0;
   EXPECT_TRUE(CONEX_NewLinearMatrixInequality(p, bad_order, 2, &constraint_id) == CONEX_FAILURE);
-  ConexDeleteConeProgram(p);
+  CONEX_DeleteConeProgram(p);
 }
 
 TEST(TestArguments, UpdateLMI) {
-  void* p = ConexCreateConeProgram();
+  void* p = CONEX_CreateConeProgram();
 
   int status;
   int constraint_id = 0;
@@ -68,5 +68,5 @@ TEST(TestArguments, UpdateLMI) {
 
   status = CONEX_UpdateAffineTerm(p, constraint_id, .3, 0, 0, hyper_complex_dim - 1);
   EXPECT_EQ(CONEX_FAILURE, status); 
-  ConexDeleteConeProgram(p);
+  CONEX_DeleteConeProgram(p);
 }

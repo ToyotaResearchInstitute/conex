@@ -58,7 +58,7 @@ class LMIOperator:
 class Conex:
     def __init__(self, m = 0):
         self.wrapper = conex
-        self.a = self.wrapper.ConexCreateConeProgram();
+        self.a = self.wrapper.CONEX_CreateConeProgram();
         self.wrapper.CONEX_SetNumberOfVariables(self.a, m);
         self.num_constraints = 0
         self.num_lmi_constraints = 0
@@ -68,7 +68,7 @@ class Conex:
         self.m = m
 
     def __del__(self): 
-        self.wrapper.ConexDeleteConeProgram(self.a);
+        self.wrapper.CONEX_DeleteConeProgram(self.a);
 
     def GetIterationStats(self):
         stats = self.GetIterationNumberStats(-1)
@@ -83,11 +83,11 @@ class Conex:
 
     def GetIterationNumberStats(self, num):
         stats = self.wrapper.ConexIterationStats()
-        self.wrapper.ConexGetIterationStats(self.a, stats, num)
+        self.wrapper.CONEX_GetIterationStats(self.a, stats, num)
         return stats
 
     def AddLinearInequality(self, A, c): 
-        const_id = self.wrapper.ConexAddDenseLinearConstraint(self.a, A, c)
+        const_id = self.wrapper.CONEX_AddDenseLinearConstraint(self.a, A, c)
         self.m = A.shape[1]
         self.n = A.shape[0]
         self.A.append(np.matrix(A))
@@ -96,7 +96,7 @@ class Conex:
 
     def DefaultConfiguration(self):
         config = self.wrapper.ConexSolverConfiguration()
-        self.wrapper.ConexSetDefaultOptions(config);
+        self.wrapper.CONEX_SetDefaultOptions(config);
         config.inv_sqrt_mu_max = 1000
         config.maximum_mu = 1e20
         config.max_iterations = 100
@@ -131,7 +131,7 @@ class Conex:
             n2 = c.shape[0]
             n1 = c.shape[1]
             xi = np.ones((n1, n2)).astype(real)
-            self.wrapper.ConexGetDualVariable(self.a, i, xi)
+            self.wrapper.CONEX_GetDualVariable(self.a, i, xi)
             xi = np.matrix(xi).transpose()
             x.append(xi)
 
@@ -171,7 +171,7 @@ class Conex:
 
         variables = np.arange(0, self.m)
         variables = variables.astype('int_')
-        self.wrapper.ConexAddDenseLMIConstraint(self.a, A, c)
+        self.wrapper.CONEX_AddDenseLMIConstraint(self.a, A, c)
         self.num_constraints = self.num_constraints + 1
 
     def AddSparseLinearMatrixInequality(self, A, c, variables): 
@@ -182,7 +182,7 @@ class Conex:
         self.c.append(c)
 
         variables = np.array(variables).astype('int_')
-        self.wrapper.ConexAddSparseLMIConstraint(self.a, A, c, variables) 
+        self.wrapper.CONEX_AddSparseLMIConstraint(self.a, A, c, variables) 
         self.num_constraints = self.num_constraints + 1
 
     def ComputeErrors(self, y, xa, b):

@@ -1,45 +1,44 @@
 #include "conex.h"
 
 #include <iostream>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include <Eigen/Dense>
 
-#include "conex/linear_constraint.h"
-#include "conex/soc_constraint.h"
 #include "conex/cone_program.h"
+#include "conex/constraint.h"
 #include "conex/dense_lmi_constraint.h"
 #include "conex/hermitian_psd.h"
-#include "conex/constraint.h"
+#include "conex/linear_constraint.h"
+#include "conex/soc_constraint.h"
 
 #include "conex/error_checking_macros.h"
 // TODO(FrankPermenter): check for null pointers.
 
-#define SAFER_CAST_TO_Program(x, prog) \
-    CONEX_DEMAND(x, "Program pointer is null.");\
-    prog = static_cast<Program*>(x); \
-    if (prog->is_initialized) { \
-      if (prog->NumberOfConstraints() + 2 != static_cast<int>(prog->workspaces.size())) { \
-        CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
-      } \
-    } else { \
-      if (prog->workspaces.size() != 0) { \
-        CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
-      } \
-    } \
-    CONEX_DEMAND(prog, "Program corrupted or invalid pointer."); 
-
-
+#define SAFER_CAST_TO_Program(x, prog)                              \
+  CONEX_DEMAND(x, "Program pointer is null.");                      \
+  prog = static_cast<Program*>(x);                                  \
+  if (prog->is_initialized) {                                       \
+    if (prog->NumberOfConstraints() + 2 !=                          \
+        static_cast<int>(prog->workspaces.size())) {                \
+      CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
+    }                                                               \
+  } else {                                                          \
+    if (prog->workspaces.size() != 0) {                             \
+      CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
+    }                                                               \
+  }                                                                 \
+  CONEX_DEMAND(prog, "Program corrupted or invalid pointer.");
 
 using DenseMatrix = Eigen::MatrixXd;
-using conex::SolverConfiguration;
 using conex::DenseLMIConstraint;
-using conex::Program;
 using conex::HermitianPsdConstraint;
+using conex::Program;
+using conex::SolverConfiguration;
 
-int ConexSolve(void* prog_ptr, const double*b, int br, const ConexSolverConfiguration*
-               config, double* y, int yr) {
+int ConexSolve(void* prog_ptr, const double* b, int br,
+               const ConexSolverConfiguration* config, double* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);
   DenseMatrix blinear = bmap;
@@ -60,7 +59,7 @@ int ConexSolve(void* prog_ptr, const double*b, int br, const ConexSolverConfigur
   return Solve(blinear, prog, c, y);
 }
 
-void ConexGetDualVariable(void* prog_ptr, int i, double* x, int xr,  int xc) {
+void CONEX_GetDualVariable(void* prog_ptr, int i, double* x, int xr, int xc) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
   assert(prog.constraints.at(i)->dual_variable_size() == xr * xc);
 
@@ -72,22 +71,21 @@ void ConexGetDualVariable(void* prog_ptr, int i, double* x, int xr,  int xc) {
   xmap.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
 }
 
-int ConexGetDualVariableSize(void* prog_ptr, int i) {
+int CONEX_GetDualVariableSize(void* prog_ptr, int i) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
   return prog.constraints.at(i)->dual_variable_size();
 }
 
-void* ConexCreateConeProgram() {
+void* CONEX_CreateConeProgram() {
   return reinterpret_cast<void*>(new Program(0));
 }
 
-void ConexDeleteConeProgram(void* prog) {
+void CONEX_DeleteConeProgram(void* prog) {
   delete reinterpret_cast<Program*>(prog);
 }
 
-int ConexAddDenseLMIConstraint(void* prog,
-  const double* A, int Ar, int Ac, int m,
-  const double* c, int cr, int cc) {
+int CONEX_AddDenseLMIConstraint(void* prog, const double* A, int Ar, int Ac,
+                                int m, const double* c, int cr, int cc) {
   assert(Ar == Ac);
   assert(Ar == cr);
   assert(cc == cr);
@@ -104,17 +102,16 @@ int ConexAddDenseLMIConstraint(void* prog,
 
   int n = cc;
 
-  DenseLMIConstraint T3{n,  Avect, Cmap};
+  DenseLMIConstraint T3{n, Avect, Cmap};
   auto& program = *reinterpret_cast<Program*>(prog);
   int constraint_id = program.NumberOfConstraints();
   program.AddConstraint(T3);
   return constraint_id;
 }
 
-int ConexAddSparseLMIConstraint(void* prog,
-  const double* A, int Ar, int Ac, int num_vars,
-  const double* c, int cr, int cc,
-  const long *vars, int vars_rows) {
+int CONEX_AddSparseLMIConstraint(void* prog, const double* A, int Ar, int Ac,
+                                 int num_vars, const double* c, int cr, int cc,
+                                 const long* vars, int vars_rows) {
   assert(Ar == Ac);
   assert(Ar == cr);
   assert(cc == cr);
@@ -133,7 +130,6 @@ int ConexAddSparseLMIConstraint(void* prog,
   }
   InputMatrix Cmap(c, cr, cc);
 
-
   conex::SparseLMIConstraint T3{Avect, Cmap, variables};
   auto& program = *reinterpret_cast<Program*>(prog);
   int constraint_id = program.NumberOfConstraints();
@@ -141,9 +137,8 @@ int ConexAddSparseLMIConstraint(void* prog,
   return constraint_id;
 }
 
-int ConexAddDenseLinearConstraint(void* prog,
-  const double* A, int Ar, int Ac,
-  const double* c, int cr) {
+int CONEX_AddDenseLinearConstraint(void* prog, const double* A, int Ar, int Ac,
+                                   const double* c, int cr) {
   assert(Ar == cr);
 
   int n = Ar;
@@ -157,7 +152,7 @@ int ConexAddDenseLinearConstraint(void* prog,
   return constraint_id;
 }
 
-void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
+void CONEX_SetDefaultOptions(ConexSolverConfiguration* c) {
   if (c == NULL) {
     std::cerr << "Received null pointer.";
     return;
@@ -166,7 +161,7 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   c->prepare_dual_variables = config.prepare_dual_variables;
   c->max_iterations = config.max_iterations;
   c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  c->maximum_mu = config.maximum_mu; 
+  c->maximum_mu = config.maximum_mu;
   c->minimum_mu = config.minimum_mu;
   c->divergence_upper_bound = config.divergence_upper_bound;
   c->final_centering_steps = config.final_centering_steps;
@@ -174,7 +169,8 @@ void ConexSetDefaultOptions(ConexSolverConfiguration* c) {
   c->initialization_mode = config.initialization_mode;
 }
 
-void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num_circular) {
+void CONEX_GetIterationStats(void* prog, ConexIterationStats* stats,
+                             int iter_num_circular) {
   if ((prog == NULL) || (stats == NULL)) {
     std::cerr << "Received null pointer.";
     return;
@@ -196,25 +192,29 @@ void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num
     std::cerr << "Specified iteration is out of bounds.";
     return;
   }
-  stats->mu = 1.0/(program.stats.sqrt_inv_mu[iter_num] *
-                            program.stats.sqrt_inv_mu[iter_num]); 
+  stats->mu = 1.0 / (program.stats.sqrt_inv_mu[iter_num] *
+                     program.stats.sqrt_inv_mu[iter_num]);
   stats->iteration_number = iter_num;
 }
 
-int CONEX_UpdateLinearOperator(void* p, int constraint, int variable, int
-                                hyper_complex_dim, int value, int row, int col) {
-//  CONEX_DEMAND(p);
-//  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 || 
-//               hyper_complex_dim == 4 || hyper_complex_dim == 8);
-//
+int CONEX_UpdateLinearOperator(void* p, int constraint, int variable,
+                               int hyper_complex_dim, int value, int row,
+                               int col) {
+  //  CONEX_DEMAND(p);
+  //  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 ||
+  //               hyper_complex_dim == 4 || hyper_complex_dim == 8);
+  //
   return CONEX_SUCCESS;
 }
 
-CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order, int hyper_complex_dim, int* constraint_id) {
+CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order,
+                                             int hyper_complex_dim,
+                                             int* constraint_id) {
   CONEX_DEMAND(order >= 1, "Invalid LMI dimensions.");
   CONEX_DEMAND(constraint_id, "Received output null pointer.");
-  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 || 
-               hyper_complex_dim == 4 || hyper_complex_dim == 8, "Hypercomplex dimension must be 1, 2, 4, or 8.");
+  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 ||
+                   hyper_complex_dim == 4 || hyper_complex_dim == 8,
+               "Hypercomplex dimension must be 1, 2, 4, or 8.");
 
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
@@ -230,34 +230,39 @@ CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order, int hyper_compl
       prg->AddConstraint(HermitianPsdConstraint<conex::Quaternions>(order));
       break;
     case 8:
-      CONEX_DEMAND(order <= 3, "Order of octonion algebra cannot be greater than 3.");
+      CONEX_DEMAND(order <= 3,
+                   "Order of octonion algebra cannot be greater than 3.");
       prg->AddConstraint(HermitianPsdConstraint<conex::Octonions>(order));
   }
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
 }
 
-
-CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value, int variable, 
-                                        int row, int col, int hyper_complex_dim) {
+CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value,
+                                        int variable, int row, int col,
+                                        int hyper_complex_dim) {
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
   CONEX_DEMAND(constraint < prg->NumberOfConstraints(), "Invalid Constraint.");
-  return UpdateLinearOperator(prg->constraints.at(constraint), value, variable, 
+  return UpdateLinearOperator(prg->constraints.at(constraint), value, variable,
                               row, col, hyper_complex_dim);
-
 }
 
 CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value,
-                                        int row, int col, int hyper_complex_dim) {
+                                    int row, int col, int hyper_complex_dim) {
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
-  CONEX_DEMAND(constraint < static_cast<int>(prg->constraints.size()), "Invalid Constraint.");
-  return UpdateAffineTerm(prg->constraints.at(constraint), value, row, col, hyper_complex_dim);
+  CONEX_DEMAND(constraint < static_cast<int>(prg->constraints.size()),
+               "Invalid Constraint.");
+  return UpdateAffineTerm(prg->constraints.at(constraint), value, row, col,
+                          hyper_complex_dim);
 }
 
-CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order, int* constraint_id) {
-  CONEX_DEMAND(order >= 1, "Received invalid n. Second order cone must have order (n + 1) >= 2.");
+CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order,
+                                            int* constraint_id) {
+  CONEX_DEMAND(
+      order >= 1,
+      "Received invalid n. Second order cone must have order (n + 1) >= 2.");
   CONEX_DEMAND(constraint_id, "Received output null pointer.");
 
   Program* prg;
@@ -272,7 +277,8 @@ CONEX_STATUS CONEX_SetNumberOfVariables(void* p, int number_of_variables) {
   CONEX_DEMAND(number_of_variables >= 1, "Number of variables must be > 0.");
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
-  CONEX_DEMAND(prg->GetNumberOfVariables() == 0, "Number of variables already set.");
-  prg-> SetNumberOfVariables(number_of_variables);
+  CONEX_DEMAND(prg->GetNumberOfVariables() == 0,
+               "Number of variables already set.");
+  prg->SetNumberOfVariables(number_of_variables);
   return CONEX_SUCCESS;
 }

@@ -1,12 +1,11 @@
 #ifndef CONEX_API_H
 #define CONEX_API_H
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef int CONEX_STATUS;
-enum { CONEX_SUCCESS = 0, CONEX_FAILURE = 1};
+enum { CONEX_SUCCESS = 0, CONEX_FAILURE = 1 };
 
 typedef struct {
   int prepare_dual_variables;
@@ -16,7 +15,7 @@ typedef struct {
   double maximum_mu;
   double divergence_upper_bound;
   int final_centering_steps;
-  double infeasibility_threshold; 
+  double infeasibility_threshold;
   double initialization_mode;
   int collect_statistics;
 } ConexSolverConfiguration;
@@ -30,52 +29,52 @@ typedef struct {
   int iterations;
 } ConexSolutionStats;
 
+void* CONEX_CreateConeProgram();
+void CONEX_DeleteConeProgram(void*);
 
-void* ConexCreateConeProgram();
-void ConexDeleteConeProgram(void*);
-
-int ConexAddDenseLinearConstraint(void* prog,
-  const double* A, int Ar, int Ac,
-  const double* c, int cr);
-
+int CONEX_AddDenseLinearConstraint(void* prog, const double* A, int Ar, int Ac,
+                                   const double* c, int cr);
 
 //  Parameters Aarrayr, Aarrayc, cr, cc all equal the
 //  order n of LMI.
 // TODO(FrankPermenter): update this.
-int ConexAddDenseLMIConstraint(void* prog,
-  const double* Aarray, int Aarrayr, int Aarrayc, int m,
-  const double* cmat, int cr, int cc);
+int CONEX_AddDenseLMIConstraint(void* prog, const double* Aarray, int Aarrayr,
+                                int Aarrayc, int m, const double* cmat, int cr,
+                                int cc);
 
-int ConexAddSparseLMIConstraint(void* prog,
-  const double* Aarray, int Aarrayr, int Aarrayc, int m,
-  const double* cmat, int cr, int cc,
-  const long* vars, int vars_c);
+int CONEX_AddSparseLMIConstraint(void* prog, const double* Aarray, int Aarrayr,
+                                 int Aarrayc, int m, const double* cmat, int cr,
+                                 int cc, const long* vars, int vars_c);
 
-int ConexSolve(void* prog, const double*b, int br, const ConexSolverConfiguration* config, 
-                double* y, int yr);
+int ConexSolve(void* prog, const double* b, int br,
+               const ConexSolverConfiguration* config, double* y, int yr);
 
-void ConexGetDualVariable(void* prog, int i, double* x, int xr, int xc);
+void CONEX_GetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
-int ConexGetDualVariableSize(void* prog_ptr, int i);
+int CONEX_GetDualVariableSize(void* prog_ptr, int i);
 
 // TODO(FrankPermenter): Rename Options to Configuration
-void ConexSetDefaultOptions(ConexSolverConfiguration* config);
+void CONEX_SetDefaultOptions(ConexSolverConfiguration* config);
 
-void ConexGetIterationStats(void* prog, ConexIterationStats* stats, int iter_num);
+void CONEX_GetIterationStats(void* prog, ConexIterationStats* stats,
+                             int iter_num);
 
-CONEX_STATUS CONEX_UpdateLinearOperator(void* program, int constraint, double value, int variable, 
-                                        int row, int col, int hyper_complex_dim);
+CONEX_STATUS CONEX_UpdateLinearOperator(void* program, int constraint,
+                                        double value, int variable, int row,
+                                        int col, int hyper_complex_dim);
 
-CONEX_STATUS CONEX_NewLinearMatrixInequality(void* program, int order, int  hyper_complex_dim, 
-                                    int *constraint_id);
+CONEX_STATUS CONEX_NewLinearMatrixInequality(void* program, int order,
+                                             int hyper_complex_dim,
+                                             int* constraint_id);
 
 CONEX_STATUS CONEX_UpdateAffineTerm(void* program, int constraint, double value,
-                                        int row, int col, int hyper_complex_dim);
+                                    int row, int col, int hyper_complex_dim);
 
-CONEX_STATUS CONEX_NewLorentzConeConstraint(void* program, int order, int *constraint_id);
+CONEX_STATUS CONEX_NewLorentzConeConstraint(void* program, int order,
+                                            int* constraint_id);
 CONEX_STATUS CONEX_SetNumberOfVariables(void* program, int m);
 
 #ifdef __cplusplus
-} // extern "C"
+}  // extern "C"
 #endif
 #endif

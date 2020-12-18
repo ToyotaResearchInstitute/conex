@@ -3,7 +3,7 @@
 
 
 int main() {
-  void* p = ConexCreateConeProgram();
+  void* p = CONEX_CreateConeProgram();
 
   int status;
   int constraint_id = 0;
@@ -27,8 +27,8 @@ int main() {
 
   std::cout << status;
   ConexSolverConfiguration config;
-  ConexSetDefaultOptions(&config);
+  CONEX_SetDefaultOptions(&config);
   ConexSolve(p, &b[0], num_vars, &config, &y[0], num_vars);
 
-  ConexDeleteConeProgram(p);
+  CONEX_DeleteConeProgram(p);
 }

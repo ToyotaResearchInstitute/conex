@@ -29,17 +29,17 @@ classdef ConexProgram < handle
       if ~libisloaded('libconex')
         loadlibrary libconex.so conex.h
       end
-      self.p = calllib('libconex', 'ConexCreateConeProgram');
+      self.p = calllib('libconex', 'CONEX_CreateConeProgram');
       calllib('libconex', 'CONEX_SetNumberOfVariables', self.p, num_vars); 
       self.options = libstruct('ConexSolverConfiguration');
       % Force matlab to allocate memory for options
       self.options.divergence_upper_bound = 1;
-      calllib('libconex', 'ConexSetDefaultOptions', self.options);
+      calllib('libconex', 'CONEX_SetDefaultOptions', self.options);
       self.options.prepare_dual_variables = 1;
     end
 
     function delete(self)
-      calllib('libconex', 'ConexDeleteConeProgram', self.p);
+      calllib('libconex', 'CONEX_DeleteConeProgram', self.p);
     end
 
     function AddLinearInequality(self, A, c)
@@ -47,7 +47,7 @@ classdef ConexProgram < handle
       num_constraint = size(A, 1);
       Aptr = libpointer('doublePtr', full(A(:)));
       Cptr = libpointer('doublePtr', full(c));
-      self.constraints(end+1) = calllib('libconex', 'ConexAddDenseLinearConstraint', self.p, Aptr,  ...
+      self.constraints(end+1) = calllib('libconex', 'CONEX_AddDenseLinearConstraint', self.p, Aptr,  ...
       num_constraint, num_var, Cptr, num_constraint);
     end
 
@@ -60,9 +60,9 @@ classdef ConexProgram < handle
     end
 
     function x = GetDualVariable(self, i)
-       dual_var_size = calllib('libconex', 'ConexGetDualVariableSize', self.p, i);
+       dual_var_size = calllib('libconex', 'CONEX_GetDualVariableSize', self.p, i);
        xptr = libpointer('doublePtr', zeros(dual_var_size, 1));
-       dual_var_size = calllib('libconex', 'ConexGetDualVariable', self.p, i, xptr, dual_var_size, 1);
+       dual_var_size = calllib('libconex', 'CONEX_GetDualVariable', self.p, i, xptr, dual_var_size, 1);
        x = xptr.Value;
     end
 
@@ -71,7 +71,7 @@ classdef ConexProgram < handle
 
       Aptr = libpointer('doublePtr', full(A(:)));
       Cptr = libpointer('doublePtr', full(c));
-      self.constraints(end + 1) = calllib('libconex', 'ConexAddDenseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n);
+      self.constraints(end + 1) = calllib('libconex', 'CONEX_AddDenseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n);
     end
 
     function AddSparseLinearMatrixInequality(self, A, c, vars)
@@ -80,7 +80,7 @@ classdef ConexProgram < handle
       Aptr = libpointer('doublePtr', full(A(:)));
       Cptr = libpointer('doublePtr', full(c));
       varPtr = libpointer('longPtr', full(vars));
-      self.constraints(end + 1) = calllib('libconex', 'ConexAddSparseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n, varPtr, m);
+      self.constraints(end + 1) = calllib('libconex', 'CONEX_AddSparseLMIConstraint', self.p, Aptr,  n, n, m, Cptr, n, n, varPtr, m);
     end
 
     function [y, x, status] = Maximize(self, b)
