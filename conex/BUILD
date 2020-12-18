@@ -55,20 +55,6 @@ cc_test(
     deps = ["@gtest//:main", "conex_lib", "test_util"],
 )
 
-cc_library(
-    name = "cholesky",
-    srcs = glob(["debug_macros.h", "test/util.h", "cholesky_decomposition.h", "cholesky_decomposition.cc", "elimination_ordering.cc", "elimination_ordering.h"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@eigen"],
-)
-
-cc_test(
-    name = "cholesky_test",
-    srcs = glob(["test/cholesky_test.cc"]),
-    copts = ["-Iexternal/gtest/include"], 
-    deps = ["@gtest//:main", "@eigen", "cholesky"],
-)
-
 cc_test(
     name = "approximate_eigenvalues_test",
     srcs = glob(["test/approximate_eigenvalues.cc", "debug_macros.h"]),
@@ -200,8 +186,7 @@ cc_library(
 
 cc_library(
     name = "conex_lib",
-    hdrs = ["cholesky_decomposition.h",
-            "cone_program.h",
+    hdrs = ["cone_program.h",
             "constraint.h",
             "debug_macros.h",
             "dense_lmi_constraint.h",
@@ -218,8 +203,7 @@ cc_library(
             "soc_constraint.h",
             "workspace.h",
             "workspace_soc.h"],
-    srcs = ["cholesky_decomposition.cc",
-            "cone_program.cc",
+    srcs = ["cone_program.cc",
             "dense_lmi_constraint.cc",
             "divergence.cc",
             "elimination_ordering.cc",

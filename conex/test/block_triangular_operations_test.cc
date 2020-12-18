@@ -6,9 +6,6 @@
 
 namespace conex {
 
-
-
-
 using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
@@ -49,13 +46,6 @@ TEST(LowerTri, Cholesky) {
   DoCholeskyTest({{0, 1, 2}, {1, 2, 3}, {3, 4, 2}});
   DoCholeskyTest({{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10}});
 }
-
-// Pick root A
-// for all elements B
-//    ( A \cap B )
-//  Order A B C
-//    B \subseteq A \cap C
-//
 
 void DoInverseTest(const std::vector<Clique>& cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
@@ -139,15 +129,6 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
   B::BlockLDLTInPlace(&mat.workspace_, &factorization);
 
-  i = 0;
-
-  // int i = 0;
-  for (auto ci : cliques) {
-    Eigen::PermutationMatrix<-1> P(factorization.at(i).transpositionsP());
-    //  MatrixXd L = factorization.at(i).matrixL();
-    //  MatrixXd D = factorization.at(i).vectorD().asDiagonal();
-    //  i++;
-  }
 
   Eigen::VectorXd z = Eigen::VectorXd::Random(X.cols());
   z.setConstant(0);
