@@ -197,15 +197,6 @@ void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,
   stats->iteration_number = iter_num;
 }
 
-int CONEX_UpdateLinearOperator(void* p, int constraint, int variable,
-                               int hyper_complex_dim, int value, int row,
-                               int col) {
-  //  CONEX_DEMAND(p);
-  //  CONEX_DEMAND(hyper_complex_dim == 1 || hyper_complex_dim == 2 ||
-  //               hyper_complex_dim == 4 || hyper_complex_dim == 8);
-  //
-  return CONEX_SUCCESS;
-}
 
 CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order,
                                              int hyper_complex_dim,
