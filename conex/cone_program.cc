@@ -186,6 +186,11 @@ bool Solve(const DenseMatrix& b, Program& prog,
   Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
 
   for (int i = 0; i < config.max_iterations; i++) {
+    if (i < 10) {
+      std::cout << "i:  " << i << ", ";
+    } else {
+      std::cout << "i: " << i << ", ";
+    }
     bool update_mu =
         (i == 0) || ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) &&
                      i < config.max_iterations - config.final_centering_steps);
@@ -194,7 +199,9 @@ bool Solve(const DenseMatrix& b, Program& prog,
       break;
     }
 
+    START_TIMER(Assemble)
     solver->Assemble(&AW, &AQc);
+    END_TIMER
 
     START_TIMER(Factor)
     solver->Factor();
@@ -231,18 +238,13 @@ bool Solve(const DenseMatrix& b, Program& prog,
     newton_step_parameters.c_weight = newton_step_parameters.inv_sqrt_mu;
 
     StepInfo info;
-    START_TIMER(Step)
+    START_TIMER(Update)
     TakeStep(&prog.kkt_system_manager_, newton_step_parameters, y, &info);
     END_TIMER
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
     const double d_inf = std::fabs(info.norminfd);
 
-    if (i < 10) {
-      std::cout << "i:  " << i << ", ";
-    } else {
-      std::cout << "i: " << i << ", ";
-    }
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);

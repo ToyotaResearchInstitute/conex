@@ -107,7 +107,6 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
 
   // Set to identity.
-  int i = 1;
   for (auto& sn : mat.workspace_.diagonal) {
     if (diagonal) {
       sn.setZero();

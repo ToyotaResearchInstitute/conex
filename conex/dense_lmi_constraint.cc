@@ -53,20 +53,16 @@ void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,
   if (initialize) {
     int n = Rank(*o);
     Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n * n);
-    START_TIMER(Mult)
     for (int i = 0; i < m; i++) {
       o->ComputeAW(i, W, &AW, &WAW);
-      // std::cerr << std::endl;
       sys->G.row(i).head(i + 1) =
           vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i + 1);
       sys->AW(i, 0) = AW.trace();
       sys->AQc(i, 0) = o->EvalDualObjective(WAW);
     }
-    END_TIMER
   } else {
     int n = Rank(*o);
     Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n * n);
-    // START_TIMER
     for (int i = 0; i < m; i++) {
       o->ComputeAW(i, W, &AW, &WAW);
       sys->G.row(i).head(i + 1) +=

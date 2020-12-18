@@ -120,8 +120,8 @@ class JacobiSolver {
   }
 
   MatrixXd W_;
-  int n_;
   VectorXd r0_;
+  int n_;
   std::vector<MatrixXd> powers_of_A_;
 };
 
