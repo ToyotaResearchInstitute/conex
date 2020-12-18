@@ -1,6 +1,6 @@
 #include "conex/exponential_map.h"
 
-#include "conex/vect_jordan_matrix_algebra.h"
+#include "conex/jordan_matrix_algebra.h"
 #include "gtest/gtest.h"
 
 #include <Eigen/Dense>

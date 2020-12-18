@@ -134,12 +134,12 @@ cc_library(
 
 
 cc_library(
-    name = "vect_jordan_matrix_algebra",
+    name = "jordan_matrix_algebra",
     srcs = [
         "debug_macros.h",
-        "vect_jordan_matrix_algebra.cc",
+        "jordan_matrix_algebra.cc",
     ],
-    hdrs = ["vect_jordan_matrix_algebra.h"],
+    hdrs = ["jordan_matrix_algebra.h"],
     visibility = ["//visibility:public"],
     deps = [
         "@eigen",
@@ -147,11 +147,11 @@ cc_library(
 )
 
 cc_test(
-    name = "vect_jordan_matrix_algebra_test",
-    srcs = ["test/vect_jordan_matrix_algebra_test.cc"],
+    name = "jordan_matrix_algebra_test",
+    srcs = ["test/jordan_matrix_algebra_test.cc"],
     copts = ["-Iexternal/gtest/include -O0"],
     deps = [
-        "vect_jordan_matrix_algebra",
+        "jordan_matrix_algebra",
         "test_util",
         "@gtest//:main",
     ],
@@ -173,7 +173,7 @@ cc_library(
     hdrs = ["exponential_map.h"],
     visibility = ["//visibility:public"],
     deps = [
-        "vect_jordan_matrix_algebra",
+        "jordan_matrix_algebra",
         "@eigen",
     ],
 )
@@ -289,7 +289,7 @@ cc_library(
         "exponential_map",
         "matrix_exponential",
         "supernodal_solver",
-        "vect_jordan_matrix_algebra",
+        "jordan_matrix_algebra",
         "@eigen",
     ],
 )

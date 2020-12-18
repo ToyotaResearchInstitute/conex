@@ -1,4 +1,4 @@
-#include "conex/vect_jordan_matrix_algebra.h"
+#include "conex/jordan_matrix_algebra.h"
 
 namespace conex {
 
