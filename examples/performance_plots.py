@@ -136,7 +136,7 @@ def CenteringConfig(mu):
     return config
 
 def GetCenteringIterates(A, b, c, mu):
-    prog = Conex()
+    prog = Conex(b.shape[0])
     prog.AddDenseLinearMatrixInequality(A, c)
 
     config = CenteringConfig(mu)
@@ -288,7 +288,7 @@ def SolveMixedConeProgram(num_variables, copies, config, hyper_complex_dim = [1,
         mu = [stats.mu for stats in prog.GetIterationStats()]
     return mu, rank 
 def SolveRandomSDP(num_variables, n, config, w0 = []):
-    prog = Conex()
+    prog = Conex(num_variables)
     A = np.ones((n, n, num_variables))
     for i in range(0, num_variables):
         A[:, :, i] = random_symmetric_matrix(n)
