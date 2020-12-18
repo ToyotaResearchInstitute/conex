@@ -1,4 +1,4 @@
-#include "matrix_exponential.h"
+#include "exponential_map_pade.h"
 #include <cmath>
 #include <complex>
 #include "debug_macros.h"
@@ -14,7 +14,6 @@ using Eigen::MatrixXd;
  */
 template <typename MatA, typename MatU, typename MatV>
 void matrix_exp_pade3(const MatA& A, MatU& U, MatV& V) {
-  // DUMP("3");
   typedef typename MatA::PlainObject MatrixType;
   const RealScalar b[] = {120.L, 60.L, 12.L, 1.L};
   const MatrixType A2 = A * A;
@@ -31,7 +30,6 @@ void matrix_exp_pade3(const MatA& A, MatU& U, MatV& V) {
  */
 template <typename MatA, typename MatU, typename MatV>
 void matrix_exp_pade5(const MatA& A, MatU& U, MatV& V) {
-  DUMP("5");
   typedef typename MatA::PlainObject MatrixType;
   const RealScalar b[] = {30240.L, 15120.L, 3360.L, 420.L, 30.L, 1.L};
   const MatrixType A2 = A * A;
@@ -49,7 +47,6 @@ void matrix_exp_pade5(const MatA& A, MatU& U, MatV& V) {
  */
 template <typename MatA, typename MatU, typename MatV>
 void matrix_exp_pade7(const MatA& A, MatU& U, MatV& V) {
-  DUMP("7");
   typedef typename MatA::PlainObject MatrixType;
   const RealScalar b[] = {17297280.L, 8648640.L, 1995840.L, 277200.L,
                           25200.L,    1512.L,    56.L,      1.L};
@@ -74,69 +71,6 @@ void matrix_exp_pade9(const MatA& A, MatU& U, MatV& V) {
   const RealScalar b[] = {
       17643225600.L, 8821612800.L, 2075673600.L, 302702400.L, 30270240.L,
       2162160.L,     110880.L,     3960.L,       90.L,        1.L};
-  // MatrixType tmp = b[1] * MatrixType::Identity(A.rows(), A.cols());
-  // V = b[0] * MatrixType::Identity(A.rows(), A.cols());
-
-  // const MatrixType A2 = A * A;
-  // tmp += b[3] * A2;
-  // V += b[2] * A2;
-
-  // const MatrixType A4 = A2 * A2;
-  // tmp += b[5] * A4;
-  // V += b[4] * A4;
-
-  // const MatrixType A6 = A4 * A2;
-  // tmp += b[7] * A6;
-  // V += b[6] * A6;
-
-  // const MatrixType A8 = A6 * A2;
-  // tmp += b[9] * A8;
-  // V += b[8] * A8;
-
-  ////const MatrixType tmp = b[9] * A8 + b[7] * A6 + b[5] * A4 + b[3] * A2 +
-  /// b[1] * MatrixType::Identity(A.rows(), A.cols());
-
-  // U.noalias() = A * tmp;
-  // V = b[8] * A8 + b[6] * A6 + b[4] * A4 + b[2] * A2 + b[0] *
-  // MatrixType::Identity(A.rows(), A.cols());
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-
-#if 0
-  MatrixType Apow1;
-  MatrixType Apow2;
-  V = b[0] * MatrixType::Identity(A.rows(), A.cols());
-  U = b[1] * A; 
-
-  Apow1 = A * A;
-  V += b[2] * Apow1;
-  Apow2 = A * Apow1;
-  U += b[3] * Apow2;
-
-  Apow1 = A * Apow2;
-  V += b[4] * Apow1;
-  Apow2 = A * Apow1;
-  U += b[5] * Apow2;
-
-  Apow1 = A * Apow2;
-  V += b[6] * Apow1;
-  Apow2 = A * Apow1;
-  U += b[7] * Apow2;
-
-  Apow1 = A * Apow2;
-  V += b[8] * Apow1;
-  Apow2 = A * Apow1;
-  U += b[9] * Apow2;
-#else
   MatrixType Asqr;
   MatrixType Apow;
   MatrixType Apow1;
@@ -159,7 +93,6 @@ void matrix_exp_pade9(const MatA& A, MatU& U, MatV& V) {
   V += b[8] * Apow;
   U += b[9] * Apow;
   U = A * U;
-#endif
 }
 
 /** \brief Compute the (13,13)-Pad&eacute; approximant to the exponential.
@@ -200,12 +133,12 @@ void matrix_exp_pade13(const MatA& A, MatU& U, MatV& V) {
 }
 
 template <typename RealScalar>
-struct MatrixExponentialScalingOp {
+struct ExponentialMapPadeApproximationScalingOp {
   /** \brief Constructor.
    *
    * \param[in] squarings  The integer \f$ s \f$ in this document.
    */
-  MatrixExponentialScalingOp(int squarings) : m_squarings(squarings) {}
+  ExponentialMapPadeApproximationScalingOp(int squarings) : m_squarings(squarings) {}
 
   /** \brief Scale a matrix coefficient.
    *
@@ -238,7 +171,7 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings) {
   using std::pow;
   const RealScalar l1norm = arg.cwiseAbs().colwise().sum().maxCoeff();
   squarings = 0;
-  if (true) {  // l1norm < 1.495585217958292e-002) {
+  if (true) {  
     matrix_exp_pade3(arg, U, V);
   } else if (l1norm < 2.539398330063230e-001) {
     matrix_exp_pade5(arg, U, V);
@@ -251,12 +184,12 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings) {
     frexp(l1norm / maxnorm, &squarings);
     if (squarings < 0) squarings = 0;
     MatrixType A =
-        arg.unaryExpr(MatrixExponentialScalingOp<RealScalar>(squarings));
+        arg.unaryExpr(ExponentialMapPadeApproximationScalingOp<RealScalar>(squarings));
     matrix_exp_pade13(A, U, V);
   }
 }
 
-void MatrixExponential(const Eigen::Ref<const Eigen::MatrixXd>& arg,
+void ExponentialMapPadeApproximation(const Eigen::Ref<const Eigen::MatrixXd>& arg,
                        Ref* result) {
   using MatrixType = MatrixXd;
   MatrixType U, V;

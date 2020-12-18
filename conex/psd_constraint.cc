@@ -1,7 +1,8 @@
 #include <cmath>
 
 #include "conex/approximate_eigenvalues.h"
-#include "conex/matrix_exponential.h"
+#include "conex/exponential_map_pade.h"
+#include "conex/exponential_map.h"
 #include "conex/psd_constraint.h"
 
 namespace conex {
@@ -20,7 +21,7 @@ void PsdConstraint::GeodesicUpdate(double scale, const StepOptions& opt,
     (*WS) *= scale;
   }
 
-  MatrixExponential(*WS, &expWS);
+  ExponentialMapPadeApproximation(*WS, &expWS);
   W = expWS * W;
   *WS = W.transpose();
   W = (W + (*WS)) * 0.5;

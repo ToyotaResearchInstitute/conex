@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "conex/matrix_exponential.h"
+#include "conex/exponential_map_pade.h"
 
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
@@ -16,7 +16,7 @@ using Eigen::Map;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-TEST(MatrixExponential, CompareWithEigen) {
+TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
   int n = 4;
   MatrixXd A(n, n);
   // clang-format off
@@ -31,7 +31,7 @@ TEST(MatrixExponential, CompareWithEigen) {
   MatrixXd calculated(n, n);
 
   Map<MatrixXd, Eigen::Aligned> map(calculated.data(), n, n);
-  MatrixExponential(A, &map);
+  ExponentialMapPadeApproximation(A, &map);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       EXPECT_NEAR(reference(i, j), calculated(i, j), 1e-7);

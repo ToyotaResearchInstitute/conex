@@ -165,8 +165,8 @@ HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x,
       return DoGeodesicUpdateScaled<Octonions>(x, s);
       break;
     default:
-      bool valid_xuments = false;
-      assert(valid_xuments);
+      bool valid_arguments = false;
+      assert(valid_arguments);
   }
   // Unreachable
   return x;

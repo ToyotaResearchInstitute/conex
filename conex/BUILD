@@ -111,27 +111,26 @@ cc_library(
 )
 
 cc_test(
-    name = "matrix_exponential_test",
-    srcs = glob(["test/matrix_exponential_test.cc"]),
+    name = "exponential_map_pade_test",
+    srcs = glob(["test/exponential_map_pade_test.cc"]),
     copts = ["-Iexternal/gtest/include"],
     deps = [
-        "matrix_exponential",
+        "exponential_map_pade",
         "@eigen",
         "@gtest//:main",
     ],
 )
 
 cc_library(
-    name = "matrix_exponential",
+    name = "exponential_map_pade",
     srcs = [
         "debug_macros.h",
-        "matrix_exponential.cc",
+        "exponential_map_pade.cc",
     ],
-    hdrs = ["matrix_exponential.h"],
+    hdrs = ["exponential_map_pade.h"],
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
-
 
 cc_library(
     name = "jordan_matrix_algebra",
@@ -287,9 +286,9 @@ cc_library(
     deps = [
         "approximate_eigenvalues",
         "exponential_map",
-        "matrix_exponential",
-        "supernodal_solver",
+        "exponential_map_pade",
         "jordan_matrix_algebra",
+        "supernodal_solver",
         "@eigen",
     ],
 )

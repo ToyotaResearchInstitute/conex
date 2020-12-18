@@ -30,7 +30,7 @@ HyperComplexMatrix BuildMatrix(const VectorXd& eigenvalues,
   return T::Multiply(T::Multiply(Q, D), T::ConjugateTranspose(Q));
 }
 
-TEST(MatrixExponential, CompareWithEigen) {
+TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
   int n = 4;
   MatrixXd A(n, n);
   A << 3, 1, 0, 1, 1, 3, 1, 0, 0, 1, 4, 1, 1, 0, 1, 5;

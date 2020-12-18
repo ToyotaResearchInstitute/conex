@@ -20,11 +20,11 @@ SOURCES = approximate_eigenvalues.cc \
 	  dense_lmi_constraint.cc \
 	  divergence.cc \
 	  exponential_map.cc \
+	  exponential_map_pade.cc \
 	  hermitian_psd.cc \
 	  kkt_assembler.cc \
 	  kkt_solver.cc \
 	  linear_constraint.cc \
-	  matrix_exponential.cc \
 	  psd_constraint.cc \
 	  quadratic_cone_constraint.cc \
 	  soc_constraint.cc \

@@ -10,7 +10,7 @@ using DenseMatrix = Eigen::MatrixXd;
 namespace conex {
 void TestSDP(int i) {
   SolverConfiguration config;
-  int n = 200;
+  int n = 300;
   int m = 50;
   auto constraints2 = GetRandomDenseMatrices(n, m);
 
