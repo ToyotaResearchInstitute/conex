@@ -44,7 +44,6 @@ void DoExponentialMap(const HyperComplexMatrix& xinput, HyperComplexMatrix* y) {
 void ExponentialMap(const HyperComplexMatrix& arg, HyperComplexMatrix* result) {
   assert(arg.size() > 0);
   assert(arg.size() == result->size());
-  int dimension = arg.at(0).size();
   int n = arg.size();
 
   switch (n) {
@@ -89,7 +88,6 @@ HyperComplexMatrix GeodesicUpdate(const HyperComplexMatrix& x,
                                   const HyperComplexMatrix& s) {
   assert(x.size() > 0);
   assert(x.size() == s.size());
-  int dimension = x.at(0).size();
   int n = x.size();
 
   switch (n) {
@@ -151,7 +149,6 @@ HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x,
                                         const HyperComplexMatrix& s) {
   assert(x.size() > 0);
   assert(x.size() == s.size());
-  int dimension = x.at(0).size();
   int n = x.size();
 
   switch (n) {
