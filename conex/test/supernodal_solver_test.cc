@@ -7,9 +7,6 @@
 
 namespace conex {
 
-
-
-
 using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
@@ -249,5 +246,4 @@ TEST(SupernodalSolver, TestFullSolver) {
   }
 }
 
-} // namespace conex
-
+}  // namespace conex

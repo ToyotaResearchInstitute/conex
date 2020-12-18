@@ -233,5 +233,3 @@ TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
 }
 
 }  // namespace conex
-
-

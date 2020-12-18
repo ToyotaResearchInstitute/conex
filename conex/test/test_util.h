@@ -5,8 +5,6 @@
 
 namespace conex {
 
-
-
 using std::map;
 using std::vector;
 using Tuple = std::pair<int, int>;
@@ -32,5 +30,4 @@ struct EigenvalueDecomposition {
 };
 EigenvalueDecomposition eig(const Eigen::MatrixXd& x);
 
-} // namespace conex
-
+}  // namespace conex

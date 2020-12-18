@@ -9,9 +9,6 @@
 
 namespace conex {
 
-
-
-
 using Eigen::Map;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -39,5 +36,4 @@ TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
   }
 }
 
-} // namespace conex
-
+}  // namespace conex

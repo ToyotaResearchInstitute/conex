@@ -128,7 +128,6 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization;
   B::BlockLDLTInPlace(&mat.workspace_, &factorization);
 
-
   Eigen::VectorXd z = Eigen::VectorXd::Random(X.cols());
   z.setConstant(0);
   z(1) = 1;
@@ -158,5 +157,4 @@ TEST(LowerTri, LDLT) {
   DoLDLTTest(diagonal, {{0, 1}, {2, 4}, {3, 4}, {5, 6, 7}, {7, 8, 9, 10}});
 }
 
-} // namespace conex
-
+}  // namespace conex

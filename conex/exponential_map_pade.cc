@@ -138,7 +138,8 @@ struct ExponentialMapPadeApproximationScalingOp {
    *
    * \param[in] squarings  The integer \f$ s \f$ in this document.
    */
-  ExponentialMapPadeApproximationScalingOp(int squarings) : m_squarings(squarings) {}
+  ExponentialMapPadeApproximationScalingOp(int squarings)
+      : m_squarings(squarings) {}
 
   /** \brief Scale a matrix coefficient.
    *
@@ -171,7 +172,7 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings) {
   using std::pow;
   const RealScalar l1norm = arg.cwiseAbs().colwise().sum().maxCoeff();
   squarings = 0;
-  if (true) {  
+  if (true) {
     matrix_exp_pade3(arg, U, V);
   } else if (l1norm < 2.539398330063230e-001) {
     matrix_exp_pade5(arg, U, V);
@@ -183,14 +184,14 @@ void run(const ArgType& arg, MatrixType& U, MatrixType& V, int& squarings) {
     const RealScalar maxnorm = 5.371920351148152;
     frexp(l1norm / maxnorm, &squarings);
     if (squarings < 0) squarings = 0;
-    MatrixType A =
-        arg.unaryExpr(ExponentialMapPadeApproximationScalingOp<RealScalar>(squarings));
+    MatrixType A = arg.unaryExpr(
+        ExponentialMapPadeApproximationScalingOp<RealScalar>(squarings));
     matrix_exp_pade13(A, U, V);
   }
 }
 
-void ExponentialMapPadeApproximation(const Eigen::Ref<const Eigen::MatrixXd>& arg,
-                       Ref* result) {
+void ExponentialMapPadeApproximation(
+    const Eigen::Ref<const Eigen::MatrixXd>& arg, Ref* result) {
   using MatrixType = MatrixXd;
   MatrixType U, V;
   int squarings;

@@ -10,8 +10,6 @@
 
 namespace conex {
 
-
-//using conex::jordan_algebra::eig;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -114,5 +112,4 @@ TEST(Eigenvalues, Profile) {
   }
 }
 
-} // namespace conex
-
+}  // namespace conex

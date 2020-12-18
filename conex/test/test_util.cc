@@ -2,9 +2,6 @@
 
 namespace conex {
 
-
-
-
 DenseMatrix Symmetrize(const DenseMatrix& X) {
   DenseMatrix Xt = X.transpose();
   return .5 * (X + Xt);
@@ -102,6 +99,4 @@ EigenvalueDecomposition eig(const Eigen::MatrixXd& x) {
   return output;
 }
 
-
-} // namespace conex
-
+}  // namespace conex

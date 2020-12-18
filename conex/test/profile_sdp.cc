@@ -1,9 +1,9 @@
-#include <Eigen/Dense>
-#include "conex/linear_constraint.h"
-#include "conex/dense_lmi_constraint.h"
-#include "conex/constraint.h"
 #include "conex/cone_program.h"
+#include "conex/constraint.h"
+#include "conex/dense_lmi_constraint.h"
+#include "conex/linear_constraint.h"
 #include "conex/test/test_util.h"
+#include <Eigen/Dense>
 
 using DenseMatrix = Eigen::MatrixXd;
 
@@ -24,11 +24,11 @@ void TestSDP(int i) {
   auto b = GetFeasibleObjective(&prog);
   Solve(b, prog, config, y.data());
 }
-}
+}  // namespace conex
 
 int main() {
   for (int i = 0; i < 1; i++) {
-    conex::TestSDP(i); 
+    conex::TestSDP(i);
   }
   return 0;
 }

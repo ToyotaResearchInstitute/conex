@@ -8,9 +8,6 @@
 
 namespace conex {
 
-
-
-
 using JordanTypes = testing::Types<Real, Complex, Quaternions, Octonions>;
 
 using Eigen::MatrixXd;
@@ -50,7 +47,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
   Program prog2(m);
   DenseMatrix y2(m, 1);
   prog2.AddConstraint(DenseLMIConstraint(3, ToMat(constraint_matrices),
-                                                 ToMat(constraint_affine)));
+                                         ToMat(constraint_affine)));
 
   bool solved_2 = Solve(b, prog2, config, y2.data());
   EXPECT_TRUE((y2 - y).norm() < 1e-12);
@@ -112,5 +109,4 @@ TEST(Hermitian, CompareWithLMI) {
   }
 }
 
-} // namespace conex
-
+}  // namespace conex

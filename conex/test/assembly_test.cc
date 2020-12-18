@@ -3,8 +3,8 @@
 #include "conex/clique_ordering.h"
 #include "conex/constraint_manager.h"
 #include "conex/debug_macros.h"
-#include "conex/kkt_system_assembler.h"
 #include "conex/kkt_solver.h"
+#include "conex/kkt_system_assembler.h"
 
 #include "gtest/gtest.h"
 
@@ -17,26 +17,22 @@
 
 namespace conex {
 
-
 class Container {
  public:
-  template<typename T>
-  Container(const T& x) : obj(x), 
-                         kkt(std::any_cast<T>(&obj)) {}
+  template <typename T>
+  Container(const T& x) : obj(x), kkt(std::any_cast<T>(&obj)) {}
   std::any obj;
   KKT_SystemAssembler kkt;
 };
 
-
 std::vector<KKT_SystemAssembler*> GetPointers(std::list<Container>& r) {
   std::vector<KKT_SystemAssembler*> y;
-  for (auto& ri: r) {
+  for (auto& ri : r) {
     y.push_back(&ri.kkt);
-    //y.push_back(&ri.kkt);
+    // y.push_back(&ri.kkt);
   }
   return y;
 }
-
 
 using Cliques = std::vector<std::vector<int>>;
 using Eigen::MatrixXd;
@@ -67,7 +63,7 @@ void Assign(Eigen::MatrixXd& T, vector<int>& permutation, vector<int>& rows,
   }
 }
 
-//vector<int> Relabel(const vector<int>& x, const vector<int>& labels) {
+// vector<int> Relabel(const vector<int>& x, const vector<int>& labels) {
 //  vector<int> y;
 //  for (auto& xi : x) {
 //    y.push_back(labels.at(xi));
@@ -76,7 +72,7 @@ void Assign(Eigen::MatrixXd& T, vector<int>& permutation, vector<int>& rows,
 //}
 //
 //
-//std::vector<int> ReplaceWithPosition(const std::vector<int>& a,
+// std::vector<int> ReplaceWithPosition(const std::vector<int>& a,
 //                                     const std::vector<int>& b) {
 //  std::vector<int> y;
 //  for (auto ai : a) {
@@ -93,7 +89,7 @@ void Assign(Eigen::MatrixXd& T, vector<int>& permutation, vector<int>& rows,
 //  return y;
 //}
 //
-//std::vector<int> ConcatFirstN(const std::vector<int>& a, int N,
+// std::vector<int> ConcatFirstN(const std::vector<int>& a, int N,
 //                              const std::vector<int>& b) {
 //  std::vector<int> y;
 //  for (int i = 0; i < N; i++) {
@@ -111,7 +107,8 @@ void BuildLQRProblem(int N, ConstraintManager<Container>* prg) {
 
   MatrixXd A0(2, 3);
   MatrixXd Ai(2, 5);
-  MatrixXd bi(2, 1); bi << 1, 2;
+  MatrixXd bi(2, 1);
+  bi << 1, 2;
 
   // clang-format off
   A0 << 1, 1, 0,
@@ -130,7 +127,7 @@ void BuildLQRProblem(int N, ConstraintManager<Container>* prg) {
   for (int i = 0; i < N; i++) {
     vector vars{1 + o, 2 + o, 3 + o, 4 + o, 5 + o};
     o += 3;
-    prog.AddConstraint(EqualityConstraints{Ai * (i + 2), bi * (i+2)}, vars);
+    prog.AddConstraint(EqualityConstraints{Ai * (i + 2), bi * (i + 2)}, vars);
   }
 
   prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{0, 1, 2});
@@ -142,9 +139,6 @@ void BuildLQRProblem(int N, ConstraintManager<Container>* prg) {
     prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vars);
   }
 }
-
-
-
 
 TEST(LDLT, TestAssembly) {
   using Eigen::MatrixXd;

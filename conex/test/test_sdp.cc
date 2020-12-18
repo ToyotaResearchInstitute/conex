@@ -1,7 +1,6 @@
 #include "conex/cone_program.h"
 #include "conex/constraint.h"
 #include "conex/dense_lmi_constraint.h"
-#include "conex/test/test_util.h"
 #include "conex/linear_constraint.h"
 #include "conex/test/test_util.h"
 #include "gtest/gtest.h"
@@ -34,17 +33,16 @@ int TestDiagonalSDP() {
   DenseLMIConstraint LMI{n, constraints2, affine2};
   LinearConstraint Linear{n, &Alinear, &Clinear};
 
-
   Program prog(m);
   Eigen::VectorXd b(m);
-  prog.AddConstraint(LMI, {0,1});
+  prog.AddConstraint(LMI, {0, 1});
   b = GetFeasibleObjective(&prog);
-  //b << 1.22, -.36;  
+  // b << 1.22, -.36;
   DenseMatrix y1(m, 1);
   Solve(b, prog, config, y1.data());
 
   Program prog2(m);
-  prog2.AddConstraint(Linear, {0,1});
+  prog2.AddConstraint(Linear, {0, 1});
   b = GetFeasibleObjective(&prog2);
   DenseMatrix y2(m, 1);
   Solve(b, prog2, config, y2.data());
@@ -167,5 +165,4 @@ TEST(SDP, ProfileSDP) {
 }
 #endif
 
-} // namespace conex
-
+}  // namespace conex

@@ -1,8 +1,8 @@
 #include <cmath>
 
 #include "conex/approximate_eigenvalues.h"
-#include "conex/exponential_map_pade.h"
 #include "conex/exponential_map.h"
+#include "conex/exponential_map_pade.h"
 #include "conex/psd_constraint.h"
 
 namespace conex {

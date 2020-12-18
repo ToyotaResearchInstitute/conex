@@ -5,7 +5,6 @@
 
 namespace conex {
 
-
 class HyperComplexMatrix : public std::vector<Eigen::MatrixXd> {
  public:
   template <typename T>
