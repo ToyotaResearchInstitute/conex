@@ -4,15 +4,10 @@
 #include <Eigen/Dense>
 
 #include "conex/debug_macros.h"
-#include "conex/eigen_decomp.h"
+#include "conex/test/test_util.h"
 
 namespace conex {
 
-
-
-
-
-using conex::jordan_algebra::eig;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 

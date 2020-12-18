@@ -96,6 +96,7 @@ cc_test(
     deps = [
         "approximate_eigenvalues",
         "conex_lib",
+        "test_util",
         "@eigen",
         "@gtest//:main",
     ],
@@ -131,30 +132,6 @@ cc_library(
     deps = ["@eigen"],
 )
 
-cc_library(
-    name = "jordan_matrix_algebra",
-    srcs = [
-        "debug_macros.h",
-        "jordan_matrix_algebra.cc",
-    ],
-    hdrs = ["jordan_matrix_algebra.h"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "eigen_decomp",
-        "@eigen",
-    ],
-)
-
-cc_test(
-    name = "jordan_matrix_algebra_test",
-    srcs = ["test/jordan_matrix_algebra_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"],
-    deps = [
-        "conex_lib",
-        "jordan_matrix_algebra",
-        "@gtest//:main",
-    ],
-)
 
 cc_library(
     name = "vect_jordan_matrix_algebra",
@@ -165,7 +142,6 @@ cc_library(
     hdrs = ["vect_jordan_matrix_algebra.h"],
     visibility = ["//visibility:public"],
     deps = [
-        "eigen_decomp",
         "@eigen",
     ],
 )
@@ -176,19 +152,9 @@ cc_test(
     copts = ["-Iexternal/gtest/include -O0"],
     deps = [
         "vect_jordan_matrix_algebra",
+        "test_util",
         "@gtest//:main",
     ],
-)
-
-cc_library(
-    name = "eigen_decomp",
-    srcs = [
-        "eigen_decomp.cc",
-        "eigen_decomp.h",
-    ],
-    hdrs = ["eigen_decomp.h"],
-    visibility = ["//visibility:public"],
-    deps = ["@eigen"],
 )
 
 cc_test(
@@ -293,7 +259,6 @@ cc_library(
         "cone_program.cc",
         "dense_lmi_constraint.cc",
         "divergence.cc",
-        "elimination_ordering.cc",
         "hermitian_psd.cc",
         "linear_constraint.cc",
         "psd_constraint.cc",
@@ -306,7 +271,6 @@ cc_library(
         "debug_macros.h",
         "dense_lmi_constraint.h",
         "divergence.h",
-        "elimination_ordering.h",
         "error_checking_macros.h",
         "error_codes.h",
         "hermitian_psd.h",
@@ -322,7 +286,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "approximate_eigenvalues",
-        "eigen_decomp",
         "exponential_map",
         "matrix_exponential",
         "supernodal_solver",

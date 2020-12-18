@@ -6,8 +6,6 @@
 
 namespace conex {
 
-using conex::jordan_algebra::SpectralRadius;
-using conex::jordan_algebra::SpectrumBounds;
 using Eigen::VectorXd;
 
 // Applies update  W^{1/2}( exp ( e + W^{1/2} S W^{1/2} ) W^{1/2}
@@ -99,7 +97,6 @@ void SetIdentity(PsdConstraint* o) {
 
 void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
-  using conex::jordan_algebra::SpectralRadius;
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& WSWS = workspace->temp_1;

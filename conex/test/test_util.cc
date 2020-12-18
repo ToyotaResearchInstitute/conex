@@ -91,5 +91,17 @@ DenseMatrix QuadRep(const DenseMatrix& x, const DenseMatrix& y) {
   return x * y * x;
 }
 
+EigenvalueDecomposition eig(const Eigen::MatrixXd& x) {
+  // conex::jordan_algebra::SpectralDecompSymmetricMatrices<d> spec;
+  // spec.Compute(x);
+  Eigen::EigenSolver<Eigen::MatrixXd> spec;
+  spec.compute(x);
+  EigenvalueDecomposition output;
+  output.eigenvalues = spec.eigenvalues().array().real();
+  // output.eigenvectors = spec.eigenvectors();
+  return output;
+}
+
+
 } // namespace conex
 

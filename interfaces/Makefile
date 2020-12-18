@@ -13,11 +13,8 @@ SOURCES = approximate_eigenvalues.cc \
 	  cone_program.cc \
 	  dense_lmi_constraint.cc \
 	  divergence.cc \
-	  eigen_decomp.cc \
-	  elimination_ordering.cc \
 	  exponential_map.cc \
 	  hermitian_psd.cc \
-	  jordan_matrix_algebra.cc \
 	  kkt_assembler.cc \
 	  kkt_solver.cc \
 	  linear_constraint.cc \

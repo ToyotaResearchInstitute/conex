@@ -1,7 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 
-#include "conex/eigen_decomp.h"
+//#include "conex/eigen_decomp.h"
 #include "conex/newton_step.h"
 #include "conex/vect_jordan_matrix_algebra.h"
 #include "conex/workspace.h"

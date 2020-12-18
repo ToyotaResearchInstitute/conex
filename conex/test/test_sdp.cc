@@ -1,16 +1,13 @@
 #include "conex/cone_program.h"
 #include "conex/constraint.h"
 #include "conex/dense_lmi_constraint.h"
-#include "conex/eigen_decomp.h"
+#include "conex/test/test_util.h"
 #include "conex/linear_constraint.h"
 #include "conex/test/test_util.h"
 #include "gtest/gtest.h"
 #include <Eigen/Dense>
 
 namespace conex {
-
-
-
 
 using DenseMatrix = Eigen::MatrixXd;
 #define TEST_OR_PROFILE 1

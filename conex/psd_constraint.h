@@ -1,7 +1,6 @@
 #pragma once
 #include <Eigen/Dense>
 
-#include "eigen_decomp.h"
 #include "newton_step.h"
 #include "workspace.h"
 

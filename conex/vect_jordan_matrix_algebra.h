@@ -1,9 +1,10 @@
 #pragma once
 #include "conex/debug_macros.h"
-#include "conex/eigen_decomp.h"
+//#include "conex/eigen_decomp.h"
 #include <Eigen/Dense>
 
 namespace conex {
+
 
 class HyperComplexMatrix : public std::vector<Eigen::MatrixXd> {
  public:
@@ -117,44 +118,7 @@ class MatrixAlgebra {
   static Matrix MakeHermitian(const Matrix& x) {
     return ScalarMultiply(Add(x, ConjugateTranspose(x)), .5);
   }
-  double NormInfWeighted(const Matrix& w, const Matrix& s);
 };
-
-// Finds the largest eigenvalue of Q(w) Q(s) by first finding the coefficients
-// of it's minimal polynomial.  This in turn is the largest eigenvalue of
-// Q(w^{1/2}) Q(s) Q(w^{1/2}) = Q( Q(w^{1/2}) s ).
-template <typename T>
-double NormInfWeighted(const typename T::Matrix& w,
-                       const typename T::Matrix& s) {
-  int rank = w.at(0).rows();
-  int iter = rank * rank;
-  Eigen::MatrixXd M(rank * rank * w.size(), iter);
-  auto y = T::Identity(rank);
-
-  double k = 1;
-  for (int i = 0; i < iter; i++) {
-    M.col(i) = y.vect();
-    y = T::QuadraticRepresentation(w, T::QuadraticRepresentation(s, y));
-
-    if (i == 0) {
-      k = T::TraceInnerProduct(y, y);
-      if (k > 1e-8) {
-        k = std::sqrt(k);
-      } else {
-        k = std::sqrt(1e-8);
-      }
-    }
-
-    y = T::ScalarMultiply(y, 1.0 / k);
-  }
-
-  Eigen::MatrixXd G = M.transpose() * M;
-  Eigen::VectorXd f = M.transpose() * y.vect();
-
-  Eigen::VectorXd c = G.colPivHouseholderQr().solve(-f);
-  double z_inf_sqr_cal = conex::jordan_algebra::Roots(c).maxCoeff() * k;
-  return std::sqrt(z_inf_sqr_cal);
-}
 
 using Octonions = MatrixAlgebra<8>;
 using Quaternions = MatrixAlgebra<4>;

@@ -26,5 +26,11 @@ double NormFro(const DenseMatrix& x);
 double min(double x, double y);
 inline double max(double x, double y) { return -min(-x, -y); }
 
+struct EigenvalueDecomposition {
+  Eigen::MatrixXd eigenvalues;
+  Eigen::MatrixXd eigenvectors;
+};
+EigenvalueDecomposition eig(const Eigen::MatrixXd& x);
+
 } // namespace conex
 

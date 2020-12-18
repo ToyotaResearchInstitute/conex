@@ -1,6 +1,6 @@
 #include "conex/vect_jordan_matrix_algebra.h"
 #include "conex/debug_macros.h"
-#include "conex/eigen_decomp.h"
+//#include "conex/eigen_decomp.h"
 
 namespace conex {
 
@@ -8,6 +8,19 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 namespace {
+
+struct EigenvalueDecomposition {
+  Eigen::MatrixXd eigenvalues;
+  Eigen::MatrixXd eigenvectors;
+};
+
+EigenvalueDecomposition eig(const Eigen::MatrixXd& x) {
+  Eigen::EigenSolver<Eigen::MatrixXd> spec;
+  spec.compute(x);
+  EigenvalueDecomposition output;
+  output.eigenvalues = spec.eigenvalues().array().real();
+  return output;
+}
 
 Eigen::VectorXd Vect(const HyperComplexMatrix& x) {
   int n = x.size();
@@ -41,7 +54,7 @@ Eigen::VectorXd Roots(const Eigen::VectorXd& x) {
   c.bottomRows(1) = -x.transpose();
   c.topRightCorner(x.rows() - 1, x.rows() - 1) =
       MatrixXd::Identity(x.rows() - 1, x.rows() - 1);
-  return conex::jordan_algebra::eig(c).eigenvalues;
+  return eig(c).eigenvalues;
 }
 }  // namespace
 
