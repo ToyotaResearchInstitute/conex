@@ -1,10 +1,16 @@
-COPTS=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fvisibility=hidden -fdata-sections -ffunction-sections  -I$(MKLROOT)/include
-COPTSI=-O3  -fPIC -g -std=c++17 -fno-omit-frame-pointer -DEIGEN_USE_BLAS  -fdata-sections -ffunction-sections -I$(MKLROOT)/include
-
 EIGEN=$(EIGEN_DIR)
 CONEX=../
 
-CPPFLAGS=$(COPTS) -I $(EIGEN) -I $(CONEX)
+CPPFLAGS =-O3 -fPIC -std=c++17 -fdata-sections -ffunction-sections  
+
+# BLAS 
+CPPFLAGS_LIBRARY=$(CPPFLAGS) -I $(EIGEN) -I $(CONEX) -DEIGEN_USE_BLAS -fvisibility=hidden
+LFLAGS=-lblas 
+
+# MKL
+#CPPFLAGS_LIBRARY=$(CPPFLAGS) -I $(EIGEN) -I $(CONEX) -DEIGEN_USE_MKL_ALL -I$(MKLROOT)/include -fvisibility=hidden
+#LFLAGS= -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl -fopenmp
+
 all: libconex.so
 
 SOURCES = approximate_eigenvalues.cc \
@@ -29,15 +35,15 @@ SOURCES = approximate_eigenvalues.cc \
 OBJECTS := $(SOURCES:.cc=.o)
 
 %.o : ../conex/%.cc
-	$(CXX) -c $(CPPFLAGS) $< 
+	$(CXX) -c $(CPPFLAGS_LIBRARY) $< 
 
 libsource: $(SOURCES:.cc=.o)
 
 conex.o: conex.h conex.cc
-	g++ -c $(COPTSI)  -I${EIGEN_DIR} -I $(CONEX) conex.cc
+	g++ -c $(CPPFLAGS) -I${EIGEN_DIR} -I $(CONEX) conex.cc
 
 libconex.so:  conex.o libsource
-	g++ -static-libstdc++ -Wl,--exclude-libs,ALL -Wl,--gc-sections -shared -o libconex.so conex.o $(OBJECTS) -lblas 
+	g++ -static-libstdc++ -Wl,--exclude-libs,ALL -Wl,--gc-sections -shared -o libconex.so conex.o $(OBJECTS) $(LFLAGS)
 
 main: libconex.so
 	g++ test/test_app.cc libconex.so
