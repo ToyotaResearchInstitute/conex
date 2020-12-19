@@ -35,7 +35,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
         T::Add(constraint_matrices.at(i),
                T::ConjugateTranspose(constraint_matrices.at(i)));
   }
-  HermitianPsdConstraint<T> T2(3, constraint_matrices, constraint_affine);
+  HermitianPsdConstraint<T> T2(rank, constraint_matrices, constraint_affine);
 
   Program prog(m);
   DenseMatrix y(m, 1);
@@ -46,7 +46,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
 
   Program prog2(m);
   DenseMatrix y2(m, 1);
-  prog2.AddConstraint(DenseLMIConstraint(3, ToMat(constraint_matrices),
+  prog2.AddConstraint(DenseLMIConstraint(rank, ToMat(constraint_matrices),
                                          ToMat(constraint_affine)));
 
   bool solved_2 = Solve(b, prog2, config, y2.data());
@@ -105,7 +105,9 @@ TYPED_TEST(TestCases, SolveRandomInstances) {
 
 TEST(Hermitian, CompareWithLMI) {
   for (int i = 0; i < 2; i++) {
-    EXPECT_TRUE(CompareRealHermitianWithLMI(3, 2));
+    int num_vars = 10;
+    int rank = 10;
+    EXPECT_TRUE(CompareRealHermitianWithLMI(rank, num_vars));
   }
 }
 
