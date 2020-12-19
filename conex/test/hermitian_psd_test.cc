@@ -105,8 +105,8 @@ TYPED_TEST(TestCases, SolveRandomInstances) {
 
 TEST(Hermitian, CompareWithLMI) {
   for (int i = 0; i < 2; i++) {
-    int num_vars = 10;
-    int rank = 10;
+    int num_vars = 2;
+    int rank = 3;
     EXPECT_TRUE(CompareRealHermitianWithLMI(rank, num_vars));
   }
 }
