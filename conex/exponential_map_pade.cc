@@ -16,7 +16,7 @@ void ComputeWeightedPowers(const MatrixXd& A, MatrixXd* U, MatrixXd* V) {
       b[3] * Asquared + b[1] * MatrixXd::Identity(A.rows(), A.cols());
   U->noalias() = A * tmp;
 
-  (*V).array() *= b[2];  
+  (*V).array() *= b[2];
   V->diagonal().array() += b[0];
 }
 
