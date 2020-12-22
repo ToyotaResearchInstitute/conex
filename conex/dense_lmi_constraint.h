@@ -1,3 +1,4 @@
+#pragma once
 #include "newton_step.h"
 #include "psd_constraint.h"
 
@@ -41,14 +42,16 @@ class DenseLMIConstraint final : public MatrixLMIConstraint {
                      const DenseMatrix& constraint_affine)
       : MatrixLMIConstraint(n, constraint_matrices, constraint_affine) {}
 
-  friend void ConstructSchurComplementSystem<DenseLMIConstraint>(
-      DenseLMIConstraint* o, bool initialize, SchurComplementSystem* sys);
+  DenseLMIConstraint(const std::vector<DenseMatrix>& constraint_matrices,
+                     const DenseMatrix& constraint_affine)
+      : MatrixLMIConstraint(constraint_affine.rows(), constraint_matrices,
+                            constraint_affine) {}
+
+  friend void ConstructSchurComplementSystem(DenseLMIConstraint* o,
+                                             bool initialize,
+                                             SchurComplementSystem* sys);
   int variable(int i) override { return i; }
 };
-
-template <>
-void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,
-                                    SchurComplementSystem* sys);
 
 class SparseLMIConstraint final : public MatrixLMIConstraint {
  public:
@@ -59,8 +62,10 @@ class SparseLMIConstraint final : public MatrixLMIConstraint {
                             constraint_affine),
         variables_(variables) {}
 
-  friend void ConstructSchurComplementSystem<SparseLMIConstraint>(
-      SparseLMIConstraint* o, bool initialize, SchurComplementSystem* sys);
+  friend void ConstructSchurComplementSystem(SparseLMIConstraint* o,
+                                             bool initialize,
+                                             SchurComplementSystem* sys);
+
   std::vector<int> variables_;
   int variable(int i) override {
     // TODO(FrankPermenter): remove range check.

@@ -36,36 +36,6 @@ struct WorkspaceDensePSD {
   int n_;
 };
 
-// To avoid overhead of virtual functions, we
-// assume that classes that inherit PsdConstraint
-// will add a specialization of this template
-// as a "friend" function.
-template <typename T>
-void ConstructSchurComplementSystem(T* o, bool initialize,
-                                    SchurComplementSystem* sys) {
-  auto workspace = o->workspace();
-  auto& W = workspace->W;
-  auto& AW = workspace->temp_1;
-  auto& WAW = workspace->temp_2;
-  int m = o->num_dual_constraints_;
-
-  if (initialize) {
-    sys->G.setZero();
-    sys->AW.setZero();
-    sys->AQc.setZero();
-  }
-
-  for (int i = 0; i < m; i++) {
-    o->ComputeAW(i, W, &AW, &WAW);
-    for (int j = i; j < m; j++) {
-      sys->G(o->variable(j), o->variable(i)) += o->EvalDualConstraint(j, WAW);
-    }
-
-    sys->AW(o->variable(i), 0) += AW.trace();
-    sys->AQc(o->variable(i), 0) += o->EvalDualObjective(WAW);
-  }
-}
-
 class PsdConstraint {
  public:
   friend void SetIdentity(PsdConstraint* o);
