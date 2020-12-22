@@ -19,7 +19,7 @@ class LinearConstraint {
       : LinearConstraint(constraint_matrix.rows(), constraint_matrix,
                          constraint_affine) {}
 
-  LinearConstraint(const Eigen::MatrixXd& constraint_matrix, 
+  LinearConstraint(const Eigen::MatrixXd& constraint_matrix,
                    const Eigen::MatrixXd& constraint_affine)
       : LinearConstraint(constraint_matrix.rows(), constraint_matrix,
                          constraint_affine) {}
@@ -63,21 +63,20 @@ class LinearConstraint {
   const DenseMatrix constraint_affine_;
 };
 
-
 class LowerBound : public LinearConstraint {
-  public:
-    LowerBound(const Eigen::VectorXd& lower_bounds) 
-    : LinearConstraint(-Eigen::MatrixXd::Identity(lower_bounds.rows(), 
-                                                 lower_bounds.rows()), -lower_bounds) {}
+ public:
+  LowerBound(const Eigen::VectorXd& lower_bounds)
+      : LinearConstraint(-Eigen::MatrixXd::Identity(lower_bounds.rows(),
+                                                    lower_bounds.rows()),
+                         -lower_bounds) {}
 };
 
 class UpperBound : public LinearConstraint {
-  public:
-    UpperBound(const Eigen::VectorXd& upper_bounds) 
-    : LinearConstraint(Eigen::MatrixXd::Identity(upper_bounds.rows(), 
-                                                 upper_bounds.rows()), upper_bounds) {}
+ public:
+  UpperBound(const Eigen::VectorXd& upper_bounds)
+      : LinearConstraint(
+            Eigen::MatrixXd::Identity(upper_bounds.rows(), upper_bounds.rows()),
+            upper_bounds) {}
 };
-
-
 
 }  // namespace conex
