@@ -68,10 +68,11 @@ void GetMuSelectionParameters(ConstraintManager<Container>* constraints,
   }
 }
 
-int Rank(const ConstraintManager<Container>& kkt) {
+template <typename T>
+int Rank(const std::vector<T*>& c) {
   int rank = 0;
-  for (const auto& ci : kkt.eqs) {
-    rank += Rank(ci.constraint);
+  for (const auto& ci : c) {
+    rank += Rank(*ci);
   }
   return rank;
 }
@@ -91,6 +92,7 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
     prog.InitializeWorkspace();
+    SetIdentity(&prog.constraints);
 
     solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
                                       prog.kkt_system_manager_.dual_vars);
@@ -98,7 +100,6 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
     kkt.clear();
     for (auto& c : prog.kkt_system_manager_.eqs) {
       c.kkt_assembler.Reset();
-      SetIdentity(&c.constraint);
     }
 
     for (auto& c : prog.kkt_system_manager_.eqs) {
@@ -138,34 +139,35 @@ void ApplyLimits(double* x, double lb, double ub) {
     *x = lb;
   }
 }
-bool Solve(const DenseMatrix& b, Program& prog,
+bool Solve(const DenseMatrix& bin, Program& prog,
            const SolverConfiguration& config, double* primal_variable) {
 #ifdef EIGEN_USE_MKL_ALL
   std::cout << "CONEX: MKL Enabled";
 #endif
 
+  auto& constraints = prog.constraints;
   auto& solver = prog.solver;
   bool solved = 1;
 
   std::cout.precision(2);
   std::cout << std::scientific;
 
-  CONEX_DEMAND(prog.GetNumberOfVariables() == b.rows(),
+  CONEX_DEMAND(prog.GetNumberOfVariables() == bin.rows(),
                "Cost vector dimension does not equal number of variables");
 
-  int m = b.rows();
+  int m = bin.rows();
   // Empty program
   if (prog.NumberOfConstraints() == 0) {
     Eigen::Map<DenseMatrix> ynan(primal_variable, m, 1);
     solved = 0;
-    ynan.array() = b.array() * std::numeric_limits<double>::infinity();
+    ynan.array() = bin.array() * std::numeric_limits<double>::infinity();
     return solved;
   }
   Initialize(prog, config);
 
-  Eigen::MatrixXd ydata(m, 1);
+  Eigen::MatrixXd ydata(prog.kkt_system_manager_.SizeOfKKTSystem(), 1);
   Eigen::Map<DenseMatrix> yout(primal_variable, m, 1);
-  Ref y(ydata.data(), m, 1);
+  Ref y(ydata.data(), prog.kkt_system_manager_.SizeOfKKTSystem(), 1);
 
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
 
@@ -175,11 +177,14 @@ bool Solve(const DenseMatrix& b, Program& prog,
   newton_step_parameters.inv_sqrt_mu = 0;
   newton_step_parameters.affine = false;
 
-  int rankK = Rank(prog.kkt_system_manager_);
+  int rankK = Rank(constraints);
   int centering_steps = 0;
 
   Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
+  Eigen::VectorXd b(prog.kkt_system_manager_.SizeOfKKTSystem());
+  b.setZero();
+  b.head(m) << bin;
 
   for (int i = 0; i < config.max_iterations; i++) {
     if (i < 10) {
@@ -265,7 +270,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
     TakeStep(&prog.kkt_system_manager_, newton_step_parameters, y2map, &info);
   }
   y /= newton_step_parameters.inv_sqrt_mu;
-  yout = y;
+  yout = y.topRows(m);
   solved = 1;
   PRINTSTATUS("Solved.");
   return solved;

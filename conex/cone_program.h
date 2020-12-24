@@ -1,10 +1,11 @@
 #pragma once
-#include "conex/error_checking_macros.h"
 #include "conex/constraint.h"
 #include "conex/constraint_manager.h"
 #include "conex/equality_constraint.h"
+#include "conex/error_checking_macros.h"
 #include "conex/kkt_assembler.h"
 #include "conex/kkt_solver.h"
+#include "conex/linear_constraint.h"
 #include "workspace.h"
 
 namespace conex {
@@ -46,8 +47,7 @@ class Program {
 
   int GetNumberOfVariables() { return sys.m_; }
 
-
-  template<typename T>
+  template <typename T>
   void GetDualVariable(int i, T* xi) {
     int cnt = 0;
     for (auto& ci : kkt_system_manager_.eqs) {
@@ -71,30 +71,32 @@ class Program {
     CONEX_DEMAND(false, "Invalid Constraint");
   }
 
-  int UpdateLinearOperatorOfConstraint(int i, double value, int variable, 
-                           int row, int col, int hyper_complex_dim) {
+  int UpdateLinearOperatorOfConstraint(int i, double value, int variable,
+                                       int row, int col,
+                                       int hyper_complex_dim) {
     int cnt = 0;
     for (auto& ci : kkt_system_manager_.eqs) {
       if (cnt == i) {
-        return UpdateLinearOperator(&ci.constraint, value, variable, row, col, hyper_complex_dim);
+        return UpdateLinearOperator(&ci.constraint, value, variable, row, col,
+                                    hyper_complex_dim);
       }
       cnt++;
     }
     CONEX_DEMAND(false, "Invalid Constraint");
   }
 
-  int UpdateAffineTermOfConstraint(int i, double value, int row, int col, int hyper_complex_dim) {
+  int UpdateAffineTermOfConstraint(int i, double value, int row, int col,
+                                   int hyper_complex_dim) {
     int cnt = 0;
     for (auto& ci : kkt_system_manager_.eqs) {
       if (cnt == i) {
-        return UpdateAffineTerm(&ci.constraint, value, row, col, hyper_complex_dim);
+        return UpdateAffineTerm(&ci.constraint, value, row, col,
+                                hyper_complex_dim);
       }
       cnt++;
     }
     CONEX_DEMAND(false, "Invalid Constraint");
   }
-
-  int SetNumberOfConstraints() const { return kkt_system_manager_.eqs.size(); }
 
   void InitializeWorkspace() {
     for (auto& constraint : kkt_system_manager_.eqs) {
@@ -110,22 +112,30 @@ class Program {
 
   template <typename T>
   void AddConstraint(T&& d) {
-    kkt_system_manager_.AddConstraint(d);
+    if constexpr (!std::is_same<T, EqualityConstraints>::value) {
+      kkt_system_manager_.AddConstraint<T>(std::forward<T>(d));
+      constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+    } else {
+      kkt_system_manager_.AddEqualityConstraint(
+          std::forward<EqualityConstraints>(d));
+    }
   }
 
   template <typename T>
   void AddConstraint(T&& d, const std::vector<int>& variables) {
-    kkt_system_manager_.AddConstraint(d, variables);
+    if constexpr (!std::is_same<T, EqualityConstraints>::value) {
+      kkt_system_manager_.AddConstraint<T>(std::forward<T>(d), variables);
+      constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+    } else {
+      kkt_system_manager_.AddEqualityConstraint(
+          std::forward<EqualityConstraints>(d), variables);
+    }
   }
-
-  //  void AddConstraint(EqualityConstraints&& d, const std::vector<int>&
-  //  variables) {
-  //    kkt_system_manager_.AddConstraint(d, variables);
-  //  }
 
   int NumberOfConstraints() { return kkt_system_manager_.eqs.size(); }
 
   ConstraintManager<Container> kkt_system_manager_;
+  std::vector<Constraint*> constraints;
   SchurComplementSystem sys;
   WorkspaceStats stats;
   std::vector<Workspace> workspaces;

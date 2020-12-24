@@ -292,3 +292,22 @@ cc_library(
         "@eigen",
     ],
 )
+
+cc_test(
+    name = "equality_constraints_test",
+    srcs = glob(["test/equality_constraints_test.cc"]),
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
+)
+
+cc_binary(
+    name = "solver_failures",
+    srcs = ["test/solver_failures.cc"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
+)

@@ -24,9 +24,42 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
     schur_complement_data.AQc.bottomRows(A_.rows()) = b_;
     schur_complement_data.AW.setZero();
   }
+
   int SizeOfDualVariable() { return A_.rows(); }
   Eigen::MatrixXd A_;
   Eigen::MatrixXd b_;
+
+  friend int Rank(const EqualityConstraints& o) { return 0; };
+  friend void SetIdentity(EqualityConstraints* o){};
+  friend void TakeStep(EqualityConstraints* o, const StepOptions& opt,
+                       const Ref& y, StepInfo* data){};
+  friend void GetMuSelectionParameters(EqualityConstraints* o, const Ref& y,
+                                       MuSelectionParameters* p){};
+
+  friend void ConstructSchurComplementSystem(EqualityConstraints* o,
+                                             bool initialize,
+                                             SchurComplementSystem* sys_) {
+    auto& sys = *sys_;
+    auto& A_ = o->A_;
+    auto& b_ = o->b_;
+    if (initialize) {
+      sys.G.setZero();
+      sys.G.bottomLeftCorner(A_.rows(), A_.cols()) = A_;
+      sys.G.topRightCorner(A_.cols(), A_.rows()) = A_.transpose();
+      sys.AQc.bottomRows(A_.rows()) = b_;
+      sys.AW.setZero();
+    } else {
+      sys.G.bottomLeftCorner(A_.rows(), A_.cols()) += A_;
+      sys.G.topRightCorner(A_.cols(), A_.rows()) += A_.transpose();
+      sys.AQc.bottomRows(A_.rows()) += b_;
+    }
+  }
+
+  int number_of_variables() { return 0; }
+  WorkspaceLinear* workspace() { return &workspace_; }
+
+ private:
+  WorkspaceLinear workspace_{0, 0};
 };
 
 }  // namespace conex

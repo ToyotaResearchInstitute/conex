@@ -45,8 +45,8 @@ class ConstraintManager {
     dual_vars.push_back({});
   }
 
-  void AddConstraint(EqualityConstraints&& x,
-                     const std::vector<int>& variables) {
+  void AddEqualityConstraint(EqualityConstraints&& x,
+                             const std::vector<int>& variables) {
     eqs.emplace_back(x);
     cliques.push_back(variables);
     const int m = x.SizeOfDualVariable();
@@ -56,6 +56,14 @@ class ConstraintManager {
       dual_vars.back().push_back(i + dual_variable_start_);
     }
     dual_variable_start_ += m;
+  }
+
+  void AddEqualityConstraint(EqualityConstraints&& x) {
+    std::vector<int> clique(max_number_of_variables_);
+    for (size_t i = 0; i < clique.size(); i++) {
+      clique[i] = i;
+    }
+    AddEqualityConstraint(std::forward<EqualityConstraints>(x), clique);
   }
 
   // Use a list so that we do not trigger reallocations.
