@@ -68,11 +68,10 @@ void GetMuSelectionParameters(ConstraintManager<Container>* constraints,
   }
 }
 
-template <typename T>
-int Rank(const std::vector<T*>& c) {
+int Rank(const ConstraintManager<Container>& kkt) {
   int rank = 0;
-  for (const auto& ci : c) {
-    rank += Rank(*ci);
+  for (const auto& ci : kkt.eqs) {
+    rank += Rank(ci.constraint);
   }
   return rank;
 }
@@ -92,7 +91,6 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
     prog.InitializeWorkspace();
-    SetIdentity(&prog.constraints);
 
     solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
                                       prog.kkt_system_manager_.dual_vars);
@@ -100,6 +98,7 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
     kkt.clear();
     for (auto& c : prog.kkt_system_manager_.eqs) {
       c.kkt_assembler.Reset();
+      SetIdentity(&c.constraint);
     }
 
     for (auto& c : prog.kkt_system_manager_.eqs) {
@@ -145,10 +144,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
   std::cout << "CONEX: MKL Enabled";
 #endif
 
-  auto& constraints = prog.constraints;
-  auto& sys = prog.sys;
   auto& solver = prog.solver;
-
   bool solved = 1;
 
   std::cout.precision(2);
@@ -179,7 +175,7 @@ bool Solve(const DenseMatrix& b, Program& prog,
   newton_step_parameters.inv_sqrt_mu = 0;
   newton_step_parameters.affine = false;
 
-  int rankK = Rank(constraints);
+  int rankK = Rank(prog.kkt_system_manager_);
   int centering_steps = 0;
 
   Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
@@ -256,22 +252,10 @@ bool Solve(const DenseMatrix& b, Program& prog,
 
   if (config.prepare_dual_variables) {
     DenseMatrix y2;
-    bool iter_refine = false;
-    if (iter_refine) {
-      ConstructSchurComplementSystem(&constraints, true, &sys);
-      Eigen::LLT<Eigen::Ref<DenseMatrix>> llt(sys.G);
-      DenseMatrix L = llt.matrixL();
-      DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * sys.AW;
-      y2 = bres * 0;
-      for (int i = 0; i < 1; i++) {
-        y2 += llt.solve(bres - L * L.transpose() * y2);
-      }
-    } else {
-      solver->Assemble(&AW, &AQc);
-      solver->Factor();
-      DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * AW;
-      y2 = solver->Solve(bres);
-    }
+    solver->Assemble(&AW, &AQc);
+    solver->Factor();
+    DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * AW;
+    y2 = solver->Solve(bres);
 
     newton_step_parameters.affine = true;
     newton_step_parameters.e_weight = 0;

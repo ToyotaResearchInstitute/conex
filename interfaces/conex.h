@@ -47,7 +47,7 @@ int CONEX_AddSparseLMIConstraint(void* prog, const double* Aarray, int Aarrayr,
                                  int cc, const long* vars, int vars_c);
 
 int CONEX_Solve(void* prog, const double* b, int br,
-               const CONEX_SolverConfiguration* config, double* y, int yr);
+                const CONEX_SolverConfiguration* config, double* y, int yr);
 
 void CONEX_GetDualVariable(void* prog, int i, double* x, int xr, int xc);
 

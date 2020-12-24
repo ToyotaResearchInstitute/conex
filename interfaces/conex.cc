@@ -16,19 +16,19 @@
 #include "conex/error_checking_macros.h"
 // TODO(FrankPermenter): check for null pointers.
 
-#define SAFER_CAST_TO_Program(x, prog)                              \
-  CONEX_DEMAND(x, "Program pointer is null.");                      \
-  prog = static_cast<Program*>(x);                                  \
-  if (prog->is_initialized) {                                       \
-    if (prog->NumberOfConstraints() + 2 !=                          \
-        static_cast<int>(prog->workspaces.size())) {                \
-      CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
-    }                                                               \
-  } else {                                                          \
-    if (prog->workspaces.size() != 0) {                             \
-      CONEX_DEMAND(false, "Program corrupted or invalid pointer."); \
-    }                                                               \
-  }                                                                 \
+#define SAFER_CAST_TO_Program(x, prog)                                     \
+  CONEX_DEMAND(x, "Program pointer is null.");                             \
+  prog = static_cast<Program*>(x);                                         \
+  if (prog->is_initialized) {                                              \
+    if (prog->NumberOfConstraints() + 2 !=                                 \
+        static_cast<int>(prog->workspaces.size())) {                       \
+      CONEX_DEMAND(false, "Program corrupted or invalid pointer.");        \
+    }                                                                      \
+  } else {                                                                 \
+    if (prog->workspaces.size() != 0 || prog->NumberOfConstraints() < 0) { \
+      CONEX_DEMAND(false, "Program corrupted or invalid pointer.");        \
+    }                                                                      \
+  }                                                                        \
   CONEX_DEMAND(prog, "Program corrupted or invalid pointer.");
 
 using DenseMatrix = Eigen::MatrixXd;
@@ -38,7 +38,7 @@ using conex::Program;
 using conex::SolverConfiguration;
 
 int CONEX_Solve(void* prog_ptr, const double* b, int br,
-               const CONEX_SolverConfiguration* config, double* y, int yr) {
+                const CONEX_SolverConfiguration* config, double* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);
   DenseMatrix blinear = bmap;
@@ -61,19 +61,17 @@ int CONEX_Solve(void* prog_ptr, const double* b, int br,
 
 void CONEX_GetDualVariable(void* prog_ptr, int i, double* x, int xr, int xc) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
-  assert(prog.constraints.at(i)->dual_variable_size() == xr * xc);
+  assert(prog.GetDualVariableSize(i) == xr * xc);
 
   using InputMatrix = Eigen::Map<DenseMatrix>;
 
-  prog.constraints.at(i)->get_dual_variable(x);
-
   InputMatrix xmap(x, xr, xc);
-  xmap.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+  prog.GetDualVariable(i, &xmap);
 }
 
 int CONEX_GetDualVariableSize(void* prog_ptr, int i) {
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
-  return prog.constraints.at(i)->dual_variable_size();
+  return prog.GetDualVariableSize(i);
 }
 
 void* CONEX_CreateConeProgram() {
@@ -197,7 +195,6 @@ void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,
   stats->iteration_number = iter_num;
 }
 
-
 CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order,
                                              int hyper_complex_dim,
                                              int* constraint_id) {
@@ -235,18 +232,17 @@ CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value,
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
   CONEX_DEMAND(constraint < prg->NumberOfConstraints(), "Invalid Constraint.");
-  return UpdateLinearOperator(prg->constraints.at(constraint), value, variable,
-                              row, col, hyper_complex_dim);
+  return prg->UpdateLinearOperatorOfConstraint(constraint, value, variable, row,
+                                               col, hyper_complex_dim);
 }
 
 CONEX_STATUS CONEX_UpdateAffineTerm(void* p, int constraint, double value,
                                     int row, int col, int hyper_complex_dim) {
   Program* prg;
   SAFER_CAST_TO_Program(p, prg);
-  CONEX_DEMAND(constraint < static_cast<int>(prg->constraints.size()),
-               "Invalid Constraint.");
-  return UpdateAffineTerm(prg->constraints.at(constraint), value, row, col,
-                          hyper_complex_dim);
+  CONEX_DEMAND(constraint < prg->NumberOfConstraints(), "Invalid Constraint.");
+  return prg->UpdateAffineTermOfConstraint(constraint, value, row, col,
+                                           hyper_complex_dim);
 }
 
 CONEX_STATUS CONEX_NewLorentzConeConstraint(void* p, int order,

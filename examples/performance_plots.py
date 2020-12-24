@@ -308,9 +308,9 @@ show_plot = True
 #PlotMuUpdate(1, "Real", show_plot)
 #PlotMuUpdate(2, "Complex", show_plot)
 #PlotMuUpdate(4, "Quaternion", show_plot)
-#PlotMuUpdate(-1, "special", show_plot)
+PlotMuUpdate(-1, "special", show_plot)
 
-PlotMuUpdate(-2, "sdp", show_plot)
+#lotMuUpdate(-2, "sdp", show_plot)
 #PlotMuUpdate(8, "exceptional", show_plot)
 #PlotMuUpdateVsDivBound()
 

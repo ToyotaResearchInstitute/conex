@@ -146,9 +146,9 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
       VectorXd slack = C.at(i) - A.at(i) * Vars(y, variables.at(i));
       EXPECT_TRUE((slack).minCoeff() >= -eps);
 
-      VectorXd xi(A.at(i).rows());
-      prog.constraints.at(i)->get_dual_variable(xi.data());
-      xi.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+      MatrixXd xi(A.at(i).rows(), 1);
+      prog.GetDualVariable(i, &xi);
+
       VectorXd temp = A.at(i).transpose() * xi;
       int k = 0;
       for (auto vk : variables.at(i)) {
@@ -165,9 +165,8 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
     auto L = Combine(A, C, variables);
     VectorXd slack = L.constraint_affine_ - L.constraint_matrix_ * y;
 
-    VectorXd xi(L.constraint_affine_.rows());
-    prog.constraints.at(0)->get_dual_variable(xi.data());
-    xi.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+    MatrixXd xi(L.constraint_affine_.rows(), 1);
+    prog.GetDualVariable(0, &xi);
     EXPECT_NEAR((b - L.constraint_matrix_.transpose() * xi).norm(), 0, 1e-8);
   }
 
@@ -234,9 +233,8 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
       VectorXd slack = C.at(i) - A.at(i) * Vars(y, variables.at(i));
       EXPECT_TRUE((slack).minCoeff() >= -eps);
 
-      VectorXd xi(A.at(i).rows());
-      prog.constraints.at(i)->get_dual_variable(xi.data());
-      xi.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+      MatrixXd xi(A.at(i).rows(), 1);
+      prog.GetDualVariable(i, &xi);
       VectorXd temp = A.at(i).transpose() * xi;
       int k = 0;
       for (auto vk : variables.at(i)) {
@@ -253,9 +251,8 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
     auto L = Combine(A, C, variables);
     VectorXd slack = L.constraint_affine_ - L.constraint_matrix_ * y;
 
-    VectorXd xi(L.constraint_affine_.rows());
-    prog.constraints.at(0)->get_dual_variable(xi.data());
-    xi.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+    MatrixXd xi(L.constraint_affine_.rows(), 1);
+    prog.GetDualVariable(0, &xi);
     EXPECT_NEAR((b - L.constraint_matrix_.transpose() * xi).norm(), 0, 1e-8);
   }
 
