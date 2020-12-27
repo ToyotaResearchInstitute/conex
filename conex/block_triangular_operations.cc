@@ -166,12 +166,15 @@ void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat,
   }
 }
 
-void T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
+bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
   assert(C->diagonal.size() == C->off_diagonal.size());
   std::vector<Eigen::LLT<Eigen::Ref<MatrixXd>>> llts;
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
     llts.emplace_back(C->diagonal.at(i));
+    if (llts.back().info() != Eigen::Success) {
+      return false;
+    }
 
     // Construction of [n, s] block
     if (C->off_diagonal.at(i).size() > 0) {
@@ -187,6 +190,7 @@ void T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
       }
     }
   }
+  return true;
 }
 
 // Apply inv(M^T)  = inv(L^T P) = P^T inv(L^T)
@@ -284,7 +288,7 @@ void T::ApplyBlockInverseOfMD(
 //
 //  So, Q^T = inv(D_1) inv(M) off_diag
 //          = inv(D_1) inv(L) P  * off_diag
-void T::BlockLDLTInPlace(
+bool T::BlockLDLTInPlace(
     TriangularMatrixWorkspace* C,
     std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>>* factorization) {
   auto& llts = *factorization;
@@ -294,6 +298,10 @@ void T::BlockLDLTInPlace(
     // In place LLT of [n, n] block
     C->diagonal.at(i) = C->diagonal.at(i).selfadjointView<Eigen::Lower>();
     llts.emplace_back(C->diagonal.at(i));
+    if (llts.back().info() != Eigen::Success) {
+      DUMP(C->diagonal.at(i));
+      return false;
+    }
     Eigen::PermutationMatrix<-1> P(llts.at(i).transpositionsP());
 
     //   Q^T = inv(D_1) inv(L) inv(P)  * off_diag
@@ -316,6 +324,7 @@ void T::BlockLDLTInPlace(
       }
     }
   }
+  return true;
 }
 
 }  // namespace conex
