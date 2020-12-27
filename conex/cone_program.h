@@ -111,23 +111,30 @@ class Program {
   }
 
   template <typename T>
-  void AddConstraint(T&& d) {
+  bool AddConstraint(T&& d) {
     if constexpr (!std::is_same<T, EqualityConstraints>::value) {
-      kkt_system_manager_.AddConstraint<T>(std::forward<T>(d));
-      constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+      bool result = kkt_system_manager_.AddConstraint<T>(std::forward<T>(d));
+      if (result) {
+        constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+      }
+      return result;
     } else {
-      kkt_system_manager_.AddEqualityConstraint(
+      return kkt_system_manager_.AddEqualityConstraint(
           std::forward<EqualityConstraints>(d));
     }
   }
 
   template <typename T>
-  void AddConstraint(T&& d, const std::vector<int>& variables) {
+  bool AddConstraint(T&& d, const std::vector<int>& variables) {
     if constexpr (!std::is_same<T, EqualityConstraints>::value) {
-      kkt_system_manager_.AddConstraint<T>(std::forward<T>(d), variables);
-      constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+      bool result =
+          kkt_system_manager_.AddConstraint<T>(std::forward<T>(d), variables);
+      if (result) {
+        constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+      }
+      return result;
     } else {
-      kkt_system_manager_.AddEqualityConstraint(
+      return kkt_system_manager_.AddEqualityConstraint(
           std::forward<EqualityConstraints>(d), variables);
     }
   }

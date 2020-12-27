@@ -299,7 +299,6 @@ bool T::BlockLDLTInPlace(
     C->diagonal.at(i) = C->diagonal.at(i).selfadjointView<Eigen::Lower>();
     llts.emplace_back(C->diagonal.at(i));
     if (llts.back().info() != Eigen::Success) {
-      DUMP(C->diagonal.at(i));
       return false;
     }
     Eigen::PermutationMatrix<-1> P(llts.at(i).transpositionsP());

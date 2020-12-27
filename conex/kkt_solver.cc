@@ -143,12 +143,11 @@ bool T::Factor() {
     }
   }
   if (use_cholesky_) {
-    BlockTriangularOperations::BlockCholeskyInPlace(&mat.workspace_);
+    return BlockTriangularOperations::BlockCholeskyInPlace(&mat.workspace_);
   } else {
-    BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
-                                                &factorization);
+    return BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
+                                                       &factorization);
   }
-  return true;
 }
 
 // TODO(FrankPermenter): Reimplement Solve using SolveInPlace.

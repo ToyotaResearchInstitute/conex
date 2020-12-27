@@ -30,7 +30,7 @@ void EqualityConstraintFailingLDLT() {
   eq << 1, -1;
 
   Program prog(num_vars);
-  prog.AddEqualityConstraint(EqualityConstraints{eq, eq_affine}, {0, 1});
+  prog.AddConstraint(EqualityConstraints{eq, eq_affine}, {0, 1});
   prog.AddConstraint(linear_inequality);
 
   VectorXd linear_cost(num_vars);

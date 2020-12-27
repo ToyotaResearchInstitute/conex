@@ -7,6 +7,18 @@
 
 namespace conex {
 
+inline int IsUnique(int N, const std::vector<int>& x) {
+  Eigen::VectorXd y(N);
+  y.setZero();
+  for (auto& xi : x) {
+    y(xi)++;
+    if (y(xi) > 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
 template <typename Container>
 class ConstraintManager {
  public:
@@ -30,23 +42,31 @@ class ConstraintManager {
   };
 
   template <typename T>
-  void AddConstraint(T&& x) {
+  bool AddConstraint(T&& x) {
     std::vector<int> clique(max_number_of_variables_);
     for (size_t i = 0; i < clique.size(); i++) {
       clique[i] = i;
     }
     AddConstraint(x, clique);
+    return true;
   }
 
   template <typename T>
-  void AddConstraint(T&& x, const std::vector<int>& variables) {
+  bool AddConstraint(T&& x, const std::vector<int>& variables) {
+    if (!IsUnique(max_number_of_variables_, variables)) {
+      return false;
+    }
     eqs.emplace_back(x);
     cliques.push_back(variables);
     dual_vars.push_back({});
+    return true;
   }
 
-  void AddEqualityConstraint(EqualityConstraints&& x,
+  bool AddEqualityConstraint(EqualityConstraints&& x,
                              const std::vector<int>& variables) {
+    if (!IsUnique(max_number_of_variables_, variables)) {
+      return false;
+    }
     eqs.emplace_back(x);
     cliques.push_back(variables);
     const int m = x.SizeOfDualVariable();
@@ -56,14 +76,16 @@ class ConstraintManager {
       dual_vars.back().push_back(i + dual_variable_start_);
     }
     dual_variable_start_ += m;
+    return true;
   }
 
-  void AddEqualityConstraint(EqualityConstraints&& x) {
+  bool AddEqualityConstraint(EqualityConstraints&& x) {
     std::vector<int> clique(max_number_of_variables_);
     for (size_t i = 0; i < clique.size(); i++) {
       clique[i] = i;
     }
     AddEqualityConstraint(std::forward<EqualityConstraints>(x), clique);
+    return true;
   }
 
   // Use a list so that we do not trigger reallocations.

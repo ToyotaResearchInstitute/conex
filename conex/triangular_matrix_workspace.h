@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 
 #include "conex/debug_macros.h"
+#include "conex/memory_utils.h"
 
 namespace conex {
 
@@ -58,11 +59,11 @@ struct TriangularMatrixWorkspace {
   std::vector<std::vector<int>> separators;
 
   int SizeOfSupernode(int i) const {
-    return supernode_size.at(i) * supernode_size.at(i);
+    return get_size_aligned(supernode_size.at(i) * supernode_size.at(i));
   }
 
   int SizeOfSeparator(int i) const {
-    return supernode_size.at(i) * separators.at(i).size();
+    return get_size_aligned(supernode_size.at(i) * separators.at(i).size());
   }
 
   friend int SizeOf(const TriangularMatrixWorkspace& o) {

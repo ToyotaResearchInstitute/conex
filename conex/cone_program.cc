@@ -139,6 +139,7 @@ void ApplyLimits(double* x, double lb, double ub) {
     *x = lb;
   }
 }
+
 bool Solve(const DenseMatrix& bin, Program& prog,
            const SolverConfiguration& config, double* primal_variable) {
 #ifdef EIGEN_USE_MKL_ALL
@@ -205,7 +206,13 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     END_TIMER
 
     START_TIMER(Factor)
-    solver->Factor();
+    if (!solver->Factor()) {
+      solver->Assemble(&AW, &AQc);
+      solver->Factor();
+      solved = 0;
+      PRINTSTATUS("Factorization failed.");
+      return solved;
+    }
     END_TIMER
 
     if (update_mu) {
