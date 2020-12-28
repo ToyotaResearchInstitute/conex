@@ -11,6 +11,9 @@ inline int IsUnique(int N, const std::vector<int>& x) {
   Eigen::VectorXd y(N);
   y.setZero();
   for (auto& xi : x) {
+    if (xi >= N) {
+      return false;
+    }
     y(xi)++;
     if (y(xi) > 1) {
       return false;
@@ -94,8 +97,8 @@ class ConstraintManager {
   std::vector<std::vector<int>> dual_vars;
 
  private:
-  int max_number_of_variables_;
-  int dual_variable_start_;
+  int max_number_of_variables_ = 0;
+  int dual_variable_start_ = 0;
 };
 
 }  // namespace conex
