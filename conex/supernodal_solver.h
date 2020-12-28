@@ -81,7 +81,7 @@ struct SparseTriangularMatrix {
             Eigen::VectorXd::Zero(
                 SizeOf(TriangularMatrixWorkspace(cliques, supernode_size)))) {}
 
-  SparseTriangularMatrix(MatrixData& data)
+  SparseTriangularMatrix(const MatrixData& data)
       : SparseTriangularMatrix(data.N, data.cliques, data.supernode_size) {}
 
   int N;

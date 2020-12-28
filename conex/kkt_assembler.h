@@ -48,6 +48,7 @@ class LinearKKTAssemblerBase {
   void Scatter(const int* r, int sizer, const int* c, int sizec, double** data);
   int num_variables_;
 
+  bool direct_update = false;
   std::vector<DiagonalBlock> diag;
   std::vector<OffDiagonalBlock> off_diag;
   std::vector<OffDiagonalBlock> scatter_block;
@@ -75,9 +76,7 @@ class LinearKKTAssemblerStatic : public LinearKKTAssemblerBase {
   LinearKKTAssemblerStatic(){};
   LinearKKTAssemblerStatic(const Eigen::MatrixXd& A) : A_(A) {}
 
-  virtual void SetDenseData() override {
-    schur_complement_data.G = A_.transpose() * A_;
-  }
+  virtual void SetDenseData() override { schur_complement_data.G = A_; }
   Eigen::MatrixXd A_;
 };
 

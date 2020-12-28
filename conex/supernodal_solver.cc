@@ -436,6 +436,7 @@ MatrixData GetData(const vector<vector<int>>& cliques) {
   vector<vector<int>> supernodes;
   MatrixData d;
   d.cliques = cliques;
+  Sort(&d.cliques);
   auto& order = d.clique_order;
 
   PickCliqueOrder(d.cliques, 0, &order, &supernodes, &separators);

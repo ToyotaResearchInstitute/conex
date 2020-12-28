@@ -74,6 +74,7 @@ double T::GetCoeff(int i, int j) {
 }
 
 void T::BindDiagonalBlock(const DiagonalBlock* data) {
+  assert(!direct_update);
   diag.push_back(*data);
   UpdateNumberOfVariables();
   int m = NumberOfVariables();
@@ -82,14 +83,24 @@ void T::BindDiagonalBlock(const DiagonalBlock* data) {
   memory.resize(SizeOf(schur_complement_data));
   Initialize(&schur_complement_data, memory.data());
 
-  // TODO(FrankPermenter) Move this into smarter initialization function.
   if (m == data->num_vars) {
+    direct_update = true;
+    for (int i = 1; i < data->num_vars; i++) {
+      if (*(data->var_data + i) <= *(data->var_data + i - 1)) {
+        direct_update = false;
+        break;
+      }
+    }
+  }
+
+  if (direct_update) {
     new (&schur_complement_data.G)
         Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>(data->data, m, m);
   }
 }
 
 void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
+  assert(!direct_update);
   if (data->stride != -1) {
     off_diag.push_back(*data);
   } else {
@@ -157,12 +168,11 @@ void T::UpdateNumberOfVariables() {
 void T::UpdateBlocks() {
   SetDenseData();
 
-  for (const auto& d : diag) {
-    // There is a single block and we have already filled it.
-    if (d.num_vars == T::NumberOfVariables()) {
-      return;
-    }
+  if (direct_update) {
+    return;
+  }
 
+  for (const auto& d : diag) {
     Eigen::Map<MatrixXd> data(d.data, d.num_vars, d.num_vars);
     // TODO(FrankPermenter): Only set the lower triangular part.
     if (d.assign) {

@@ -35,6 +35,7 @@ std::vector<KKT_SystemAssembler*> GetPointers(std::list<Container>& r) {
 }
 
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
 using std::vector;
 
 void BuildLQRProblem(int N, ConstraintManager<Container>* prg) {
@@ -98,7 +99,7 @@ TEST(LDLT, TestAssembly) {
                      3, 6;
   // clang-format on
 
-  Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(n, n) * 4;
+  Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(n, n) * 2;
   Eigen::MatrixXd Qi = Eigen::MatrixXd::Identity(3, 3) * 2;
 
   int N = 2;
@@ -163,33 +164,27 @@ TEST(LDLT, Benchmark2) {
   }
 }
 
-#if 0
-TEST(bad, bad) {
-  MatrixXd Qi = MatrixXd::Random(3, 3);
-  Qi.setConstant(1);
-  MatrixXd Q2 = MatrixXd::Identity(2, 2);
-  Q2(0, 0) = 1000;
+TEST(Assemble, VariablesSpecifiedOutOfOrder) {
+  MatrixXd Q = MatrixXd::Identity(3, 3);
 
   ConstraintManager<Container> prog;
   prog.SetNumberOfVariables(4);
-  // prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{2, 0, 1});
-  // prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{3, 2, 1});
-  // prog.AddConstraint(LinearKKTAssemblerStatic{Q2}, vector{2, 1});
+  Q << 1, 0, 0, 0, 0, 0, 0, 0, 3;
 
-  prog.AddConstraint(LinearKKTAssemblerStatic{MatrixXd::Identity(3, 3)},
-                     vector{0, 1, 2});
-  prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{3, 2, 1});
-  // prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{1, 2, 3});
+  prog.AddConstraint(LinearKKTAssemblerStatic{Q}, vector{1, 0, 3});
+  Q << 1, 0, 0, 0, 0, 0, 0, 0, 2;
+  prog.AddConstraint(LinearKKTAssemblerStatic{Q}, vector{1, 0, 2});
 
-  // prog.AddConstraint(LinearKKTAssemblerStatic{Q2}, vector{1, 2});
-
-  DUMP(prog.cliques);
   Solver solver(prog.cliques, prog.dual_vars);
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(prog.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.SizeOfKKTSystem());
   solver.Assemble(&AW, &AQc);
-  DUMP(solver.KKTMatrix());
+  auto M = solver.KKTMatrix();
+  Eigen::VectorXd expected(4);
+  expected << 0, 2, 2, 3;
+  EXPECT_EQ((expected - M.diagonal()).norm(), 0);
+  MatrixXd Mref = expected.asDiagonal();
+  EXPECT_EQ((Mref - M).norm(), 0);
 }
-#endif
 }  // namespace conex

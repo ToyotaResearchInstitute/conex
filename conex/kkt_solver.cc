@@ -88,17 +88,6 @@ void T::RelabelCliques(MatrixData* data_ptr) {
   }
 }
 
-template <typename T1, typename T2>
-auto GetData(const T2& cliquesin) {
-  auto cliques = cliquesin;
-
-  auto cliques_sorted = cliques;
-  Sort(&cliques_sorted);
-
-  conex::MatrixData data;
-  return GetData(cliques_sorted);
-}
-
 T::Solver(const std::vector<std::vector<int>>& cliques,
           const std::vector<std::vector<int>>& dual_vars)
     : cliques_(cliques),
