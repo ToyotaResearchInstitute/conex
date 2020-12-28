@@ -10,7 +10,7 @@
 namespace conex {
 using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
-#if 0
+
 TEST(LP, Dense) {
   for (int i = 0; i < 1; i++) {
     SolverConfiguration config;
@@ -27,7 +27,7 @@ TEST(LP, Dense) {
 
     LinearConstraint linear_constraint{n, &Alinear, &Clinear};
 
-    Program prog;
+    Program prog(m);
     prog.SetNumberOfVariables(m);
     prog.AddConstraint(linear_constraint);
 
@@ -36,18 +36,13 @@ TEST(LP, Dense) {
     Solve(b, prog, config, y.data());
 
     VectorXd x(n);
-    prog.constraints.at(0)->get_dual_variable(x.data());
-    x.array() /= prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
+    prog.GetDualVariable(0, &x);
 
     VectorXd slack = Clinear - Alinear * y;
     EXPECT_TRUE((Alinear.transpose() * x - b).norm() <= eps);
     EXPECT_TRUE((slack).minCoeff() >= -eps);
-
-    double sqrtmu = 1.0 / prog.stats.sqrt_inv_mu[prog.stats.num_iter - 1];
-    EXPECT_TRUE(slack.dot(x) <= sqrtmu * sqrtmu * n + eps);
   }
 }
-#else
 
 Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
   Eigen::VectorXd z(indices.size());
@@ -60,7 +55,8 @@ Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
 
 using Eigen::MatrixXd;
 using std::vector;
-auto Combine(vector<MatrixXd> A, vector<MatrixXd> C, vector<vector<int>> vars) {
+auto Combine(vector<MatrixXd> A, vector<MatrixXd> C,
+             vector<vector<int> > vars) {
   int n = A.at(0).rows() * A.size();
   int m = A.at(0).cols() * A.size();
   Eigen::MatrixXd Af(n, m);
@@ -95,7 +91,7 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
   config.prepare_dual_variables = true;
 
   int number_of_constraints = 50;
-  std::vector<std::vector<int>> variables(number_of_constraints);
+  std::vector<std::vector<int> > variables(number_of_constraints);
   vector<MatrixXd> A(number_of_constraints);
   vector<MatrixXd> C(number_of_constraints);
 
@@ -179,7 +175,6 @@ TEST(LP, Sparse) {
   auto y2 = SolveSparseHelper(false);
   EXPECT_NEAR((y1 - y2).norm(), 0, 1e-7);
 }
-#endif
 
 Eigen::VectorXd SolveFillIn(bool sparse) {
   double eps = 1e-8;
@@ -189,9 +184,9 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
   config.prepare_dual_variables = true;
 
   int number_of_constraints = 4;
-  std::vector<std::vector<int>> variables{{0, 1}, {1, 2}, {2, 3}, {3, 0}};
+  std::vector<std::vector<int> > variables{{0, 1}, {1, 2}, {2, 3}, {0, 3}};
+
   int number_of_variables = 3 + 1;
-  // std::vector<std::vector<int>> variables(number_of_constraints);
   vector<MatrixXd> A(number_of_constraints);
   vector<MatrixXd> C(number_of_constraints);
 
@@ -260,6 +255,7 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
 }
 
 TEST(LP, SparseWithFillIn) {
+  DUMP("HEHEH!");
   auto y1 = SolveFillIn(true);
   auto y2 = SolveFillIn(false);
   EXPECT_NEAR((y1 - y2).norm(), 0, 1e-7);

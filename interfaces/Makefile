@@ -30,6 +30,7 @@ SOURCES = approximate_eigenvalues.cc \
 	  soc_constraint.cc \
 	  supernodal_solver.cc \
 	  triangular_matrix_workspace.cc \
+	  tree_utils.cc \
 	  jordan_matrix_algebra.cc \
 
 OBJECTS := $(SOURCES:.cc=.o)

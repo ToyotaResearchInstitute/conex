@@ -7,7 +7,6 @@
 #include "conex/supernodal_solver.h"
 
 namespace conex {
-
 using Eigen::MatrixXd;
 using std::vector;
 
@@ -52,7 +51,6 @@ void DoVerifyPerfectEliminationOrdering(const vector<vector<int>>& cliques_in,
     Sort(&supernodes);
     Sort(&cliques);
     Sort(&separators);
-
     for (size_t i = 0; i < n; i++) {
       if (expect_fill_in) {
         EXPECT_GE(supernodes.at(i).size() + separators.at(i).size(),
@@ -75,20 +73,11 @@ void DoVerifyPerfectEliminationOrdering(const vector<vector<int>>& cliques_in,
   }
 }
 
-TEST(CliqueOrdering, ExpectFillIn) {
-  DoVerifyPerfectEliminationOrdering({{1, 2}, {2, 3}, {3, 4}, {4, 1}},
-                                     true /*expect fill-in*/);
-}
-
 TEST(CliqueOrdering, PerfectEliminationOrderFound) {
   DoVerifyPerfectEliminationOrdering(
       {{1, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {8, 9}, {1, 11}});
   DoVerifyPerfectEliminationOrdering(
       {{0, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {0, 11}});
-}
-
-TEST(CliqueOrdering, Nonmaximal) {
-  DoVerifyPerfectEliminationOrdering({{0, 1}, {0, 1, 2}, {0, 1, 2, 3, 4}});
 }
 
 TEST(CliqueOrdering, SmallSize) {
@@ -116,6 +105,33 @@ TEST(CliqueOrdering, PerfectEliminationOrderFoundDiagonal) {
 TEST(CliqueOrdering, OptimalOrdering) {
   DoVerifyPerfectEliminationOrdering(
       {{1, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {8, 9}, {1, 11}});
+}
+
+TEST(CliqueOrdering, FillIn) {
+  // Apply to clique tree:
+  //      12
+  //    23  01
+  //      30
+  vector<vector<int>> cliques{{0, 1}, {1, 2}, {0, 3}, {2, 3}};
+  int n = 4;
+  vector<int> order(n);
+  vector<vector<int>> supernodes(n);
+  vector<vector<int>> separators(n);
+  PickCliqueOrder(cliques, 1, &order, &supernodes, &separators);
+  vector<int> order_ref{3, 2, 0, 1};
+  EXPECT_EQ(order.at(0), 2);
+  EXPECT_EQ(order.back(), 1);
+}
+
+TEST(CliqueOrdering, Nonmaximal) {
+  vector<vector<int>> cliques{{0, 1}, {0, 1, 2}, {0, 1, 2, 3, 4}};
+  int n = 5;
+  vector<int> order(n);
+  vector<vector<int>> supernodes(n);
+  vector<vector<int>> separators(n);
+  PickCliqueOrder(cliques, 2 /*root*/, &order, &supernodes, &separators);
+  vector<int> order_ref{0, 1, 2};
+  EXPECT_EQ(order, order_ref);
 }
 
 }  // namespace conex

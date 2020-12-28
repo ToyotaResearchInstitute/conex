@@ -80,7 +80,7 @@ void T::RelabelCliques(MatrixData* data_ptr) {
 
     data.supernodes_original_labels.at(e) =
         ReplaceWithPosition(data.supernodes_original_labels.at(e), labels,
-                            /*!found = error*/ false);
+                            /*!found = fill in*/ true);
 
     data.separators_original_labels.at(e) =
         ReplaceWithPosition(data.separators_original_labels.at(e), labels,

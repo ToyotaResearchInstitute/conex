@@ -5,6 +5,7 @@
 
 #include "conex/debug_macros.h"
 #include "conex/supernodal_solver.h"
+#include "conex/tree_utils.h"
 
 namespace conex {
 
@@ -78,7 +79,8 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
                           int root_in,
                           SymmetricMatrix<vector<int>>* intersections_ptr,
                           vector<vector<int>>* separators,
-                          std::vector<int>* order) {
+                          std::vector<int>* order, RootedTree* tree_ptr) {
+  auto& tree = *tree_ptr;
   auto& intersections = *intersections_ptr;
   size_t n = cliques_sorted.size();
   assert(root_in < static_cast<int>(n));
@@ -107,6 +109,8 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
     if (visited.at(active) == 0) {
       order->push_back(active);
       visited.at(active) = 1;
+      tree.parent.at(active) = active;
+      tree.height.at(active) = 0;
     }
 
     // Find unvisited neighbor with maximum weight.
@@ -138,6 +142,8 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
       order->push_back(e);
       visited.at(e) = 1;
       edges.emplace_back(active, e);
+      tree.parent.at(e) = active;
+      tree.height.at(e) = tree.height.at(active) + 1;
     }
 
     if (argmax.size() == 0) {
@@ -164,6 +170,53 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
 
 }  // namespace
 
+void FillIn(const RootedTree& tree, int num_variables,
+            const std::vector<int>* order, vector<std::vector<int>>* supernodes,
+            vector<std::vector<int>>* separators) {
+  std::vector<int> eliminated(num_variables);
+  int num_cliques = order->size();
+  for (auto& e : eliminated) {
+    e = num_cliques + 1;
+  }
+
+  // Detect if variable is a supernode of clique i and
+  // clique j.  If so, apply running intersection property
+  // to the path from clique i and to clique j:
+  //  1) Make a supernode of the clique closest to the root.
+  //  2) Make a separator of all other cliques.
+  //
+  for (size_t i = 0; i < order->size(); i++) {
+    for (auto v : supernodes->at(order->at(i))) {
+      if (eliminated.at(v) < num_cliques) {
+        auto fill_in =
+            path(order->at(i), eliminated.at(v), tree.parent, tree.height);
+        for (size_t j = 0; j < fill_in.size() - 1; j++) {
+          auto e = fill_in.at(j);
+          separators->at(e) = UnionOfSorted(separators->at(e), {v});
+        }
+        eliminated.at(v) = fill_in.back();
+        supernodes->at(fill_in.back()).push_back(v);
+      } else {
+        eliminated.at(v) = order->at(i);
+      }
+    }
+  }
+
+  supernodes->clear();
+  supernodes->resize(num_cliques);
+  for (size_t i = 0; i < eliminated.size(); i++) {
+    // TODO(FrankPermenter): Remove this check if we refactor
+    // to require that require variable set = [0, ..., GetMax(Vars)].
+    // As is, variables are only a subset and hence the "eliminated"
+    // vector has spurious entries.
+    if (eliminated.at(i) < num_cliques) {
+      supernodes->at(eliminated.at(i)).push_back(i);
+    }
+  }
+  Sort(separators);
+  Sort(supernodes);
+}
+
 void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
                      int root, std::vector<int>* order,
                      std::vector<std::vector<int>>* supernodes,
@@ -173,17 +226,20 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
   order->resize(n);
   separators->clear();
   separators->resize(n);
-
   SymmetricMatrix<vector<int>> intersections(n);
+  RootedTree tree(n);
   int better_root = PickCliqueOrderHelper(cliques_sorted, root, &intersections,
-                                          separators, order);
+                                          separators, order, &tree);
+
   if (root == -1) {
     order->clear();
     order->resize(n);
     separators->clear();
     separators->resize(n);
+    RootedTree tree_i(n);
     int r2 = PickCliqueOrderHelper(cliques_sorted, better_root, &intersections,
-                                   separators, order);
+                                   separators, order, &tree_i);
+    tree = tree_i;
     assert(r2 == better_root);
   }
 
@@ -198,27 +254,8 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
     }
   }
 
-  vector<size_t> eliminated(GetMax(cliques_sorted) + 1);
-  for (auto& e : eliminated) {
-    e = n + 1;
-  }
-
-  // Fill in
-  for (size_t i = 0; i < order->size(); i++) {
-    for (auto v : supernodes->at(order->at(i))) {
-      if (eliminated.at(v) < n) {
-        for (size_t j = eliminated.at(v); j < i; j++) {
-          separators->at(order->at(j)).push_back(v);
-        }
-        auto& sn = supernodes->at(order->at(eliminated.at(v)));
-        for (size_t s = 0; s < sn.size(); s++) {
-          sn.erase(sn.begin() + s);
-          break;
-        }
-      }
-      eliminated.at(v) = i;
-    }
-  }
+  int num_vars = GetMax(cliques_sorted) + 1;
+  FillIn(tree, num_vars, order, supernodes, separators);
 }
 
 }  // namespace conex
