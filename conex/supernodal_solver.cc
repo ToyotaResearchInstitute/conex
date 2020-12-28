@@ -458,17 +458,14 @@ MatrixData GetData(const vector<vector<int>>& cliques) {
   supernodes_.resize(order.size());
   separators_.resize(order.size());
 
-  vector<vector<int>> cliques_(order.size());
   i = 0;
 
   for (auto e : order) {
-    cliques_.at(i) = Relabel(cliques.at(e), d.permutation);
     supernodes_.at(i) = Relabel(supernodes.at(e), d.permutation);
     separators_.at(i) = Relabel(separators.at(e), d.permutation);
     i++;
   }
 
-  Sort(&cliques_);
   Sort(&separators_);
   Sort(&supernodes_);
 

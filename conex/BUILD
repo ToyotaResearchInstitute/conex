@@ -217,6 +217,16 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "tree_utils_test",
+    srcs = ["test/tree_utils_test.cc"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "supernodal_solver",
+        "@gtest//:main",
+    ],
+)
+
 cc_library(
     name = "supernodal_solver",
     srcs = [
@@ -226,6 +236,7 @@ cc_library(
         "kkt_assembler.cc",
         "kkt_solver.cc",
         "supernodal_solver.cc",
+        "tree_utils.cc",
         "triangular_matrix_workspace.cc",
     ],
     hdrs = [
@@ -245,6 +256,7 @@ cc_library(
         "newton_step.h",
         "supernodal_cholesky_data.h",
         "supernodal_solver.h",
+        "tree_utils.h",
         "triangular_matrix_workspace.h",
         "workspace.h",
     ],

@@ -19,6 +19,7 @@ class LinearKKTAssemblerBase {
     diag.clear();
     off_diag.clear();
     scatter_block.clear();
+    direct_update = false;
   }
 
   void UpdateBlocks();

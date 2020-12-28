@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
-#include <Eigen/Dense>
 
 namespace conex {
 
@@ -37,8 +36,9 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& P) {
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& P) {
+  os << "\n--\n";
   for (auto e : P) {
-    os << e << "\n\n";
+    os << e << "\n-\n";
   }
   return os;
 }
@@ -50,21 +50,6 @@ inline std::ostream& operator<<(std::ostream& os,
     os << e << "\n\n";
   }
   return os;
-}
-
-template <typename T>
-Eigen::MatrixXd Sparsity(const T& x) {
-  Eigen::MatrixXd y(x.rows(), x.cols());
-  for (int i = 0; i < x.rows(); i++) {
-    for (int j = 0; j < x.cols(); j++) {
-      if (std::fabs(x(i, j)) > 1e-9) {
-        y(i, j) = 1;
-      } else {
-        y(i, j) = 0;
-      }
-    }
-  }
-  return y;
 }
 
 #define LOG(x)                     \
