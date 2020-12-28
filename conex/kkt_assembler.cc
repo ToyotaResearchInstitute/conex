@@ -10,7 +10,7 @@ using std::vector;
 namespace {
 
 template <typename T>
-vector<T> InitVector(T* data, int N) {
+vector<T> InitVector(const T* data, int N) {
   vector<T> y;
   for (int i = 0; i < N; i++) {
     y.push_back(data[i]);
@@ -20,7 +20,8 @@ vector<T> InitVector(T* data, int N) {
 
 }  // namespace
 
-void T::Set(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
+void T::Set(const vector<int>& r, const vector<int>& c,
+            Eigen::Map<MatrixXd>* data) {
   int i = 0;
   for (auto ri : r) {
     int j = 0;
@@ -32,7 +33,8 @@ void T::Set(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
   }
 }
 
-void T::Increment(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
+void T::Increment(const vector<int>& r, const vector<int>& c,
+                  Eigen::Map<MatrixXd>* data) {
   int i = 0;
   for (auto ri : r) {
     int j = 0;
@@ -44,7 +46,7 @@ void T::Increment(vector<int> r, vector<int> c, Eigen::Map<MatrixXd>* data) {
   }
 }
 
-void T::Increment(int* r, int sizer, int* c, int sizec,
+void T::Increment(const int* r, int sizer, const int* c, int sizec,
                   Eigen::Map<MatrixXd>* data) {
   for (int i = 0; i < sizer; i++) {
     for (int j = 0; j < sizec; j++) {
@@ -53,7 +55,8 @@ void T::Increment(int* r, int sizer, int* c, int sizec,
   }
 }
 
-void T::Set(int* r, int sizer, int* c, int sizec, Eigen::Map<MatrixXd>* data) {
+void T::Set(const int* r, int sizer, const int* c, int sizec,
+            Eigen::Map<MatrixXd>* data) {
   for (int i = 0; i < sizer; i++) {
     for (int j = 0; j < sizec; j++) {
       (*data)(i, j) = GetCoeff(*(r + i), *(c + j));
@@ -100,7 +103,8 @@ void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   Initialize(&schur_complement_data, memory.data());
 }
 
-void T::Scatter(int* r, int sizer, int* c, int sizec, double** data) {
+void T::Scatter(const int* r, int sizer, const int* c, int sizec,
+                double** data) {
   int cnt = 0;
   for (int j = 0; j < sizec; j++) {
     for (int i = j; i < sizer; i++) {

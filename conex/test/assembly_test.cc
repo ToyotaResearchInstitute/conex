@@ -163,4 +163,33 @@ TEST(LDLT, Benchmark2) {
   }
 }
 
+#if 0
+TEST(bad, bad) {
+  MatrixXd Qi = MatrixXd::Random(3, 3);
+  Qi.setConstant(1);
+  MatrixXd Q2 = MatrixXd::Identity(2, 2);
+  Q2(0, 0) = 1000;
+
+  ConstraintManager<Container> prog;
+  prog.SetNumberOfVariables(4);
+  // prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{2, 0, 1});
+  // prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{3, 2, 1});
+  // prog.AddConstraint(LinearKKTAssemblerStatic{Q2}, vector{2, 1});
+
+  prog.AddConstraint(LinearKKTAssemblerStatic{MatrixXd::Identity(3, 3)},
+                     vector{0, 1, 2});
+  prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{3, 2, 1});
+  // prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{1, 2, 3});
+
+  // prog.AddConstraint(LinearKKTAssemblerStatic{Q2}, vector{1, 2});
+
+  DUMP(prog.cliques);
+  Solver solver(prog.cliques, prog.dual_vars);
+  solver.Bind(GetPointers(prog.eqs));
+  Eigen::VectorXd AW(prog.SizeOfKKTSystem());
+  Eigen::VectorXd AQc(prog.SizeOfKKTSystem());
+  solver.Assemble(&AW, &AQc);
+  DUMP(solver.KKTMatrix());
+}
+#endif
 }  // namespace conex

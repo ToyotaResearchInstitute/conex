@@ -5,7 +5,7 @@ namespace conex {
 
 struct DiagonalBlock {
   int num_vars;
-  int* var_data;
+  const int* var_data;
   double* data;
   int increment_or_assign;
   int stride;
@@ -14,9 +14,9 @@ struct DiagonalBlock {
 
 struct OffDiagonalBlock {
   int num_rows;
-  int* row_data;
+  const int* row_data;
   int num_cols;
-  int* col_data;
+  const int* col_data;
   double* data;
   double** data_pointers;
   int assign;

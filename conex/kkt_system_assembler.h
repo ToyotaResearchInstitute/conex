@@ -62,7 +62,8 @@ class KKT_SystemAssembler {
   std::unique_ptr<KKT_SystemAssemblerDispatcher> model;
 };
 
-inline OffDiagonalBlock BuildBlock(std::vector<int>* r, std::vector<int>* c,
+inline OffDiagonalBlock BuildBlock(const std::vector<int>* r,
+                                   const std::vector<int>* c,
                                    double* matrix_data) {
   OffDiagonalBlock block;
   block.num_rows = r->size();
@@ -75,7 +76,8 @@ inline OffDiagonalBlock BuildBlock(std::vector<int>* r, std::vector<int>* c,
   return block;
 }
 
-inline DiagonalBlock BuildBlock(std::vector<int>* r, double* matrix_data) {
+inline DiagonalBlock BuildBlock(const std::vector<int>* r,
+                                double* matrix_data) {
   DiagonalBlock block;
   block.num_vars = r->size();
   block.var_data = r->data();
@@ -85,7 +87,8 @@ inline DiagonalBlock BuildBlock(std::vector<int>* r, double* matrix_data) {
   return block;
 }
 
-inline OffDiagonalBlock BuildBlock(std::vector<int>* r, std::vector<int>* c,
+inline OffDiagonalBlock BuildBlock(const std::vector<int>* r,
+                                   const std::vector<int>* c,
                                    std::vector<double*>* mat) {
   OffDiagonalBlock block;
   block.num_rows = r->size();

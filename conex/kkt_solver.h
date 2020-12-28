@@ -7,13 +7,6 @@ namespace conex {
 
 class Solver {
  public:
-  std::vector<std::vector<int>> cliques_;
-  std::vector<std::vector<int>> dual_variables_;
-  MatrixData data;
-  SparseTriangularMatrix mat;
-  std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
-  Eigen::PermutationMatrix<-1> Pt;
-  std::vector<KKT_SystemAssembler*> assembler;
   Solver(const std::vector<std::vector<int>>& cliques,
          const std::vector<std::vector<int>>& dual_vars);
 
@@ -36,6 +29,14 @@ class Solver {
 
  private:
   bool use_cholesky_ = false;
+  // Copies of inputs.
+  const std::vector<std::vector<int>> cliques_;
+  const std::vector<std::vector<int>> dual_variables_;
+  MatrixData data;
+  SparseTriangularMatrix mat;
+  std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
+  Eigen::PermutationMatrix<-1> Pt;
+  std::vector<KKT_SystemAssembler*> assembler;
 };
 
 }  // namespace conex

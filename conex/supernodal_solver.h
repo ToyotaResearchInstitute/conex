@@ -23,8 +23,8 @@ struct MatrixData {
   std::vector<std::vector<int>> supernodes_original_labels;
   std::vector<std::vector<int>> separators_original_labels;
   std::vector<int> supernode_size;
-  // The map from supernode to original variable.
   std::vector<int> permutation;
+  // The map from supernode to original variable.
   std::vector<int> permutation_inverse;
   // The map from clique (with fill-in) to original clique.
   std::vector<int> clique_order;
@@ -33,14 +33,13 @@ struct MatrixData {
 
 MatrixData GetData(const std::vector<Clique>& cliques);
 
-inline void DoBind(MatrixData& data, TriangularMatrixWorkspace& workspace,
+inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
                    const std::vector<KKT_SystemAssembler*>& eqs) {
   auto& sn = data.supernodes_original_labels;
   auto& sep = data.separators_original_labels;
 
   for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
-
     if (sep.at(e).size() > 0 && sn.at(e).size() > 0) {
       auto block = BuildBlock(&sn.at(e), &sep.at(e),
                               workspace.off_diagonal.at(e).data());

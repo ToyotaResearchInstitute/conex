@@ -53,7 +53,6 @@ namespace conex {
 using T = Solver;
 void T::RelabelCliques(MatrixData* data_ptr) {
   auto cliques = cliques_;
-  //  auto& eqs = prog.eqs;
   auto& data = *data_ptr;
 
   std::vector<int> order;
@@ -104,7 +103,7 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
           const std::vector<std::vector<int>>& dual_vars)
     : cliques_(cliques),
       dual_variables_(dual_vars),
-      data(GetData(cliques_)),
+      data(GetData(cliques)),
       mat(data),
       Pt(data.N) {
   RelabelCliques(&data);
