@@ -116,7 +116,7 @@ int LookupSuperNode(const T& o, int index, int start) {
       }
     }
   }
-  assert(0);
+  throw "Sparse matrix is malformed: invalid supernode partition.";
 }
 
 double Get(const SparseTriangularMatrix& o, int i, int j) {
@@ -173,7 +173,7 @@ class LowerTriangularSuperNodal {
         return j;
       }
     }
-    assert(0);
+    throw "Sparse matrix is malformed: invalid supernode partition.";
   }
 
   double Get(int i, int j) const {
@@ -229,8 +229,7 @@ class LowerTriangularSuperNodal {
       }
     }
 
-    bool entry_not_in_sparsity_pattern = true;
-    assert(!entry_not_in_sparsity_pattern);
+    throw "Specified entry of sparse matrix is not accesible.";
   }
 
  public:

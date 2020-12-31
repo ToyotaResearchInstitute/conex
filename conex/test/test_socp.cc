@@ -33,7 +33,7 @@ int DoMain() {
     Ai.topRightCorner(1, n) = Wsqrt.col(i - 1).transpose();
     A.push_back(Ai);
   }
-  DenseLMIConstraint T2{n + 1, A, C};
+  DenseLMIConstraint lmi_constraint{n + 1, A, C};
 
   Eigen::MatrixXd b(n, 1);
 
@@ -45,8 +45,17 @@ int DoMain() {
   Cs(0) = 1;
   SOCConstraint T(As, Cs);
 
+  QuadraticConstraint soc_constraint(As, Cs);
+
+  DenseMatrix Q = Wsqrt.transpose() * Wsqrt;
+  DenseMatrix Aq(n + 1, n);
+  Aq.setZero();
+  Aq.bottomRightCorner(n, n).setIdentity();
+  QuadraticConstraint quad_constraint(Q, Aq, Cs);
+
   for (int i = -2; i < 2; i++) {
     b.setConstant(i);
+    b += Eigen::VectorXd::Random(n, 1) * .02;
 
     Program prog2(n);
     prog2.AddConstraint(T);
@@ -54,28 +63,33 @@ int DoMain() {
     Solve(b, prog2, config, y2.data());
 
     Program prog(n);
-    prog.AddConstraint(T2);
+    prog.AddConstraint(lmi_constraint);
     DenseMatrix y1(n, 1);
     Solve(b, prog, config, y1.data());
 
-    EXPECT_TRUE((y1 - y2).norm() < 1e-4);
+    EXPECT_NEAR((y1 - y2).norm(), 0, 1e-4);
 
-    DenseMatrix Q = Wsqrt.transpose() * Wsqrt;
-    DenseMatrix Aq(n + 1, n);
-    Aq.setZero();
-    Aq.bottomRightCorner(n, n).setIdentity();
-
-    QuadraticConstraint Tq(Q, Aq, Cs);
     Program prog3(n);
-    prog3.AddConstraint(Tq);
+    prog3.AddConstraint(quad_constraint);
     DenseMatrix y3(n, 1);
     Solve(b, prog3, config, y3.data());
-    EXPECT_TRUE((y1 - y3).norm() < 1e-4);
+    EXPECT_NEAR((y1 - y3).norm(), 0, 1e-6);
+
+    Program prog4(n);
+    prog4.AddConstraint(soc_constraint);
+    DenseMatrix y4(n, 1);
+    Solve(b, prog4, config, y4.data());
+    EXPECT_NEAR((y1 - y4).norm(), 0, 1e-6);
   }
 
   return 0;
 }
 
-TEST(Constraints, SOCP) { DoMain(); }
+TEST(Constraints, SOCP) {
+  srand(1);
+  for (int i = 0; i < 10; i++) {
+    DoMain();
+  }
+}
 
 }  // namespace conex

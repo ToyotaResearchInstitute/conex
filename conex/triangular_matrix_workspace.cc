@@ -14,7 +14,7 @@ int LookupSuperNode(const T& o, int index, int start) {
       }
     }
   }
-  assert(0);
+  throw "Sparse matrix is malformed: invalid supernode partition.";
 }
 
 template <typename T>
@@ -42,7 +42,7 @@ double* LookupAddress(T& o, int r, int c) {
     }
     cnt++;
   }
-  assert(0);
+  throw "Specified entry of sparse matrix is not accessible.";
 }
 
 }  // namespace

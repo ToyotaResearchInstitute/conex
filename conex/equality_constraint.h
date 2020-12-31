@@ -29,12 +29,12 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
   Eigen::MatrixXd A_;
   Eigen::MatrixXd b_;
 
-  friend int Rank(const EqualityConstraints& o) { return 0; };
-  friend void SetIdentity(EqualityConstraints* o){};
-  friend void TakeStep(EqualityConstraints* o, const StepOptions& opt,
-                       const Ref& y, StepInfo* data){};
-  friend void GetMuSelectionParameters(EqualityConstraints* o, const Ref& y,
-                                       MuSelectionParameters* p){};
+  friend int Rank(const EqualityConstraints&) { return 0; };
+  friend void SetIdentity(EqualityConstraints*){};
+  friend void TakeStep(EqualityConstraints*, const StepOptions&, const Ref&,
+                       StepInfo*){};
+  friend void GetMuSelectionParameters(EqualityConstraints*, const Ref&,
+                                       MuSelectionParameters*){};
 
   friend void ConstructSchurComplementSystem(EqualityConstraints* o,
                                              bool initialize,

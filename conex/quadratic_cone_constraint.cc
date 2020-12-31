@@ -6,216 +6,92 @@ namespace conex {
 using EigenType = DenseMatrix;
 using Real = double;
 
-// Implements the spectral decomposition of the Spin Factor algebra.
-// See
-// http://rutcor.rutgers.edu/~alizadeh/CLASSES/12fallSDP/Notes/Lecture08/lec08.pdf
-// or "Analysis on Symmetric Cones" by Faraut and Koranyi.
 namespace {
-class SpectralDecompSpinFactorQ {
- public:
-  using IdempotentType = DenseMatrix;
-  using EigenType = Eigen::VectorXd;
-  using EssentialVectorType = DenseMatrix;
 
-  struct PeirceDecompType {
-    EigenType X00;
-    EigenType X11;
-    EigenType X01;
-    EigenType Component(int i, int j) {
-      if ((i == 0) && (j == 0)) {
-        return X00;
-      }
-      if ((i + j == 1)) {
-        return X01;
-      }
-      if ((i == 1) && (j == 1)) {
-        return X11;
-      }
-      return EigenType();
-    }
-  };
+// double InnerProduct(const DenseMatrix& Q, double x0, const Eigen::VectorXd&
+// x1,
+//                    const double y0, const Eigen::VectorXd& y1) {
+//  return 2 * (x0 * y0 + x1.transpose() * Q * y1);
+//}
 
-  Eigen::Matrix<Real, 2, 1> Eigenvalues() const { return eigenvalues_; }
-  void Compute(const Eigen::Ref<const EigenType>& x) {
-    int n = size - 1;
-    assert(x.rows() == n + 1);
-    q_ = x.col(0).tail(n);
-    norm_of_q_ = std::sqrt(InnerProduct(q_, q_));
-    if (norm_of_q_ > 0) {
-      q_ = q_ / norm_of_q_;
-    }
-    eigenvalues_(0) = x(0) + norm_of_q_;
-    eigenvalues_(1) = x(0) - norm_of_q_;
+double SquaredNorm(const DenseMatrix& Q, const Eigen::VectorXd& x) {
+  if (Q.rows() > 0)
+    return x.transpose() * Q * x;
+  else {
+    return x.transpose() * x;
   }
+}
 
-  DenseMatrix Idempotent(int i) const { return Idempotents().col(i); }
+double Norm(const Eigen::MatrixXd& Q, const Eigen::VectorXd& x) {
+  return std::sqrt(SquaredNorm(Q, x));
+}
 
-  // Implements equations from page 7 of
-  // http://rutcor.rutgers.edu/~alizadeh/CLASSES/12fallSDP/Notes/Lecture08/lec08.pdf
-  DenseMatrix Idempotents() const {
-    int n = size - 1;
-    DenseMatrix idempotents(n + 1, 2);
-    if (norm_of_q_ > 0) {
-      idempotents.col(0) << .5, .5 * q_;
-      idempotents.col(1) << .5, -.5 * q_;
-    } else {
-      idempotents.setZero();
-      idempotents(0, 0) = .5;
-      idempotents(0, 1) = .5;
-    }
-    return idempotents;
-  }
-
-  // The 3 Peirce components of x are the orthogonal projections of
-  // x onto the following 3 subspaces:
-  //
-  //   S00 := span { (1,  q) }               (dim = 0)
-  //   S11 := span { (1, -q) }               (dim = 0)
-  //   S01 :=  (S00 + S11)^{\perp}
-  //        = { (0, p) : <p, q> = 0 }
-  //
-  // See, e.g., Example 06 of "An Introduction to
-  // Formally Real Jordan Algebras and Their Applications in Optimization" by
-  // Alizadeh.
-  PeirceDecompType TransformToPeirceComponents(const Eigen::VectorXd& x) const {
-    PeirceDecompType peirce_decomp;
-    // Compute X00 and X11 by directly computing orthogonal projection
-    // onto S00 and S11
-    const double c0 = .5 * x(0);
-    const double c1 = .5 * InnerProduct(q_, x.tail(size - 1));
-    peirce_decomp.X00(0) = c0 + c1;
-    peirce_decomp.X00.tail(size - 1) = (c0 + c1) * q_;
-    peirce_decomp.X11(0) = c0 - c1;
-    peirce_decomp.X11.tail(size - 1) = (c1 - c0) * q_;
-
-    // Compute X01 by using the fact that S01 + S00 + S11 is a direct-sum
-    // decomposition
-    peirce_decomp.X01 = x - peirce_decomp.X00 - peirce_decomp.X11;
-    return peirce_decomp;
-  }
-
-  EigenType TransformFromPeirceComponents(const PeirceDecompType& X) const {
-    return X.X00 + X.X11 + X.X01;
-  }
-
-  // If we have computed the spectral decomposition of (x0, x1), then the
-  // essential unit vector is x1*1/|x1|.
-  auto EssentialUnitVector() const { return q_; }
-  auto NormOfEssentialVector() const { return norm_of_q_; }
-
-  // Let z = (z0, z1) have Peirce decomposition
-  //      z = c0 (1, q) + c1 (1, -q)  + (0, p).
-  //
-  // This function returns (c0-c1) q, i.e., the essential vector of just the
-  // "diagonal" Peirce components
-  //        c0 (1, q) + c1 (1, -q).
-  //
-  // Since z1 = (c0 - c1) q + p  and  <p , q> = 0, we compute this simply by
-  // projecting the essential vector z1 onto the span of q.
-  EssentialVectorType EssentialVectorOfDiagonalPeirceComponents(
-      const Eigen::Ref<const EssentialVectorType> z) const {
-    const double inner_product = InnerProduct(q_.tail(size - 1), z);
-    return q_ * inner_product;
-  }
-
-  double InnerProduct(const DenseMatrix& x, const DenseMatrix& y) const {
-    return (x.transpose() * Q * y)(0, 0);
-  }
-
-  SpectralDecompSpinFactorQ(int n, const DenseMatrix& Qin)
-      : Q(Qin), size(n + 1), q_(n, 1) {}
-  DenseMatrix Q;
-
- private:
-  int size;
-  Eigen::Matrix<Real, 2, 1> eigenvalues_;
-  Eigen::VectorXd q_;
-  Real norm_of_q_;
+struct SpinFactorElement {
+  double q0;
+  Eigen::VectorXd q1;
 };
 
 double InnerProduct(const DenseMatrix& Q, const Eigen::VectorXd& x,
                     const Eigen::VectorXd& y) {
-  int order = x.rows();
-  return 2 *
-         (x(0) * y(0) + x.tail(order - 1).transpose() * Q * y.tail(order - 1));
+  if (Q.rows() > 0)
+    return x.transpose() * Q * y;
+  else {
+    return x.transpose() * y;
+  }
 }
 
-double SquaredNorm(const DenseMatrix& Q, const DenseMatrix& x) {
-  DenseMatrix y = (x.transpose() * Q * x);
-  assert(y.rows() == 1);
-  assert(y.cols() == 1);
-  return y(0, 0);
-}
-
-DenseMatrix QuadraticRepresentation(const DenseMatrix& Q,
-                                    const Eigen::VectorXd& x,
-                                    const Eigen::VectorXd& y) {
+SpinFactorElement QuadraticRepresentation(double x1_norm_squared,
+                                          double inner_product_of_x1_and_y1,
+                                          double x0, const Eigen::VectorXd& x1,
+                                          double y0,
+                                          const Eigen::VectorXd& y1) {
   // We use the formula from Example 11.12 of "Formally Real Jordan Algebras
   // and Their Applications to Optimization"  by Alizadeh, which states the
   // quadratic representation of x equals the linear map
   //                          2xx' - (det x) * R
   // where R is the reflection operator R = diag(1, -1, ..., -1) and det x is
   // the determinate of x = (x0, x1), i.e., det x = x0^2 - |x1|^2.
-  int order = x.rows();
-  double det_x = x(0) * x(0) - SquaredNorm(Q, x.tail(order - 1));
-  EigenType z = det_x * y;
-  z(0) *= -1;
-  return (InnerProduct(Q, x, y)) * x + z;
+  double det_x = x0 * x0 - x1_norm_squared;
+  SpinFactorElement z;
+  double scale = 2 * (x0 * y0 + inner_product_of_x1_and_y1);
+  z.q0 = scale * x0 - det_x * y0;
+  z.q1 = scale * x1 + det_x * y1;
+  return z;
 }
 
-DenseMatrix Sqrt(const DenseMatrix& Q, double x0, const DenseMatrix& x) {
-  int n = x.rows();
-  DenseMatrix z(n + 1, 1);
-  z(0, 0) = x0;
-  z.bottomRows(n) = x;
-  SpectralDecompSpinFactorQ spec(n, Q);
-  spec.Compute(z);
-  auto ev = spec.Eigenvalues();
-
-  if (ev.minCoeff() < 0) {
-    DUMP(ev);
-    DUMP(z);
-    assert(0);
+void Exp(double norm_x1, double* x0, Eigen::VectorXd* x1) {
+  double k = norm_x1;
+  if (k > 0) {
+    (*x1) *= .5 * (exp(*x0 + k) - exp(*x0 - k)) / k;
   }
-
-  DenseMatrix zsqrt = std::sqrt(ev(0, 0)) * spec.Idempotent(0) +
-                      std::sqrt(ev(1, 0)) * spec.Idempotent(1);
-  return zsqrt;
+  (*x0) = (.5 * (exp(*x0 + k) + exp(*x0 - k)));
 }
 
-DenseMatrix Exp(const DenseMatrix& Q, double x0, const DenseMatrix& x) {
-  int n = x.rows();
-  DenseMatrix z(n + 1, 1);
-  z(0, 0) = x0;
-  z.bottomRows(n) = x;
-  SpectralDecompSpinFactorQ spec(n, Q);
-  spec.Compute(z);
-  auto ev = spec.Eigenvalues();
-  DenseMatrix zsqrt = std::exp(ev(0, 0)) * spec.Idempotent(0) +
-                      std::exp(ev(1, 0)) * spec.Idempotent(1);
-  return zsqrt;
-}
-
-double NormInf(const DenseMatrix& Q, double x0, const DenseMatrix& x) {
-  int n = x.rows();
-  DenseMatrix z(n + 1, 1);
-  z(0, 0) = x0;
-  z.bottomRows(n) = x;
-  SpectralDecompSpinFactorQ spec(n, Q);
-  spec.Compute(z);
-  auto ev = spec.Eigenvalues();
-  if (std::fabs(ev(0)) > std::fabs(ev(1))) {
-    return std::fabs(ev(0));
-  } else {
-    return std::fabs(ev(1));
+template <typename T>
+void Sqrt(double norm_x1, double* x0, T* x1) {
+  double k = norm_x1;
+  if (k > 0) {
+    (*x1) *= .5 * (std::sqrt(*x0 + k) - std::sqrt(*x0 - k)) / k;
   }
+  (*x0) = (.5 * (std::sqrt(*x0 + k) + std::sqrt(*x0 - k)));
 }
+
+DenseMatrix Eigenvalues(double norm_of_x1, double x0) {
+  DenseMatrix eigenvalues(2, 1);
+  eigenvalues(0) = x0 + norm_of_x1;
+  eigenvalues(1) = x0 - norm_of_x1;
+  return eigenvalues;
+}
+
 }  // namespace
 
 void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
                                                Ref* minus_s) {
-  minus_s->noalias() = (constraint_matrix_)*y;
-  minus_s->noalias() -= (constraint_affine_)*inv_sqrt_mu;
+  int n = A1_.rows();
+  (*minus_s)(0, 0) = A0_.dot(y.col(0));
+  (*minus_s)(0, 0) -= C0_ * inv_sqrt_mu;
+  minus_s->bottomRows(n).noalias() = A1_ * y;
+  minus_s->bottomRows(n).noalias() -= C1_ * inv_sqrt_mu;
 }
 
 // Combine this with TakeStep
@@ -223,16 +99,22 @@ void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
-  auto& Ws = workspace->temp_2;
+  SpinFactorElement Ws;
   o->ComputeNegativeSlack(1, y, &minus_s);
 
-  auto wsqrt = Sqrt(o->Q_, o->workspace_.W0, o->workspace_.W1);
-  int n = workspace->n_;
-  Ws = QuadraticRepresentation(o->Q_, wsqrt, minus_s);
+  SpinFactorElement wsqrt;
+  wsqrt.q0 = o->workspace_.W0;
+  wsqrt.q1 = o->workspace_.W1;
 
-  SpectralDecompSpinFactorQ spec(n, o->Q_);
-  spec.Compute(Ws);
-  auto ev = spec.Eigenvalues();
+  Sqrt(Norm(o->Q_, wsqrt.q1), &wsqrt.q0, &wsqrt.q1);
+
+  int n = workspace->n_;
+  Ws = QuadraticRepresentation(
+      SquaredNorm(o->Q_, wsqrt.q1),
+      InnerProduct(o->Q_, wsqrt.q1, minus_s.bottomRows(n)), wsqrt.q0, wsqrt.q1,
+      minus_s(0, 0), minus_s.bottomRows(n));
+
+  auto ev = Eigenvalues(Norm(o->Q_, Ws.q1), Ws.q0);
 
   const double lamda_max = -ev.minCoeff();
   const double lamda_min = -ev.maxCoeff();
@@ -252,84 +134,92 @@ void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
   auto& minus_s = o->workspace_.temp_1;
   o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
 
-  // e - Q(w^{1/2})(C-A^y)
-  auto wsqrt = Sqrt(o->Q_, o->workspace_.W0, o->workspace_.W1);
-  int n = wsqrt.rows();
-  auto d = QuadraticRepresentation(o->Q_, wsqrt, minus_s);
-  d(0, 0) += 1;
+  // d =  e - Q(w^{1/2})(C-A^y)
+  double wsqrt_q0 = o->workspace_.W0;
+  Eigen::VectorXd wsqrt_q1 = o->workspace_.W1;
+  Sqrt(Norm(o->Q_, wsqrt_q1), &wsqrt_q0, &wsqrt_q1);
 
-  info->norminfd = NormInf(o->Q_, d(0, 0), d.bottomRows(n - 1));
-  info->normsqrd = d.squaredNorm();
+  int n = wsqrt_q1.rows() + 1;
+  auto d = QuadraticRepresentation(
+      SquaredNorm(o->Q_, wsqrt_q1),
+      InnerProduct(o->Q_, wsqrt_q1, minus_s.bottomRows(n - 1)), wsqrt_q0,
+      wsqrt_q1, minus_s(0, 0), minus_s.bottomRows(n - 1));
+  d.q0 += 1;
+
+  // Compute rescaling.
+  auto ev = Eigenvalues(Norm(o->Q_, d.q1), d.q0);
+  info->norminfd = std::fabs(ev(0));
+  if (info->norminfd < std::fabs(ev(1))) {
+    info->norminfd = std::fabs(ev(1));
+  }
+  info->normsqrd = ev.squaredNorm();
 
   double scale = info->norminfd * info->norminfd;
   if (scale > 2.0) {
-    d = 2 * d / scale;
-  }
-  auto expd = Exp(o->Q_, d(0, 0), d.bottomRows(n - 1));
-  auto wn = QuadraticRepresentation(o->Q_, wsqrt, expd);
-  o->workspace_.W0 = wn(0, 0);
-  o->workspace_.W1 = wn.bottomRows(n - 1);
-
-  if (o->workspace_.W0 < std::sqrt(SquaredNorm(o->Q_, o->workspace_.W1))) {
-    DUMP(o->workspace_.W1.norm());
-    DUMP(o->workspace_.W0);
-    assert(0);
+    d.q0 = 2 * d.q0 / scale;
+    d.q1 = 2 * d.q1 / scale;
   }
 
-  // Q(w^{1/2}) exp Q(w^{1/2}) d
-  //                (w w^T - det w R) d
-  //  (w w^T  - det w R) exp  (w w^T - det w R) d
-  //
-  //  exp(ld1) lw1  d
-  //  exp(ld1) lw2  d
+  Exp(Norm(o->Q_, d.q1), &d.q0, &d.q1);
+  const auto& expd = d;
+
+  auto wn = QuadraticRepresentation(SquaredNorm(o->Q_, wsqrt_q1),
+                                    InnerProduct(o->Q_, wsqrt_q1, expd.q1),
+                                    wsqrt_q0, wsqrt_q1, expd.q0, expd.q1);
+  o->workspace_.W0 = wn.q0;
+  o->workspace_.W1 = wn.q1;
 }
+
+template <typename T>
+void SchurComplement(const Eigen::VectorXd& A0, const Eigen::MatrixXd& A_gram,
+                     const double W0, double det_w,
+                     const Eigen::MatrixXd& A_dot_w, bool initialize, T* G) {
+  if (initialize) {
+    *G = det_w * (A_gram - A0 * A0.transpose());
+  } else {
+    *G += det_w * (A_gram - A0 * A0.transpose());
+  }
+  (*G) += 2 * (A_dot_w + A0 * W0) * (A_dot_w + A0 * W0).transpose();
+}
+
+DenseMatrix EvalAtQX(const DenseMatrix& A, const DenseMatrix& Q,
+                     const DenseMatrix& X) {
+  if (Q.rows() > 0) {
+    return A.transpose() * Q * X;
+  } else {
+    return A.transpose() * X;
+  }
+}
+
+void QuadraticConstraint::Initialize() { A_gram_ = EvalAtQX(A1_, Q_, A1_); }
 
 void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
-  int n = o->workspace_.n_;
-  auto Wsqrt = Sqrt(o->Q_, o->workspace_.W0, o->workspace_.W1);
-  DenseMatrix W(n + 1, 1);
-  W(0, 0) = o->workspace_.W0;
-  W.bottomRows(n) = o->workspace_.W1;
+  const Eigen::VectorXd& A0 = o->A0_;
+  const Eigen::MatrixXd& A1 = o->A1_;
+  const auto& C0 = o->C0_;
+  const auto& C1 = o->C1_;
+  const Eigen::MatrixXd& A_gram = o->A_gram_;
+  const Eigen::MatrixXd& A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1);
 
-  DenseMatrix IP = Eigen::MatrixXd::Identity(n + 1, n + 1);
-  IP.bottomRightCorner(n, n) = o->Q_;
-
-  auto G = &sys->G;
-
-  auto A = o->constraint_matrix_;
-  auto C = o->constraint_affine_;
-  Eigen::MatrixXd WA = o->constraint_matrix_;
-  Eigen::MatrixXd WC = QuadraticRepresentation(o->Q_, W, o->constraint_affine_);
-
-  for (int i = 0; i < WA.cols(); i++) {
-    WA.col(i) = QuadraticRepresentation(o->Q_, W, WA.col(i));
-  }
+  double det_w = o->workspace_.W0 * o->workspace_.W0 -
+                 SquaredNorm(o->Q_, o->workspace_.W1);
 
   if (initialize) {
-    (*G).noalias() = A.transpose() * IP * WA;
-    sys->AW.noalias() = A.transpose() * IP * W;
-    sys->AQc.noalias() = A.transpose() * IP * WC;
-    sys->QwCNorm = (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
-    sys->QwCTrace = (W.cwiseProduct(o->constraint_affine_)).sum();
+    SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, true,
+                    &sys->G);
+    sys->AW.noalias() = A_dot_x + A0 * o->workspace_.W0;
+    sys->AQc.noalias() = det_w * (EvalAtQX(A1, o->Q_, C1) - A0 * C0);
+
   } else {
-    (*G).noalias() += A.transpose() * IP * WA;
-    sys->AW.noalias() += A.transpose() * IP * W;
-    sys->AQc.noalias() += A.transpose() * IP * WC;
-
-    // TODO Are these correct?
-    sys->QwCNorm += (W.cwiseProduct(o->constraint_affine_)).squaredNorm();
-    sys->QwCTrace += (W.cwiseProduct(o->constraint_affine_)).sum();
+    SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, false,
+                    &sys->G);
+    sys->AW.noalias() += A_dot_x + A0 * o->workspace_.W0;
+    sys->AQc.noalias() += det_w * (EvalAtQX(A1, o->Q_, C1) - A0 * C0);
   }
-  // DUMP(*G);
-  // auto T = *G;
-  // auto T12 = G->bottomLeftCorner(n, 1);
-  // auto T22 = G->bottomRightCorner(n, n);
-  // DUMP(T22 - T12* T12.transpose() * 1.0/T(0, 0));
-
-  // DUMP(o->Q_);
+  double scale =
+      InnerProduct(o->Q_, C1, o->workspace_.W1) + C0 * o->workspace_.W0;
+  sys->AQc.noalias() += 2 * (A_dot_x + A0 * o->workspace_.W0) * scale;
 }
-
-// A Q A
 
 }  // namespace conex

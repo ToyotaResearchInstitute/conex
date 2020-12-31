@@ -2,8 +2,32 @@
 
 namespace conex {
 
-void MatrixLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
-  MultByA(y, s);
+namespace {
+using Eigen::MatrixXd;
+
+template <bool sparse>
+void MultByA(const Ref& x, Ref* Y, std::vector<MatrixXd> constraint_matrices,
+             std::vector<int> variable = {}) {
+  int i = 0;
+  Y->setZero();
+  for (const auto& matrix : constraint_matrices) {
+    if constexpr (sparse) {
+      (*Y) += x(variable.at(i)) * matrix;
+    } else {
+      (*Y) += x(i) * matrix;
+    }
+    i++;
+  }
+}
+}  // namespace
+
+void SparseLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
+  MultByA<true>(y, s, constraint_matrices_, variables_);
+  (*s) -= k * (constraint_affine_);
+}
+
+void DenseLMIConstraint::ComputeNegativeSlack(double k, const Ref& y, Ref* s) {
+  MultByA<false>(y, s, constraint_matrices_);
   (*s) -= k * (constraint_affine_);
 }
 
@@ -29,16 +53,6 @@ double MatrixLMIConstraint::EvalDualConstraint(int j, const Ref& W) {
 double MatrixLMIConstraint::EvalDualObjective(const Ref& W) {
   const auto& constraint_matrix = constraint_affine_;
   return TraceInnerProduct(constraint_matrix, W);
-}
-
-void MatrixLMIConstraint::MultByA(const Ref& x, Ref* Y) {
-  const auto& constraint_matrices = constraint_matrices_;
-  int i = 0;
-  Y->setZero();
-  for (const auto& matrix : constraint_matrices) {
-    (*Y) += x(variable(i)) * matrix;
-    i++;
-  }
 }
 
 void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,

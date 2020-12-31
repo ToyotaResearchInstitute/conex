@@ -28,12 +28,9 @@ class MatrixLMIConstraint : public PsdConstraint {
   const DenseMatrix constraint_affine_;
 
  protected:
-  void ComputeNegativeSlack(double k, const Ref& y, Ref* s);
   void ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW);
   double EvalDualConstraint(int j, const Ref& W);
   double EvalDualObjective(const Ref& W);
-  void MultByA(const Ref& x, Ref* Y);
-  virtual int variable(int i) { return i; }
 };
 
 class DenseLMIConstraint final : public MatrixLMIConstraint {
@@ -50,7 +47,9 @@ class DenseLMIConstraint final : public MatrixLMIConstraint {
   friend void ConstructSchurComplementSystem(DenseLMIConstraint* o,
                                              bool initialize,
                                              SchurComplementSystem* sys);
-  int variable(int i) override { return i; }
+
+ private:
+  void ComputeNegativeSlack(double k, const Ref& y, Ref* s) override;
 };
 
 class SparseLMIConstraint final : public MatrixLMIConstraint {
@@ -66,8 +65,11 @@ class SparseLMIConstraint final : public MatrixLMIConstraint {
                                              bool initialize,
                                              SchurComplementSystem* sys);
 
+  void ComputeNegativeSlack(double k, const Ref& y, Ref* s) override;
+
+ private:
   std::vector<int> variables_;
-  int variable(int i) override {
+  int variable(int i) {
     // TODO(FrankPermenter): remove range check.
     return variables_.at(i);
   }
