@@ -53,6 +53,7 @@ class LinearKKTAssemblerBase {
   std::vector<DiagonalBlock> diag;
   std::vector<OffDiagonalBlock> off_diag;
   std::vector<OffDiagonalBlock> scatter_block;
+  virtual ~LinearKKTAssemblerBase(){};
 };
 
 class LinearKKTAssembler : public LinearKKTAssemblerBase {

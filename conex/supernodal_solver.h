@@ -60,10 +60,10 @@ inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
 
 struct SparseTriangularMatrix {
   SparseTriangularMatrix(int N_, const std::vector<Clique>& cliques,
-                         const std::vector<int>& supernode_size,
+                         const std::vector<int>& supernode_sizes,
                          const Eigen::VectorXd& memory)
       : N(N_),
-        workspace_(cliques, supernode_size),
+        workspace_(cliques, supernode_sizes),
         memory_(memory),
         path(cliques),
         supernode_size(workspace_.supernode_size),
@@ -75,11 +75,11 @@ struct SparseTriangularMatrix {
   }
 
   SparseTriangularMatrix(int N_, const std::vector<Clique>& cliques,
-                         const std::vector<int>& supernode_size)
+                         const std::vector<int>& supernode_sizes)
       : SparseTriangularMatrix(
-            N_, cliques, supernode_size,
+            N_, cliques, supernode_sizes,
             Eigen::VectorXd::Zero(
-                SizeOf(TriangularMatrixWorkspace(cliques, supernode_size)))) {}
+                SizeOf(TriangularMatrixWorkspace(cliques, supernode_sizes)))) {}
 
   SparseTriangularMatrix(const MatrixData& data)
       : SparseTriangularMatrix(data.N, data.cliques, data.supernode_size) {}
@@ -100,7 +100,6 @@ struct SparseTriangularMatrix {
     return SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_);
   }
 };
-
 std::vector<Clique> Permute(std::vector<Clique>& path,
                             std::vector<int>& permutation);
 void Sort(std::vector<Clique>* path);

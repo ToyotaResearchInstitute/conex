@@ -21,7 +21,7 @@ class QuadraticConstraint {
   WorkspaceSOC* workspace() { return &workspace_; }
 
   int number_of_variables() { return constraint_matrix_.cols(); }
-  friend int Rank(const QuadraticConstraint& o) { return 2; };
+  friend int Rank(const QuadraticConstraint&) { return 2; };
   friend void SetIdentity(QuadraticConstraint* o) {
     o->workspace_.W0 = 1;
     o->workspace_.W1.setZero();

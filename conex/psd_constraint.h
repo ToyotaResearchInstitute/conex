@@ -58,6 +58,7 @@ class PsdConstraint {
   virtual double EvalDualObjective(const Ref& W) = 0;
   virtual void ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) = 0;
   virtual void ComputeNegativeSlack(double k, const Ref& y, Ref* s) = 0;
+  virtual ~PsdConstraint(){};
 };
 
 }  // namespace conex

@@ -237,10 +237,9 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
     separators->clear();
     separators->resize(n);
     RootedTree tree_i(n);
-    int r2 = PickCliqueOrderHelper(cliques_sorted, better_root, &intersections,
-                                   separators, order, &tree_i);
+    PickCliqueOrderHelper(cliques_sorted, better_root, &intersections,
+                          separators, order, &tree_i);
     tree = tree_i;
-    assert(r2 == better_root);
   }
 
   supernodes->resize(n);
