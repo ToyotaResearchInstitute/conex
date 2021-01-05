@@ -430,7 +430,7 @@ std::vector<int> UnionOfSorted(const std::vector<int>& x1,
   return y;
 }
 
-MatrixData GetData(const vector<vector<int>>& cliques) {
+MatrixData GetData(const vector<vector<int>>& cliques, int init) {
   vector<vector<int>> separators;
   vector<vector<int>> supernodes;
   MatrixData d;
@@ -438,7 +438,7 @@ MatrixData GetData(const vector<vector<int>>& cliques) {
   Sort(&d.cliques);
   auto& order = d.clique_order;
 
-  PickCliqueOrder(d.cliques, 0, &order, &supernodes, &separators);
+  PickCliqueOrder(d.cliques, init, &order, &supernodes, &separators);
 
   d.permutation.resize(GetMax(cliques) + 1);
   d.permutation_inverse.resize(GetMax(cliques) + 1);

@@ -31,7 +31,7 @@ struct MatrixData {
   int N;
 };
 
-MatrixData GetData(const std::vector<Clique>& cliques);
+MatrixData GetData(const std::vector<Clique>& cliques, int init = 0);
 
 inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
                    const std::vector<KKT_SystemAssembler*>& eqs) {
