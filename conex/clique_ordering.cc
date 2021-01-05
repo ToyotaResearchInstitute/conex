@@ -186,7 +186,7 @@ void FillIn(const RootedTree& tree, int num_variables,
   //  2) Make a separator of all other cliques.
   //
   for (size_t i = 0; i < order->size(); i++) {
-    for (auto v : supernodes->at(order->at(i))) {
+    for (int v : supernodes->at(order->at(i))) {
       if (eliminated.at(v) < num_cliques) {
         auto fill_in =
             path(order->at(i), eliminated.at(v), tree.parent, tree.height);
@@ -195,7 +195,6 @@ void FillIn(const RootedTree& tree, int num_variables,
           separators->at(e) = UnionOfSorted(separators->at(e), {v});
         }
         eliminated.at(v) = fill_in.back();
-        supernodes->at(fill_in.back()).push_back(v);
       } else {
         eliminated.at(v) = order->at(i);
       }
