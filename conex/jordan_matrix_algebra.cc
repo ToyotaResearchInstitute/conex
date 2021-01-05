@@ -208,8 +208,7 @@ typename MatrixAlgebra<n>::Matrix MatrixAlgebra<n>::Orthogonalize(
     const Matrix& Qn) {
   using T = MatrixAlgebra<n>;
   if (n >= 8) {
-    bool is_real_complex_or_quaternion = false;
-    assert(is_real_complex_or_quaternion);
+    throw "Dimension of division algebra must be 1, 2, 4, or 8.";
   }
   auto Q = Qn;
   int d = Q.at(0).cols();

@@ -60,8 +60,7 @@ void ExponentialMap(const HyperComplexMatrix& arg, HyperComplexMatrix* result) {
       DoExponentialMap<8>(arg, result);
       break;
     default:
-      bool valid_arguments = false;
-      assert(valid_arguments);
+      throw "Dimension of division algebra must be 1, 2, 4, or 8.";
   }
 }
 
@@ -104,8 +103,7 @@ HyperComplexMatrix GeodesicUpdate(const HyperComplexMatrix& x,
       return DoGeodesicUpdate<Octonions>(x, s);
       break;
     default:
-      bool valid_xuments = false;
-      assert(valid_xuments);
+      throw "Dimension of division algebra must be 1, 2, 4, or 8.";
   }
   // Unreachable
   return x;
@@ -165,8 +163,7 @@ HyperComplexMatrix GeodesicUpdateScaled(const HyperComplexMatrix& x,
       return DoGeodesicUpdateScaled<Octonions>(x, s);
       break;
     default:
-      bool valid_arguments = false;
-      assert(valid_arguments);
+      throw "Dimension of division algebra must be 1, 2, 4, or 8.";
   }
   // Unreachable
   return x;
