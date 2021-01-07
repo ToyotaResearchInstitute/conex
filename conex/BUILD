@@ -290,6 +290,7 @@ cc_library(
         "newton_step.h",
         "psd_constraint.h",
         "quadratic_cone_constraint.h",
+        "quadratic_cost.h",
         "soc_constraint.h",
         "workspace.h",
         "workspace_soc.h",
