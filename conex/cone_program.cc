@@ -37,6 +37,8 @@ void TakeStep(ConstraintManager<Container>* kkt,
               const StepOptions& newton_step_parameters, const Ref& y,
               StepInfo* info) {
   StepInfo info_i;
+  info_i.normsqrd = 0;
+  info_i.norminfd = 0;
   info->normsqrd = 0;
   info->norminfd = -1;
   int i = 0;
@@ -236,7 +238,6 @@ bool Solve(const DenseMatrix& bin, Program& prog,
         return solved;
       }
     }
-
     y = newton_step_parameters.inv_sqrt_mu * (b + AQc) - 2 * AW;
     START_TIMER(Solve)
     solver->SolveInPlace(&y);

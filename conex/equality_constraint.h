@@ -46,6 +46,7 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
       sys.G.setZero();
       sys.G.bottomLeftCorner(A_.rows(), A_.cols()) = A_;
       sys.G.topRightCorner(A_.cols(), A_.rows()) = A_.transpose();
+      sys.AQc.setZero();
       sys.AQc.bottomRows(A_.rows()) = b_;
       sys.AW.setZero();
     } else {
