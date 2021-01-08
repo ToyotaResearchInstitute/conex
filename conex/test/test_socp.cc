@@ -41,7 +41,7 @@ int DoMain() {
   As.setZero();
   As.bottomRightCorner(n, n) = Wsqrt;
   DenseMatrix Cs(n + 1, 1);
-  Cs.setZero();
+  Cs.setConstant(0.000);
   Cs(0) = 1;
   SOCConstraint T(As, Cs);
 
@@ -57,15 +57,15 @@ int DoMain() {
     b.setConstant(i);
     b += Eigen::VectorXd::Random(n, 1) * .02;
 
+    Program prog1(n);
+    prog1.AddConstraint(T);
+    DenseMatrix y1(n, 1);
+    Solve(b, prog1, config, y1.data());
+
     Program prog2(n);
-    prog2.AddConstraint(T);
+    prog2.AddConstraint(lmi_constraint);
     DenseMatrix y2(n, 1);
     Solve(b, prog2, config, y2.data());
-
-    Program prog(n);
-    prog.AddConstraint(lmi_constraint);
-    DenseMatrix y1(n, 1);
-    Solve(b, prog, config, y1.data());
 
     EXPECT_NEAR((y1 - y2).norm(), 0, 1e-4);
 
@@ -73,13 +73,13 @@ int DoMain() {
     prog3.AddConstraint(quad_constraint);
     DenseMatrix y3(n, 1);
     Solve(b, prog3, config, y3.data());
-    EXPECT_NEAR((y1 - y3).norm(), 0, 5e-6);
+    EXPECT_NEAR((y1 - y3).norm(), 0, 5e-5);
 
     Program prog4(n);
     prog4.AddConstraint(soc_constraint);
     DenseMatrix y4(n, 1);
     Solve(b, prog4, config, y4.data());
-    EXPECT_NEAR((y1 - y4).norm(), 0, 1e-6);
+    EXPECT_NEAR((y1 - y4).norm(), 0, 5e-5);
   }
 
   return 0;

@@ -1,3 +1,5 @@
+#define EIGEN_RUNTIME_NO_MALLOC
+
 #include "conex/quadratic_cone_constraint.h"
 #include "conex/newton_step.h"
 
@@ -8,44 +10,36 @@ using Real = double;
 
 namespace {
 
-// double InnerProduct(const DenseMatrix& Q, double x0, const Eigen::VectorXd&
-// x1,
-//                    const double y0, const Eigen::VectorXd& y1) {
-//  return 2 * (x0 * y0 + x1.transpose() * Q * y1);
-//}
-
-template <typename T>
-double SquaredNorm(const DenseMatrix& Q, const Eigen::VectorXd& x,
-                   T* workspace) {
+template <typename T1, typename T2, typename T3>
+double SquaredNorm(const T1& Q, const T2& x, T3* workspace) {
   if (Q.rows() > 0) {
-    *workspace = Q * x;
-    return x.dot(workspace->col(0));
+    workspace->noalias() = Q * x;
+    return x.col(0).dot(workspace->col(0));
   } else {
-    return x.dot(x);
+    return x.col(0).dot(x.col(0));
   }
 }
 
-template <typename T>
-double Norm(const Eigen::MatrixXd& Q, const Eigen::VectorXd& x, T* workspace) {
+template <typename T1, typename T2, typename T3>
+double Norm(const T1& Q, const T2& x, T3* workspace) {
   return std::sqrt(SquaredNorm(Q, x, workspace));
 }
 
-template <typename T>
-double InnerProduct(const DenseMatrix& Q, const Eigen::VectorXd& x,
-                    const Eigen::VectorXd& y, T* workspace) {
+template <typename T1, typename T2, typename T4, typename T3>
+double InnerProduct(const T1& Q, const T2& x, const T3& y, T4* workspace) {
   if (Q.rows() > 0) {
-    *workspace = Q * y;
-    return x.dot(workspace->col(0));
+    workspace->noalias() = Q * y;
+    return x.col(0).dot(workspace->col(0));
   } else {
-    return x.transpose() * y;
+    return x.col(0).dot(y.col(0));
   }
 }
 
-template <typename T>
+template <typename T1, typename T2, typename T3>
 void QuadraticRepresentation(double x1_norm_squared,
                              double inner_product_of_x1_and_y1, double x0,
-                             const Eigen::VectorXd& x1, double y0,
-                             const Eigen::VectorXd& y1, double* z_q0, T* z_q1) {
+                             const T1& x1, double y0, const T2& y1,
+                             double* z_q0, T3* z_q1) {
   // We use the formula from Example 11.12 of "Formally Real Jordan Algebras
   // and Their Applications to Optimization"  by Alizadeh, which states the
   // quadratic representation of x equals the linear map
@@ -55,7 +49,7 @@ void QuadraticRepresentation(double x1_norm_squared,
   double det_x = x0 * x0 - x1_norm_squared;
   double scale = 2 * (x0 * y0 + inner_product_of_x1_and_y1);
   *z_q0 = scale * x0 - det_x * y0;
-  *z_q1 = scale * x1 + det_x * y1;
+  z_q1->noalias() = scale * x1 + det_x * y1;
 }
 
 template <typename T>
@@ -83,6 +77,32 @@ Eigen::Vector2d Eigenvalues(double norm_of_x1, double x0) {
   return eigenvalues;
 }
 
+template <typename T>
+void SchurComplement(const Eigen::VectorXd& A0, const Eigen::MatrixXd& A_gram,
+                     const double W0, double det_w,
+                     const Eigen::MatrixXd& A_dot_w, bool initialize, T* G) {
+  if (initialize) {
+    G->noalias() = A0 * A0.transpose();
+    G->noalias() -= A_gram;
+    G->array() *= -det_w;
+  } else {
+    G->noalias() += det_w * (A_gram - A0 * A0.transpose());
+  }
+  G->noalias() += (A_dot_w + A0 * W0) * (A_dot_w + A0 * W0).transpose();
+  G->noalias() += (A_dot_w + A0 * W0) * (A_dot_w + A0 * W0).transpose();
+}
+
+template <typename T>
+DenseMatrix EvalAtQX(const DenseMatrix& A, const DenseMatrix& Q,
+                     const DenseMatrix& X, T* QX) {
+  if (Q.rows() > 0) {
+    QX->noalias() = Q * X;
+    return A.transpose() * (*QX);
+  } else {
+    return A.transpose() * X;
+  }
+}
+
 }  // namespace
 
 void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
@@ -97,6 +117,7 @@ void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
 // Combine this with TakeStep
 void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
+  Eigen::internal::set_is_malloc_allowed(false);
   auto* workspace = &o->workspace_;
   auto& minus_s_1 = workspace->temp1_1;
   double minus_s_0;
@@ -106,7 +127,8 @@ void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
   auto& wsqrt_q1 = o->workspace_.temp3_1;
   wsqrt_q1 = o->workspace_.W1;
 
-  Sqrt(Norm(o->Q_, wsqrt_q1, &workspace->temp2_1), &wsqrt_q0, &wsqrt_q1);
+  double temp = Norm(o->Q_, wsqrt_q1, &workspace->temp2_1);
+  Sqrt(temp, &wsqrt_q0, &wsqrt_q1);
 
   auto& Ws_1 = workspace->temp2_1;
   double Ws_0;
@@ -128,10 +150,12 @@ void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
   }
   p->gw_norm_squared += std::pow(lamda_max, 2) + std::pow(lamda_min, 2);
   p->gw_trace += (lamda_max + lamda_min);
+  Eigen::internal::set_is_malloc_allowed(true);
 }
 
 void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
               StepInfo* info) {
+  Eigen::internal::set_is_malloc_allowed(false);
   // d =  e - Q(w^{1/2})(C-A^y)
   double wsqrt_q0 = o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;
@@ -175,58 +199,48 @@ void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
       SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp1_1),
       InnerProduct(o->Q_, wsqrt_q1, expd_q1, &o->workspace_.temp1_1), wsqrt_q0,
       wsqrt_q1, expd_q0, expd_q1, &o->workspace_.W0, &o->workspace_.W1);
+
+  Eigen::internal::set_is_malloc_allowed(true);
 }
 
-template <typename T>
-void SchurComplement(const Eigen::VectorXd& A0, const Eigen::MatrixXd& A_gram,
-                     const double W0, double det_w,
-                     const Eigen::MatrixXd& A_dot_w, bool initialize, T* G) {
-  if (initialize) {
-    *G = det_w * (A_gram - A0 * A0.transpose());
-  } else {
-    *G += det_w * (A_gram - A0 * A0.transpose());
-  }
-  (*G) += 2 * (A_dot_w + A0 * W0) * (A_dot_w + A0 * W0).transpose();
+void QuadraticConstraint::Initialize() {
+  DenseMatrix W;
+  A_gram_ = EvalAtQX(A1_, Q_, A1_, &W);
 }
-
-DenseMatrix EvalAtQX(const DenseMatrix& A, const DenseMatrix& Q,
-                     const DenseMatrix& X) {
-  if (Q.rows() > 0) {
-    return A.transpose() * Q * X;
-  } else {
-    return A.transpose() * X;
-  }
-}
-
-void QuadraticConstraint::Initialize() { A_gram_ = EvalAtQX(A1_, Q_, A1_); }
 
 void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
-  const Eigen::VectorXd& A0 = o->A0_;
-  const Eigen::MatrixXd& A1 = o->A1_;
+  const auto& A0 = o->A0_;
+  const auto& A1 = o->A1_;
   const auto& C0 = o->C0_;
   const auto& C1 = o->C1_;
-  const Eigen::MatrixXd& A_gram = o->A_gram_;
-  const Eigen::MatrixXd& A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1);
+  const auto& A_gram = o->A_gram_;
+  auto& temp = o->workspace_.temp1_1;
+  const Eigen::MatrixXd& A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1, &temp);
 
+  auto& Q_W1 = o->workspace_.temp2_1;
   double det_w = o->workspace_.W0 * o->workspace_.W0 -
-                 SquaredNorm(o->Q_, o->workspace_.W1, &o->workspace_.temp1_1);
+                 SquaredNorm(o->Q_, o->workspace_.W1, &Q_W1);
 
   if (initialize) {
     SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, true,
                     &sys->G);
     sys->AW.noalias() = A_dot_x + A0 * o->workspace_.W0;
-    sys->AQc.noalias() = det_w * (EvalAtQX(A1, o->Q_, C1) - A0 * C0);
+    sys->AQc.noalias() = det_w * (EvalAtQX(A1, o->Q_, C1, &temp) - A0 * C0);
 
   } else {
     SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, false,
                     &sys->G);
     sys->AW.noalias() += A_dot_x + A0 * o->workspace_.W0;
-    sys->AQc.noalias() += det_w * (EvalAtQX(A1, o->Q_, C1) - A0 * C0);
+    sys->AQc.noalias() += det_w * (EvalAtQX(A1, o->Q_, C1, &temp) - A0 * C0);
   }
-  double scale =
-      InnerProduct(o->Q_, C1, o->workspace_.W1, &o->workspace_.temp1_1) +
-      C0 * o->workspace_.W0;
+
+  double scale;
+  if (o->Q_.size() > 0) {
+    scale = Q_W1.col(0).dot(C1.col(0)) + C0 * o->workspace_.W0;
+  } else {
+    scale = o->workspace_.W1.col(0).dot(C1.col(0)) + C0 * o->workspace_.W0;
+  }
   sys->AQc.noalias() += 2 * (A_dot_x + A0 * o->workspace_.W0) * scale;
 }
 
