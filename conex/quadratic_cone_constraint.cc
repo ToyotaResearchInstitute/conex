@@ -88,7 +88,6 @@ Eigen::Vector2d Eigenvalues(double norm_of_x1, double x0) {
 void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
                                                double* minus_s_0,
                                                Ref* minus_s_1) {
-  int n = A1_.rows();
   *minus_s_0 = A0_.dot(y.col(0));
   *minus_s_0 -= C0_ * inv_sqrt_mu;
   minus_s_1->noalias() = A1_ * y;
