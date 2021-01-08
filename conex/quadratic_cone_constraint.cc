@@ -14,37 +14,38 @@ namespace {
 //  return 2 * (x0 * y0 + x1.transpose() * Q * y1);
 //}
 
-double SquaredNorm(const DenseMatrix& Q, const Eigen::VectorXd& x) {
-  if (Q.rows() > 0)
-    return x.transpose() * Q * x;
-  else {
-    return x.transpose() * x;
+template <typename T>
+double SquaredNorm(const DenseMatrix& Q, const Eigen::VectorXd& x,
+                   T* workspace) {
+  if (Q.rows() > 0) {
+    *workspace = Q * x;
+    return x.dot(workspace->col(0));
+  } else {
+    return x.dot(x);
   }
 }
 
-double Norm(const Eigen::MatrixXd& Q, const Eigen::VectorXd& x) {
-  return std::sqrt(SquaredNorm(Q, x));
+template <typename T>
+double Norm(const Eigen::MatrixXd& Q, const Eigen::VectorXd& x, T* workspace) {
+  return std::sqrt(SquaredNorm(Q, x, workspace));
 }
 
-struct SpinFactorElement {
-  double q0;
-  Eigen::VectorXd q1;
-};
-
+template <typename T>
 double InnerProduct(const DenseMatrix& Q, const Eigen::VectorXd& x,
-                    const Eigen::VectorXd& y) {
-  if (Q.rows() > 0)
-    return x.transpose() * Q * y;
-  else {
+                    const Eigen::VectorXd& y, T* workspace) {
+  if (Q.rows() > 0) {
+    *workspace = Q * y;
+    return x.dot(workspace->col(0));
+  } else {
     return x.transpose() * y;
   }
 }
 
-SpinFactorElement QuadraticRepresentation(double x1_norm_squared,
-                                          double inner_product_of_x1_and_y1,
-                                          double x0, const Eigen::VectorXd& x1,
-                                          double y0,
-                                          const Eigen::VectorXd& y1) {
+template <typename T>
+void QuadraticRepresentation(double x1_norm_squared,
+                             double inner_product_of_x1_and_y1, double x0,
+                             const Eigen::VectorXd& x1, double y0,
+                             const Eigen::VectorXd& y1, double* z_q0, T* z_q1) {
   // We use the formula from Example 11.12 of "Formally Real Jordan Algebras
   // and Their Applications to Optimization"  by Alizadeh, which states the
   // quadratic representation of x equals the linear map
@@ -52,14 +53,13 @@ SpinFactorElement QuadraticRepresentation(double x1_norm_squared,
   // where R is the reflection operator R = diag(1, -1, ..., -1) and det x is
   // the determinate of x = (x0, x1), i.e., det x = x0^2 - |x1|^2.
   double det_x = x0 * x0 - x1_norm_squared;
-  SpinFactorElement z;
   double scale = 2 * (x0 * y0 + inner_product_of_x1_and_y1);
-  z.q0 = scale * x0 - det_x * y0;
-  z.q1 = scale * x1 + det_x * y1;
-  return z;
+  *z_q0 = scale * x0 - det_x * y0;
+  *z_q1 = scale * x1 + det_x * y1;
 }
 
-void Exp(double norm_x1, double* x0, Eigen::VectorXd* x1) {
+template <typename T>
+void Exp(double norm_x1, double* x0, T* x1) {
   double k = norm_x1;
   if (k > 0) {
     (*x1) *= .5 * (exp(*x0 + k) - exp(*x0 - k)) / k;
@@ -76,8 +76,8 @@ void Sqrt(double norm_x1, double* x0, T* x1) {
   (*x0) = (.5 * (std::sqrt(*x0 + k) + std::sqrt(*x0 - k)));
 }
 
-DenseMatrix Eigenvalues(double norm_of_x1, double x0) {
-  DenseMatrix eigenvalues(2, 1);
+Eigen::Vector2d Eigenvalues(double norm_of_x1, double x0) {
+  Eigen::Vector2d eigenvalues(2, 1);
   eigenvalues(0) = x0 + norm_of_x1;
   eigenvalues(1) = x0 - norm_of_x1;
   return eigenvalues;
@@ -86,35 +86,37 @@ DenseMatrix Eigenvalues(double norm_of_x1, double x0) {
 }  // namespace
 
 void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
-                                               Ref* minus_s) {
+                                               double* minus_s_0,
+                                               Ref* minus_s_1) {
   int n = A1_.rows();
-  (*minus_s)(0, 0) = A0_.dot(y.col(0));
-  (*minus_s)(0, 0) -= C0_ * inv_sqrt_mu;
-  minus_s->bottomRows(n).noalias() = A1_ * y;
-  minus_s->bottomRows(n).noalias() -= C1_ * inv_sqrt_mu;
+  *minus_s_0 = A0_.dot(y.col(0));
+  *minus_s_0 -= C0_ * inv_sqrt_mu;
+  minus_s_1->noalias() = A1_ * y;
+  minus_s_1->noalias() -= C1_ * inv_sqrt_mu;
 }
 
 // Combine this with TakeStep
 void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
-  auto& minus_s = workspace->temp_1;
-  SpinFactorElement Ws;
-  o->ComputeNegativeSlack(1, y, &minus_s);
+  auto& minus_s_1 = workspace->temp1_1;
+  double minus_s_0;
+  o->ComputeNegativeSlack(1, y, &minus_s_0, &minus_s_1);
 
-  SpinFactorElement wsqrt;
-  wsqrt.q0 = o->workspace_.W0;
-  wsqrt.q1 = o->workspace_.W1;
+  double wsqrt_q0 = o->workspace_.W0;
+  auto& wsqrt_q1 = o->workspace_.temp3_1;
+  wsqrt_q1 = o->workspace_.W1;
 
-  Sqrt(Norm(o->Q_, wsqrt.q1), &wsqrt.q0, &wsqrt.q1);
+  Sqrt(Norm(o->Q_, wsqrt_q1, &workspace->temp2_1), &wsqrt_q0, &wsqrt_q1);
 
-  int n = workspace->n_;
-  Ws = QuadraticRepresentation(
-      SquaredNorm(o->Q_, wsqrt.q1),
-      InnerProduct(o->Q_, wsqrt.q1, minus_s.bottomRows(n)), wsqrt.q0, wsqrt.q1,
-      minus_s(0, 0), minus_s.bottomRows(n));
+  auto& Ws_1 = workspace->temp2_1;
+  double Ws_0;
+  QuadraticRepresentation(
+      SquaredNorm(o->Q_, wsqrt_q1, &workspace->temp2_1),
+      InnerProduct(o->Q_, wsqrt_q1, minus_s_1, &workspace->temp2_1), wsqrt_q0,
+      wsqrt_q1, minus_s_0, minus_s_1, &Ws_0, &Ws_1);
 
-  auto ev = Eigenvalues(Norm(o->Q_, Ws.q1), Ws.q0);
+  auto ev = Eigenvalues(Norm(o->Q_, Ws_1, &workspace->temp1_1), Ws_0);
 
   const double lamda_max = -ev.minCoeff();
   const double lamda_min = -ev.maxCoeff();
@@ -131,23 +133,29 @@ void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
 
 void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
               StepInfo* info) {
-  auto& minus_s = o->workspace_.temp_1;
-  o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
-
   // d =  e - Q(w^{1/2})(C-A^y)
   double wsqrt_q0 = o->workspace_.W0;
-  Eigen::VectorXd wsqrt_q1 = o->workspace_.W1;
-  Sqrt(Norm(o->Q_, wsqrt_q1), &wsqrt_q0, &wsqrt_q1);
+  auto& wsqrt_q1 = o->workspace_.temp3_1;
+  wsqrt_q1 = o->workspace_.W1;
+  auto& d_q1 = o->workspace_.temp2_1;
+  double d_q0;
 
-  int n = wsqrt_q1.rows() + 1;
-  auto d = QuadraticRepresentation(
-      SquaredNorm(o->Q_, wsqrt_q1),
-      InnerProduct(o->Q_, wsqrt_q1, minus_s.bottomRows(n - 1)), wsqrt_q0,
-      wsqrt_q1, minus_s(0, 0), minus_s.bottomRows(n - 1));
-  d.q0 += 1;
+  {  // Use temp_1
+    auto& minus_s_1 = o->workspace_.temp1_1;
+    double minus_s_0;
+    o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s_0, &minus_s_1);
+
+    Sqrt(Norm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1), &wsqrt_q0, &wsqrt_q1);
+
+    QuadraticRepresentation(
+        SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1),
+        InnerProduct(o->Q_, wsqrt_q1, minus_s_1, &o->workspace_.temp2_1),
+        wsqrt_q0, wsqrt_q1, minus_s_0, minus_s_1, &d_q0, &d_q1);
+    d_q0 += 1;
+  }  // temp_1 is free
 
   // Compute rescaling.
-  auto ev = Eigenvalues(Norm(o->Q_, d.q1), d.q0);
+  auto ev = Eigenvalues(Norm(o->Q_, d_q1, &o->workspace_.temp1_1), d_q0);
   info->norminfd = std::fabs(ev(0));
   if (info->norminfd < std::fabs(ev(1))) {
     info->norminfd = std::fabs(ev(1));
@@ -156,18 +164,18 @@ void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
 
   double scale = info->norminfd * info->norminfd;
   if (scale > 2.0) {
-    d.q0 = 2 * d.q0 / scale;
-    d.q1 = 2 * d.q1 / scale;
+    d_q0 = 2 * d_q0 / scale;
+    d_q1 = 2 * d_q1 / scale;
   }
 
-  Exp(Norm(o->Q_, d.q1), &d.q0, &d.q1);
-  const auto& expd = d;
+  Exp(Norm(o->Q_, d_q1, &o->workspace_.temp1_1), &d_q0, &d_q1);
+  const auto& expd_q1 = d_q1;
+  const auto& expd_q0 = d_q0;
 
-  auto wn = QuadraticRepresentation(SquaredNorm(o->Q_, wsqrt_q1),
-                                    InnerProduct(o->Q_, wsqrt_q1, expd.q1),
-                                    wsqrt_q0, wsqrt_q1, expd.q0, expd.q1);
-  o->workspace_.W0 = wn.q0;
-  o->workspace_.W1 = wn.q1;
+  QuadraticRepresentation(
+      SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp1_1),
+      InnerProduct(o->Q_, wsqrt_q1, expd_q1, &o->workspace_.temp1_1), wsqrt_q0,
+      wsqrt_q1, expd_q0, expd_q1, &o->workspace_.W0, &o->workspace_.W1);
 }
 
 template <typename T>
@@ -203,7 +211,7 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
   const Eigen::MatrixXd& A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1);
 
   double det_w = o->workspace_.W0 * o->workspace_.W0 -
-                 SquaredNorm(o->Q_, o->workspace_.W1);
+                 SquaredNorm(o->Q_, o->workspace_.W1, &o->workspace_.temp1_1);
 
   if (initialize) {
     SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, true,
@@ -218,7 +226,8 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
     sys->AQc.noalias() += det_w * (EvalAtQX(A1, o->Q_, C1) - A0 * C0);
   }
   double scale =
-      InnerProduct(o->Q_, C1, o->workspace_.W1) + C0 * o->workspace_.W0;
+      InnerProduct(o->Q_, C1, o->workspace_.W1, &o->workspace_.temp1_1) +
+      C0 * o->workspace_.W0;
   sys->AQc.noalias() += 2 * (A_dot_x + A0 * o->workspace_.W0) * scale;
 }
 

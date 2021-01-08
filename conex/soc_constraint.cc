@@ -200,12 +200,13 @@ void SOCConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
 void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
-  auto& minus_s = workspace->temp_1;
-  auto& Ws = workspace->temp_2;
+  int n = workspace->n_;
+  Eigen::VectorXd minus_s_data(n + 1);
+  Ref minus_s(minus_s_data.data(), n + 1, 1);
+  Eigen::VectorXd Ws(n + 1);
   o->ComputeNegativeSlack(1, y, &minus_s);
 
   auto wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
-  int n = workspace->n_;
   Ws = QuadraticRepresentation(wsqrt, minus_s);
 
   SpectralDecompSpinFactor spec(n);
@@ -227,7 +228,8 @@ void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
 
 void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
               StepInfo* info) {
-  auto& minus_s = o->workspace_.temp_1;
+  Eigen::VectorXd minus_s_data(o->workspace_.n_ + 1);
+  Ref minus_s(minus_s_data.data(), o->workspace_.n_ + 1, 1);
   o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
 
   // e - Q(w^{1/2})(C-A^y)

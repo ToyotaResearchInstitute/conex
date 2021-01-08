@@ -47,7 +47,8 @@ class QuadraticConstraint {
 
  private:
   void Initialize();
-  void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s);
+  void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, double* minus_s_0,
+                            Ref* minus_s_1);
   void GeodesicUpdate(const Ref& S, StepInfo* data);
   void AffineUpdate(const Ref& S);
 

@@ -73,7 +73,7 @@ int DoMain() {
     prog3.AddConstraint(quad_constraint);
     DenseMatrix y3(n, 1);
     Solve(b, prog3, config, y3.data());
-    EXPECT_NEAR((y1 - y3).norm(), 0, 1e-6);
+    EXPECT_NEAR((y1 - y3).norm(), 0, 5e-6);
 
     Program prog4(n);
     prog4.AddConstraint(soc_constraint);
