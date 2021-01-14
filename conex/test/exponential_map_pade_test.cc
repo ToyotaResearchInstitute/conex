@@ -13,7 +13,7 @@ using Eigen::Map;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
+GTEST_TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
   int n = 4;
   MatrixXd A(n, n);
   // clang-format off

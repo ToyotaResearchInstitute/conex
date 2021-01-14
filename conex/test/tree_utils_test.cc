@@ -33,7 +33,7 @@ array<array<int, N>, N> TestGraph() {
   return A;
 }
 
-TEST(TreeUtils, TestPath1) {
+GTEST_TEST(TreeUtils, TestPath1) {
   auto A = TestGraph();
   int root = 0;
   auto tree = BuildRootTree(A, root);
@@ -46,7 +46,7 @@ TEST(TreeUtils, TestPath1) {
   EXPECT_EQ(p2, path_ref);
 }
 
-TEST(TreeUtils, TestPath2) {
+GTEST_TEST(TreeUtils, TestPath2) {
   auto A = TestGraph();
   int root = 4;
   auto tree = BuildRootTree(A, root);

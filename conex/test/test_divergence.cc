@@ -8,7 +8,7 @@ namespace conex {
 
 using Eigen::MatrixXd;
 
-TEST(MuSelection, DivergenceBound) {
+GTEST_TEST(MuSelection, DivergenceBound) {
   int n = 3;
   MatrixXd gw = Eigen::VectorXd::Random(n, 1).array().abs();
 

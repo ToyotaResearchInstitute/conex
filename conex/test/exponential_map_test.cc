@@ -28,7 +28,7 @@ HyperComplexMatrix BuildMatrix(const VectorXd& eigenvalues,
   return T::Multiply(T::Multiply(Q, D), T::ConjugateTranspose(Q));
 }
 
-TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
+GTEST_TEST(ExponentialMapPadeApproximation, CompareWithEigen) {
   int n = 4;
   MatrixXd A(n, n);
   A << 3, 1, 0, 1, 1, 3, 1, 0, 0, 1, 4, 1, 1, 0, 1, 5;
@@ -84,7 +84,7 @@ typename T::Matrix Symmetrize(const typename T::Matrix& x) {
   return y;
 }
 
-TEST(TestCases, GeodesicUpdateOctonions) {
+GTEST_TEST(TestCases, GeodesicUpdateOctonions) {
   using T = Octonions;
   int order = 3;
   auto s = Symmetrize<T>(T::Random(order, order));
@@ -112,7 +112,7 @@ VectorXd sort(const VectorXd& x) {
   return y;
 }
 
-TEST(TestCases, GeodesicUpdateRescaling) {
+GTEST_TEST(TestCases, GeodesicUpdateRescaling) {
   using T = Octonions;
   int order = 3;
   auto wsqrt = Symmetrize<T>(T::Random(order, order));

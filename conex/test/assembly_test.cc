@@ -78,7 +78,7 @@ void BuildLQRProblem(int N, ConstraintManager<Container>* prg) {
   }
 }
 
-TEST(LDLT, TestAssembly) {
+GTEST_TEST(LDLT, TestAssembly) {
   using Eigen::MatrixXd;
   constexpr int m = 6;
   constexpr int n = 9;
@@ -140,7 +140,7 @@ TEST(LDLT, TestAssembly) {
   }
 }
 
-TEST(LDLT, Benchmark2) {
+GTEST_TEST(LDLT, Benchmark2) {
   using Eigen::MatrixXd;
 
   int N = 40;
@@ -164,7 +164,7 @@ TEST(LDLT, Benchmark2) {
   }
 }
 
-TEST(Assemble, VariablesSpecifiedOutOfOrder) {
+GTEST_TEST(Assemble, VariablesSpecifiedOutOfOrder) {
   MatrixXd Q = MatrixXd::Identity(3, 3);
 
   ConstraintManager<Container> prog;

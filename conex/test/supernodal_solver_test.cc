@@ -66,7 +66,7 @@ bool DoPatternTest(const vector<Clique>& cliques) {
   return error.norm() == 0;
 }
 
-TEST(Basic, Basic) {
+GTEST_TEST(Basic, Basic) {
   vector<Clique> cliques1{{0, 1, 5}, {1, 2, 5}, {3, 4, 5}};
 
   EXPECT_TRUE(DoPatternTest(cliques1));
@@ -93,7 +93,7 @@ vector<int> RandomTuple(int max, int size) {
 // Things added to A_{i-1} are in A_i.
 // Things added to A_{i+1} are in A_i.
 // So, on next applicatoin, A_i won't change.
-TEST(RunningIntersectionClosureIsIdemponent, Basic) {
+GTEST_TEST(RunningIntersectionClosureIsIdemponent, Basic) {
   for (int k = 0; k < 10; k++) {
     vector<Clique> cliques;
     for (int i = 0; i < 10; i++) {
@@ -108,11 +108,11 @@ TEST(RunningIntersectionClosureIsIdemponent, Basic) {
   }
 }
 
-TEST(GetPattern, Basic) {
+GTEST_TEST(GetPattern, Basic) {
   vector<Clique> cliques{{0, 1, 2, 5}, {1, 4, 2, 5}, {3, 4, 5}};
 }
 
-TEST(LowerTri, Constant) {
+GTEST_TEST(LowerTri, Constant) {
   using T = TriangularMatrixOperations;
   vector<Clique> cliques{{0, 1, 5}, {1, 2, 5}, {3, 4, 5}};
 
@@ -142,7 +142,7 @@ void DoCholeskyTest(const vector<Clique>& cliques) {
   EXPECT_NEAR(error.norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, Cholesky) {
+GTEST_TEST(LowerTri, Cholesky) {
   DoCholeskyTest({{0, 1, 2}, {2}});
 
   DoCholeskyTest({{0, 1, 2, 4}, {3, 4}, {5, 6, 7}});
@@ -166,7 +166,7 @@ void DoInverseTest(const vector<Clique>& cliques) {
   EXPECT_NEAR((L * y - b).norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, InverseTest) {
+GTEST_TEST(LowerTri, InverseTest) {
   DoInverseTest({{0, 1, 2, 3}, {3, 4, 5}});
   DoInverseTest({{0, 1, 2, 3}});
   DoInverseTest({{0, 1, 2, 3}, {3, 4}, {4, 5, 6}});
@@ -185,7 +185,7 @@ void DoInverseOfTransposeTest(const vector<Clique>& cliques) {
   EXPECT_NEAR((L.transpose() * y - b).norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, InverseOfTranspose) {
+GTEST_TEST(LowerTri, InverseOfTranspose) {
   DoInverseOfTransposeTest({{0, 1, 2, 5}, {3, 4, 5}});
   DoInverseOfTransposeTest({{0, 1, 2, 5}, {3, 4, 5}, {5, 6}});
   DoInverseOfTransposeTest({{0, 1, 2, 3}});
@@ -227,7 +227,7 @@ int Set(int initial_value, Foo* data) {
   return cnt;
 }
 
-TEST(SupernodalSolver, TestFullSolver) {
+GTEST_TEST(SupernodalSolver, TestFullSolver) {
   vector<Clique> cliques{{0, 1, 2, 4, 5}, {3, 4}, {5}, {6, 7, 8}};
   auto mat = GetFillInPattern(GetMax(cliques) + 1, cliques);
   for (auto& sn : mat.supernodes) {

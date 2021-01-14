@@ -73,19 +73,19 @@ void DoVerifyPerfectEliminationOrdering(const vector<vector<int>>& cliques_in,
   }
 }
 
-TEST(CliqueOrdering, PerfectEliminationOrderFound) {
+GTEST_TEST(CliqueOrdering, PerfectEliminationOrderFound) {
   DoVerifyPerfectEliminationOrdering(
       {{1, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {8, 9}, {1, 11}});
   DoVerifyPerfectEliminationOrdering(
       {{0, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {0, 11}});
 }
 
-TEST(CliqueOrdering, SmallSize) {
+GTEST_TEST(CliqueOrdering, SmallSize) {
   DoVerifyPerfectEliminationOrdering({{0, 1}});
   DoVerifyPerfectEliminationOrdering({{0, 1}, {1, 2}});
 }
 
-TEST(CliqueOrdering, PerfectEliminationOrderFoundDiagonal) {
+GTEST_TEST(CliqueOrdering, PerfectEliminationOrderFoundDiagonal) {
   vector<vector<int>> cliques{{1}, {2}, {3}, {4}, {5}};
   DoVerifyPerfectEliminationOrdering(cliques);
 
@@ -102,12 +102,12 @@ TEST(CliqueOrdering, PerfectEliminationOrderFoundDiagonal) {
   }
 }
 
-TEST(CliqueOrdering, OptimalOrdering) {
+GTEST_TEST(CliqueOrdering, OptimalOrdering) {
   DoVerifyPerfectEliminationOrdering(
       {{1, 2, 3, 5}, {3, 4, 5}, {4, 5, 6, 7}, {8, 9}, {1, 11}});
 }
 
-TEST(CliqueOrdering, FillIn) {
+GTEST_TEST(CliqueOrdering, FillIn) {
   // Apply to clique tree:
   //      12
   //    23  01
@@ -123,15 +123,17 @@ TEST(CliqueOrdering, FillIn) {
   EXPECT_EQ(order.back(), 1);
 }
 
-TEST(CliqueOrdering, Nonmaximal) {
+GTEST_TEST(CliqueOrdering, Nonmaximal) {
   vector<vector<int>> cliques{{0, 1}, {0, 1, 2}, {0, 1, 2, 3, 4}};
   int n = 5;
   vector<int> order(n);
   vector<vector<int>> supernodes(n);
   vector<vector<int>> separators(n);
+  vector<vector<vector<int>>> post_order(n);
   PickCliqueOrder(cliques, 2 /*root*/, &order, &supernodes, &separators);
   vector<int> order_ref{0, 1, 2};
   EXPECT_EQ(order, order_ref);
 }
+
 
 }  // namespace conex

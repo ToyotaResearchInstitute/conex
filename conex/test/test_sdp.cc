@@ -58,13 +58,13 @@ int TestDiagonalSDP() {
   return 0;
 }
 
-TEST(SDP, DiagonalSDP) {
+GTEST_TEST(SDP, DiagonalSDP) {
   for (int i = 0; i < 1; i++) {
     TestDiagonalSDP();
   }
 }
 
-TEST(SDP, SparseAndDenseAgree) {
+GTEST_TEST(SDP, SparseAndDenseAgree) {
   SolverConfiguration config;
 
   std::vector<int> variables_2{0, 2, 4, 6, 7, 8};
@@ -158,7 +158,7 @@ int TestSDP(int i) {
   return 0;
 }
 
-TEST(SDP, ProfileSDP) {
+GTEST_TEST(SDP, ProfileSDP) {
   for (int i = 0; i < 1; i++) {
     TestSDP(i);
   }

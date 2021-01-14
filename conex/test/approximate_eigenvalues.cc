@@ -13,7 +13,7 @@ namespace conex {
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-TEST(Eigenvalues, NonsymmetricFromJacobiIterations) {
+GTEST_TEST(Eigenvalues, NonsymmetricFromJacobiIterations) {
   int n = 4;
   MatrixXd A(n, n);
   A << 3, 1, 0, 1, 1, 3, 1, 0, 0, 1, 4, 1, 1, 0, 1, 5;
@@ -41,7 +41,7 @@ TEST(Eigenvalues, NonsymmetricFromJacobiIterations) {
   }
 }
 
-TEST(Eigenvalues, TruncatedApproximiationInterlaces) {
+GTEST_TEST(Eigenvalues, TruncatedApproximiationInterlaces) {
   int n = 4;
   MatrixXd A(n, n);
   A << .1, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 0, 0, 0, 0, 5;
@@ -60,7 +60,7 @@ TEST(Eigenvalues, TruncatedApproximiationInterlaces) {
   EXPECT_TRUE(eigJ.head(1)(0) >= eigA.head(1)(0));
 }
 
-TEST(Eigenvalues, Lanczos) {
+GTEST_TEST(Eigenvalues, Lanczos) {
   int n = 4;
   MatrixXd A(n, n);
   A << 3, 1, 0, 1, 1, 3, 1, 0, 0, 1, 4, 1, 1, 0, 1, 5;
@@ -84,7 +84,7 @@ TEST(Eigenvalues, Lanczos) {
   }
 }
 
-TEST(Eigenvalues, Profile) {
+GTEST_TEST(Eigenvalues, Profile) {
   for (int k = 0; k < 4; k++) {
     int n = 25;
     MatrixXd S = MatrixXd::Random(n, n);

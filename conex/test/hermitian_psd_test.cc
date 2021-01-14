@@ -103,7 +103,7 @@ TYPED_TEST(TestCases, SolveRandomInstances) {
   }
 }
 
-TEST(Hermitian, CompareWithLMI) {
+GTEST_TEST(Hermitian, CompareWithLMI) {
   for (int i = 0; i < 2; i++) {
     int num_vars = 2;
     int rank = 3;

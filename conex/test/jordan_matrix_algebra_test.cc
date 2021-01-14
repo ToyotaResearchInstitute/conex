@@ -222,7 +222,7 @@ TYPED_TEST(TestCases, DoEigenvaluesFromSpectralDecomp) {
 
 TYPED_TEST(TestCases, RankOneTest) { TestFixture::RankOneTest(3); }
 
-TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
+GTEST_TEST(JordanMatrixAlgebra, HermitianRealMatchesEigen) {
   using T = Real;
   int n = 3;
   auto Q = T::Random(n, n);

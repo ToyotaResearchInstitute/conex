@@ -11,7 +11,7 @@ namespace conex {
 using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-TEST(LP, Dense) {
+GTEST_TEST(LP, Dense) {
   for (int i = 0; i < 1; i++) {
     SolverConfiguration config;
     config.prepare_dual_variables = true;
@@ -170,7 +170,7 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
 }
 
 // Solve the same problem in dense and sparse format.
-TEST(LP, Sparse) {
+GTEST_TEST(LP, Sparse) {
   auto y1 = SolveSparseHelper(true);
   auto y2 = SolveSparseHelper(false);
   EXPECT_NEAR((y1 - y2).norm(), 0, 1e-7);
@@ -254,7 +254,7 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
   return y;
 }
 
-TEST(LP, SparseWithFillIn) {
+GTEST_TEST(LP, SparseWithFillIn) {
   DUMP("HEHEH!");
   auto y1 = SolveFillIn(true);
   auto y2 = SolveFillIn(false);

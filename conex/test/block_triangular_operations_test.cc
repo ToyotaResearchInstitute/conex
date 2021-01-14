@@ -39,7 +39,7 @@ void DoCholeskyTest(const std::vector<Clique>& cliques) {
   EXPECT_NEAR(error.norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, Cholesky) {
+GTEST_TEST(LowerTri, Cholesky) {
   DoCholeskyTest({{0, 1, 2}, {2}});
   DoCholeskyTest({{0, 1, 2, 4, 7}, {3, 4}, {5, 6, 7}});
   DoCholeskyTest({{0, 1, 5}, {1, 2, 5}, {3, 4, 5}});
@@ -62,7 +62,7 @@ void DoInverseTest(const std::vector<Clique>& cliques) {
   EXPECT_NEAR((L * y2 - b).norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, InverseTest) {
+GTEST_TEST(LowerTri, InverseTest) {
   DoInverseTest({{0, 1, 2, 3}, {3, 4, 5}});
   DoInverseTest({{0, 1, 2, 3}});
   DoInverseTest({{0, 1, 2, 3}, {3, 4}, {4, 5, 6}});
@@ -83,7 +83,7 @@ void DoInverseOfTransposeTest(const std::vector<Clique>& cliques) {
   EXPECT_NEAR((L.transpose() * y2 - b).norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, InverseOfTranspose) {
+GTEST_TEST(LowerTri, InverseOfTranspose) {
   DoInverseOfTransposeTest({{0, 1, 2, 5}, {3, 4, 5}});
   DoInverseOfTransposeTest({{0, 1, 2, 5}, {3, 4, 5}, {5, 6}});
   DoInverseOfTransposeTest({{0, 1, 2, 3}});
@@ -140,7 +140,7 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
   EXPECT_NEAR((z - y).norm(), 0, 1e-12);
 }
 
-TEST(LowerTri, LDLT) {
+GTEST_TEST(LowerTri, LDLT) {
   bool diagonal = true;
   DoLDLTTest(diagonal, {{0, 1}});
   DoLDLTTest(diagonal, {{0, 1, 2}, {2}});

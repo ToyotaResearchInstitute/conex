@@ -8,7 +8,7 @@ namespace conex {
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-TEST(EqualityConstraints, Basic) {
+GTEST_TEST(EqualityConstraints, Basic) {
   int num_vars = 3;
   int num_equalities = 1;
   int num_inequalities = 4;

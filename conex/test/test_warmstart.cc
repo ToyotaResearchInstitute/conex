@@ -10,7 +10,7 @@ namespace conex {
 
 using Eigen::MatrixXd;
 
-TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
+GTEST_TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
   SolverConfiguration config;
   config.inv_sqrt_mu_max = 10000000;
   config.final_centering_steps = 0;
@@ -40,7 +40,7 @@ TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
   EXPECT_NEAR((y - ywarm).norm(), 0, 1e-12);
 }
 /*
-TEST(Warmstart, ObjectivePertubation) {
+GTEST_TEST(Warmstart, ObjectivePertubation) {
   SolverConfiguration config;
   config.inv_sqrt_mu_max = 1000;
   config.final_centering_steps = 0;

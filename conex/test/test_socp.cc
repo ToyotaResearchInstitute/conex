@@ -85,7 +85,7 @@ int DoMain() {
   return 0;
 }
 
-TEST(Constraints, SOCP) {
+GTEST_TEST(Constraints, SOCP) {
   srand(1);
   for (int i = 0; i < 10; i++) {
     DoMain();
