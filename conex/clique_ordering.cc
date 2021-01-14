@@ -216,10 +216,27 @@ void FillIn(const RootedTree& tree, int num_variables,
   Sort(supernodes);
 }
 
-void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
-                     int root, std::vector<int>* order,
-                     std::vector<std::vector<int>>* supernodes,
-                     std::vector<std::vector<int>>* separators) {
+template <typename T>
+auto FindSupernode(const std::vector<int>& separator, const T& b, const T& c,
+                   vector<int>* intersection) {
+  if (separator.size() == 0) {
+    return c;
+  }
+  // TODO(FrankPermenter): Process separators in elimination order
+  // so we do not search over all supernodes.
+  for (auto i = b; i != c; ++i) {
+    IntersectionOfSorted(separator, *i, intersection);
+    if (intersection->size() == separator.size()) {
+      return i;
+    }
+  }
+  return c;
+}
+
+void PickCliqueOrder(const vector<vector<int>>& cliques_sorted, int root,
+                     vector<int>* order, vector<vector<int>>* supernodes,
+                     vector<vector<int>>* separators,
+                     vector<vector<vector<int>>>* post_order_pointer) {
   size_t n = cliques_sorted.size();
   order->clear();
   order->resize(n);
@@ -254,6 +271,21 @@ void PickCliqueOrder(const std::vector<std::vector<int>>& cliques_sorted,
 
   int num_vars = GetMax(cliques_sorted) + 1;
   FillIn(tree, num_vars, order, supernodes, separators);
+
+  if (post_order_pointer) {
+    int count = 0;
+    auto& post_order = *post_order_pointer;
+    for (auto& e : *separators) {
+      std::vector<int> intersection;
+      auto end = supernodes->end();
+      auto ptr = FindSupernode(e, supernodes->begin(), end, &intersection);
+      if (ptr != end) {
+        int match_index = std::distance(supernodes->begin(), ptr);
+        post_order.at(match_index).push_back(intersection);
+      }
+      count++;
+    }
+  }
 }
 
 }  // namespace conex

@@ -130,10 +130,14 @@ GTEST_TEST(CliqueOrdering, Nonmaximal) {
   vector<vector<int>> supernodes(n);
   vector<vector<int>> separators(n);
   vector<vector<vector<int>>> post_order(n);
-  PickCliqueOrder(cliques, 2 /*root*/, &order, &supernodes, &separators);
+  PickCliqueOrder(cliques, 2 /*root*/, &order, &supernodes, &separators,
+                  &post_order);
   vector<int> order_ref{0, 1, 2};
   EXPECT_EQ(order, order_ref);
-}
 
+  EXPECT_EQ(post_order.at(0).size(), 0u);
+  EXPECT_EQ(post_order.at(1).size(), 0u);
+  EXPECT_EQ(post_order.at(2).size(), 2u);
+}
 
 }  // namespace conex
