@@ -1,3 +1,9 @@
+COPTS = [
+    "-DEIGEN_NO_DEBUG",
+    "-O3",
+    "-ffast-math",
+]
+
 cc_library(
     name = "test_util",
     srcs = glob(["test/test_util.cc"]),
@@ -106,6 +112,7 @@ cc_library(
     name = "approximate_eigenvalues",
     srcs = ["approximate_eigenvalues.cc"],
     hdrs = ["approximate_eigenvalues.h"],
+    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -128,6 +135,7 @@ cc_library(
         "exponential_map_pade.cc",
     ],
     hdrs = ["exponential_map_pade.h"],
+    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -139,6 +147,7 @@ cc_library(
         "jordan_matrix_algebra.cc",
     ],
     hdrs = ["jordan_matrix_algebra.h"],
+    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "@eigen",
@@ -170,6 +179,7 @@ cc_library(
     name = "exponential_map",
     srcs = ["exponential_map.cc"],
     hdrs = ["exponential_map.h"],
+    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "jordan_matrix_algebra",
@@ -260,6 +270,7 @@ cc_library(
         "triangular_matrix_workspace.h",
         "workspace.h",
     ],
+    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -295,6 +306,8 @@ cc_library(
         "workspace.h",
         "workspace_soc.h",
     ],
+    copts = COPTS,
+    linkopts = ["-lm"],
     visibility = ["//visibility:public"],
     deps = [
         "approximate_eigenvalues",
@@ -321,6 +334,5 @@ cc_binary(
     srcs = ["test/solver_failures.cc"],
     deps = [
         "conex_lib",
-        "@gtest//:main",
     ],
 )
