@@ -20,32 +20,6 @@ vector<T> InitVector(const T* data, int N) {
 
 }  // namespace
 
-void T::Set(const vector<int>& r, const vector<int>& c,
-            Eigen::Map<MatrixXd>* data) {
-  int i = 0;
-  for (auto ri : r) {
-    int j = 0;
-    for (auto ci : c) {
-      (*data)(i, j) = GetCoeff(ri, ci);
-      j++;
-    }
-    i++;
-  }
-}
-
-void T::Increment(const vector<int>& r, const vector<int>& c,
-                  Eigen::Map<MatrixXd>* data) {
-  int i = 0;
-  for (auto ri : r) {
-    int j = 0;
-    for (auto ci : c) {
-      (*data)(i, j) += GetCoeff(ri, ci);
-      j++;
-    }
-    i++;
-  }
-}
-
 void T::Increment(const int* r, int sizer, const int* c, int sizec,
                   Eigen::Map<MatrixXd>* data) {
   for (int i = 0; i < sizer; i++) {
@@ -55,10 +29,28 @@ void T::Increment(const int* r, int sizer, const int* c, int sizec,
   }
 }
 
+void T::IncrementLowerTri(const int* r, int sizer, const int* c, int sizec,
+                          Eigen::Map<MatrixXd>* data) {
+  for (int j = 0; j < sizec; j++) {
+    for (int i = j; i < sizer; i++) {
+      (*data)(i, j) += GetCoeff(*(r + i), *(c + j));
+    }
+  }
+}
+
 void T::Set(const int* r, int sizer, const int* c, int sizec,
             Eigen::Map<MatrixXd>* data) {
-  for (int i = 0; i < sizer; i++) {
-    for (int j = 0; j < sizec; j++) {
+  for (int j = 0; j < sizec; j++) {
+    for (int i = 0; i < sizer; i++) {
+      (*data)(i, j) = GetCoeff(*(r + i), *(c + j));
+    }
+  }
+}
+
+void T::SetLowerTri(const int* r, int sizer, const int* c, int sizec,
+                    Eigen::Map<MatrixXd>* data) {
+  for (int j = 0; j < sizec; j++) {
+    for (int i = j; i < sizer; i++) {
       (*data)(i, j) = GetCoeff(*(r + i), *(c + j));
     }
   }
@@ -174,11 +166,10 @@ void T::UpdateBlocks() {
 
   for (const auto& d : diag) {
     Eigen::Map<MatrixXd> data(d.data, d.num_vars, d.num_vars);
-    // TODO(FrankPermenter): Only set the lower triangular part.
     if (d.assign) {
-      Set(d.var_data, d.num_vars, d.var_data, d.num_vars, &data);
+      SetLowerTri(d.var_data, d.num_vars, d.var_data, d.num_vars, &data);
     } else {
-      Increment(d.var_data, d.num_vars, d.var_data, d.num_vars, &data);
+      IncrementLowerTri(d.var_data, d.num_vars, d.var_data, d.num_vars, &data);
     }
   }
 

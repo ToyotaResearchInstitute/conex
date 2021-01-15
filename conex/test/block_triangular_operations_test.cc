@@ -10,6 +10,22 @@ using Eigen::MatrixXd;
 using T = TriangularMatrixOperations;
 using B = BlockTriangularOperations;
 
+SparseTriangularMatrix RandomSparseMatrix(
+    int N, const std::vector<Clique>& cliques_input) {
+  auto mat = MakeSparseTriangularMatrix(N, cliques_input);
+
+  for (int j = static_cast<int>(mat.path.size()) - 1; j >= 0; j--) {
+    // Initialize columns of super nodes.
+    int r = mat.supernodes.at(j).rows();
+    int c = mat.supernodes.at(j).cols();
+    mat.supernodes.at(j) = MatrixXd::Random(r, c);
+    r = mat.separator.at(j).rows();
+    c = mat.separator.at(j).cols();
+    mat.separator.at(j) = MatrixXd::Random(r, c);
+  }
+  return mat;
+}
+
 int GetMax(const std::vector<Clique>& cliques) {
   int max = cliques.at(0).at(0);
   for (const auto& c : cliques) {

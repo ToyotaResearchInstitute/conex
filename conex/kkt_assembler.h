@@ -33,19 +33,20 @@ class LinearKKTAssemblerBase {
 
  protected:
   double GetCoeff(int i, int j);
-  void Increment(const std::vector<int>& r, const std::vector<int>& c,
-                 Eigen::Map<Eigen::MatrixXd>* data);
 
   void Increment(const int* r, int sizer, const int* c, int sizec,
                  Eigen::Map<Eigen::MatrixXd>* data);
   void Set(const int* r, int sizer, const int* c, int sizec,
            Eigen::Map<Eigen::MatrixXd>* data);
 
-  void Set(const std::vector<int>& r, const std::vector<int>& c,
-           Eigen::Map<Eigen::MatrixXd>* data);
+  void IncrementLowerTri(const int* r, int sizer, const int* c, int sizec,
+                         Eigen::Map<Eigen::MatrixXd>* data);
+  void SetLowerTri(const int* r, int sizer, const int* c, int sizec,
+                   Eigen::Map<Eigen::MatrixXd>* data);
 
   void SetDiagonalBlock(const std::vector<int>& r,
                         Eigen::Map<Eigen::MatrixXd>* data);
+
   void Scatter(const int* r, int sizer, const int* c, int sizec, double** data);
   int num_variables_;
 

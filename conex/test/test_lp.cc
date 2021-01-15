@@ -255,7 +255,6 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
 }
 
 GTEST_TEST(LP, SparseWithFillIn) {
-  DUMP("HEHEH!");
   auto y1 = SolveFillIn(true);
   auto y2 = SolveFillIn(false);
   EXPECT_NEAR((y1 - y2).norm(), 0, 1e-7);
