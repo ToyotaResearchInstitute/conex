@@ -89,13 +89,14 @@ void ConstructSchurComplementSystem(std::vector<T*>* c, bool initialize,
   }
 }
 
-void Initialize(Program& prog, const SolverConfiguration& config) {
+bool Initialize(Program& prog, const SolverConfiguration& config) {
   if (config.initialization_mode == 0) {
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
     prog.InitializeWorkspace();
     SetIdentity(&prog.constraints);
 
+    START_TIMER(Sparsity);
     solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
                                       prog.kkt_system_manager_.dual_vars);
 
@@ -109,15 +110,13 @@ void Initialize(Program& prog, const SolverConfiguration& config) {
       kkt.push_back(&c.kkt_assembler);
     }
     solver->Bind(&kkt);
+    END_TIMER
 
   } else {
-    if (!prog.is_initialized) {
-      std::cerr << "Cannot warmstart without coldstart.";
-      assert(0);
-    }
+    CONEX_DEMAND(prog.is_initialized, "Cannot warmstart without coldstart.");
   }
 
-  return;
+  return true;
 }
 double UpdateMu(ConstraintManager<Container>& constraints,
                 std::unique_ptr<Solver>& solver, const DenseMatrix& AQc,
@@ -152,8 +151,11 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   auto& solver = prog.solver;
   bool solved = 1;
 
+#if CONEX_VERBOSE
   std::cout.precision(2);
   std::cout << std::scientific;
+  std::cout << "Initializing: \n";
+#endif
 
   CONEX_DEMAND(prog.GetNumberOfVariables() == bin.rows(),
                "Cost vector dimension does not equal number of variables");
@@ -166,7 +168,11 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     ynan.array() = bin.array() * std::numeric_limits<double>::infinity();
     return solved;
   }
+
+  START_TIMER(Assemble)
   Initialize(prog, config);
+  END_TIMER
+  std::cout << "\n";
 
   Eigen::MatrixXd ydata(prog.kkt_system_manager_.SizeOfKKTSystem(), 1);
   Eigen::Map<DenseMatrix> yout(primal_variable, m, 1);
@@ -190,11 +196,13 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   b.head(m) << bin;
 
   for (int i = 0; i < config.max_iterations; i++) {
+#if CONEX_VERBOSE
     if (i < 10) {
       std::cout << "i:  " << i << ", ";
     } else {
       std::cout << "i: " << i << ", ";
     }
+#endif
     bool update_mu =
         (i == 0) || ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) &&
                      i < config.max_iterations - config.final_centering_steps);
@@ -260,7 +268,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     prog.stats.num_iter = i + 1;
     prog.stats.sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
+#if CONEX_VERBOSE
     std::cout << std::endl;
+#endif
   }
 
   if (config.prepare_dual_variables) {

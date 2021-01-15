@@ -6,12 +6,25 @@
 
 namespace conex {
 
-#define DUMP(x)                                                \
-  do {                                                         \
-    std::cerr << __FILE__ << " line " << __LINE__ << std::endl \
-              << #x ":" << std::endl                           \
-              << x << std::endl;                               \
-  } while (false)
+#define DUMP(x)                                              \
+  std::cerr << __FILE__ << " line " << __LINE__ << std::endl \
+            << #x ":" << std::endl                           \
+            << x << std::endl;
+
+#ifndef CONEX_VERBOSE
+#define CONEX_VERBOSE 1
+#endif
+
+#if CONEX_VERBOSE
+#define LOG(x)        \
+  std::cout << #x ":" \
+            << " " << x << ", ";
+
+#define REPORT(x)     \
+  std::cout << #x ":" \
+            << " " << x << ", ";
+
+#define PRINTSTATUS(x) std::cout << "Status: " << x << "\n\n";
 
 #define START_TIMER(x)                                       \
   {                                                          \
@@ -27,6 +40,15 @@ namespace conex {
                    .count()                                                  \
             << ", ";                                                         \
   }
+#else
+
+#define LOG(x)
+#define REPORT(x)
+#define PRINTSTATUS(x)
+#define START_TIMER(x)
+#define END_TIMER
+
+#endif
 
 template <typename T1, typename T2>
 inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& P) {
@@ -51,22 +73,5 @@ inline std::ostream& operator<<(std::ostream& os,
   }
   return os;
 }
-
-#define LOG(x)                     \
-  do {                             \
-    std::cout << #x ":"            \
-              << " " << x << ", "; \
-  } while (false)
-
-#define REPORT(x)                  \
-  do {                             \
-    std::cout << #x ":"            \
-              << " " << x << ", "; \
-  } while (false)
-
-#define PRINTSTATUS(x)                      \
-  do {                                      \
-    std::cout << "Status: " << x << "\n\n"; \
-  } while (false)
 
 }  // namespace conex
