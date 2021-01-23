@@ -63,8 +63,11 @@ class HermitianPsdConstraint {
   int number_of_variables() { return constraint_matrices_.size(); }
 
   template <typename H>
-  friend void TakeStep(HermitianPsdConstraint<H>* o, const StepOptions& opt,
-                       const Ref& y, StepInfo*);
+  friend void PrepareStep(HermitianPsdConstraint<H>* o, const StepOptions& opt,
+                          const Ref& y, StepInfo*);
+
+  template <typename H>
+  friend bool TakeStep(HermitianPsdConstraint<H>* o, const StepOptions& opt);
 
   template <typename H>
   friend void ConstructSchurComplementSystem(HermitianPsdConstraint<H>* o,
@@ -84,7 +87,11 @@ class HermitianPsdConstraint {
   WorkspaceDenseHermitian workspace_;
   std::vector<Matrix> constraint_matrices_;
   Matrix constraint_affine_;
+
+  // TODO(FrankPermenter): Move to workspace.
   Matrix W;
+  Matrix WS;
+  Matrix minus_s;
 
   double EvalDualConstraint(int j, const Matrix& W) {
     return T::TraceInnerProduct(constraint_matrices_.at(j), W);

@@ -42,8 +42,8 @@ void PsdConstraint::AffineUpdate(double w_e, Ref* WS) {
   }
 }
 
-void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y,
-              StepInfo* info) {
+void PrepareStep(PsdConstraint* o, const StepOptions& opt, const Ref& y,
+                 StepInfo* info) {
   auto& workspace = o->workspace_;
   auto& minus_s = workspace.temp_1;
   auto& W = workspace.W;
@@ -61,34 +61,32 @@ void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y,
   WS = W * minus_s;
 
   int n = Rank(*o);
-  // The spectral radius of |WS + kI| is the inf-norm of W^{1/2} S W^{1/2} + kI
-  // given that they have the same eigenvalues.
-#if 0
-  double norminf = SpectralRadius(WS + opt.e_weight*Eigen::MatrixXd::Identity(n, n));
-#else
-  // Heuristic choice for initial r.
+  // Use heuristic initialization of ApproximateEigenvalues.
+  // Finds eigenvalues of -Q(w/2) s
   int index = 0;
   WS.diagonal().maxCoeff(&index);
   auto gw_eig =
       ApproximateEigenvalues(WS, workspace.W, minus_s.col(index), n / 2, true);
+
+  // Get eigenvalues of e - Q(w/2) s.
   const double lambda_1 = std::fabs(opt.e_weight + gw_eig.minCoeff());
   const double lambda_2 = std::fabs(opt.e_weight + gw_eig.maxCoeff());
   double norminf = lambda_1;
   if (norminf < lambda_2) {
     norminf = lambda_2;
   }
-#endif
 
   WSWS = WS * WS;
   double norm2 = WSWS.trace() + 2 * WS.trace() + Rank(*o);
-  double scale = 1;
-  if (norminf * norminf > 2.0) {
-    scale = 2.0 / (norminf * norminf);
-  }
 
   info->norminfd = norminf;
   info->normsqrd = norm2;
-  o->GeodesicUpdate(scale, opt, &WS);
+}
+
+bool TakeStep(PsdConstraint* o, const StepOptions& options) {
+  auto& WS = o->workspace_.temp_1;
+  o->GeodesicUpdate(options.step_size, options, &WS);
+  return true;
 }
 
 void SetIdentity(PsdConstraint* o) {

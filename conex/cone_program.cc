@@ -33,9 +33,9 @@ Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
   return z;
 }
 
-void TakeStep(ConstraintManager<Container>* kkt,
-              const StepOptions& newton_step_parameters, const Ref& y,
-              StepInfo* info) {
+void PrepareStep(ConstraintManager<Container>* kkt,
+                 const StepOptions& newton_step_parameters, const Ref& y,
+                 StepInfo* info) {
   StepInfo info_i;
   info_i.normsqrd = 0;
   info_i.norminfd = 0;
@@ -47,12 +47,19 @@ void TakeStep(ConstraintManager<Container>* kkt,
     auto ysegment = Vars(y, kkt->cliques.at(i));
     Eigen::Map<Eigen::MatrixXd, Eigen::Aligned> z(ysegment.data(),
                                                   ysegment.size(), 1);
-    TakeStep(&ci.constraint, newton_step_parameters, z, &info_i);
+    PrepareStep(&ci.constraint, newton_step_parameters, z, &info_i);
     if (info_i.norminfd > info->norminfd) {
       info->norminfd = info_i.norminfd;
     }
     info->normsqrd += info_i.normsqrd;
     i++;
+  }
+}
+
+void TakeStep(ConstraintManager<Container>* kkt,
+              const StepOptions& newton_step_parameters) {
+  for (auto& ci : kkt->eqs) {
+    TakeStep(&ci.constraint, newton_step_parameters);
   }
 }
 
@@ -266,7 +273,12 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     StepInfo info;
     START_TIMER(Update)
-    TakeStep(&prog.kkt_system_manager_, newton_step_parameters, y, &info);
+    PrepareStep(&prog.kkt_system_manager_, newton_step_parameters, y, &info);
+    newton_step_parameters.step_size = 2.0 / info.norminfd * info.norminfd;
+    if (newton_step_parameters.step_size > 1) {
+      newton_step_parameters.step_size = 1;
+    }
+    TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
     END_TIMER
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
@@ -295,7 +307,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     newton_step_parameters.c_weight = 0;
     Ref y2map(y2.data(), y2.rows(), y2.cols());
     StepInfo info;
-    TakeStep(&prog.kkt_system_manager_, newton_step_parameters, y2map, &info);
+    PrepareStep(&prog.kkt_system_manager_, newton_step_parameters, y2map,
+                &info);
   }
   y /= newton_step_parameters.inv_sqrt_mu;
   yout = y.topRows(m);

@@ -7,20 +7,44 @@ namespace conex {
 void SetIdentity(LinearConstraint* o) { o->workspace_.W.setConstant(1); }
 
 // TODO: use e_weight and c_weight
-void TakeStep(LinearConstraint* o, const StepOptions& opt, const Ref& y,
-              StepInfo* info) {
+void PrepareStep(LinearConstraint* o, const StepOptions& options, const Ref& y,
+                 StepInfo* info) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
-  if (!opt.affine) {
-    o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
+  if (!options.affine) {
+    o->ComputeNegativeSlack(options.inv_sqrt_mu, y, &minus_s);
+    auto& W = workspace->W;
+    auto& SW = workspace->temp_1;
+    auto& d = workspace->temp_2;
+    SW = minus_s.cwiseProduct(W);
+
+    int n = SW.rows();
+
+    d = SW + DenseMatrix::Ones(n, 1);
+    double norminf = (d).array().abs().maxCoeff();
+    info->norminfd = norminf;
+    info->normsqrd = d.squaredNorm();
+
   } else {
     o->ComputeNegativeSlack(0, y, &minus_s);
+    TakeStep(o, options);
   }
-  if (!opt.affine) {
-    o->GeodesicUpdate(minus_s, info);
+}
+
+bool TakeStep(LinearConstraint* o, const StepOptions& options) {
+  if (!options.affine) {
+    auto& d = o->workspace_.temp_2;
+    auto& W = o->workspace_.W;
+    if (options.step_size != 1) {
+      d.array() *= options.step_size;
+    }
+    d = d.array().exp();
+    W = W.cwiseProduct(d);
   } else {
+    auto& minus_s = o->workspace_.temp_1;
     o->AffineUpdate(minus_s);
   }
+  return true;
 }
 
 void GetMuSelectionParameters(LinearConstraint* o, const Ref& y,
@@ -48,38 +72,6 @@ void LinearConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
                                             Ref* minus_s) {
   minus_s->noalias() = (constraint_matrix_)*y.topRows(number_of_variables());
   minus_s->noalias() -= (constraint_affine_)*inv_sqrt_mu;
-}
-
-void LinearConstraint::GeodesicUpdate(const Ref& minus_s, StepInfo* info) {
-  auto& W = workspace_.W;
-  auto& SW = workspace_.temp_1;
-  auto& d = workspace_.temp_2;
-  auto& expSW = workspace_.temp_2;
-  SW = minus_s.cwiseProduct(W);
-
-  int n = SW.rows();
-
-  d = SW + DenseMatrix::Ones(n, 1);
-  double norminf = (d).array().abs().maxCoeff();
-
-  info->norminfd = norminf;
-  info->normsqrd = d.squaredNorm();
-
-  double scale = 1;
-  if (norminf * norminf > 2.0) {
-    scale = 2.0 / (norminf * norminf);
-    SW = SW * scale;
-  }
-
-  // double scale = 1;
-  // if (norminf > 2.0) {
-  //   scale = 2.0/(norminf);
-  //   SW = SW*scale;
-  // }
-
-  expSW = SW.array().exp();
-  W = W.cwiseProduct(expSW);
-  W = std::exp(scale) * W;
 }
 
 void LinearConstraint::AffineUpdate(const Ref& minus_s) {

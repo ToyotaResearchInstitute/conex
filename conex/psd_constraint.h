@@ -41,8 +41,10 @@ class PsdConstraint {
   friend void SetIdentity(PsdConstraint* o);
   friend int Rank(const PsdConstraint& o) { return o.workspace_.n_; };
   WorkspaceDensePSD* workspace() { return &workspace_; }
-  friend void TakeStep(PsdConstraint* o, const StepOptions& opt, const Ref& y,
-                       StepInfo*);
+  friend void PrepareStep(PsdConstraint* o, const StepOptions& opt,
+                          const Ref& y, StepInfo*);
+
+  friend bool TakeStep(PsdConstraint*, const StepOptions&);
   friend void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
                                        MuSelectionParameters* p);
   int number_of_variables() { return num_dual_constraints_; }

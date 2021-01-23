@@ -42,21 +42,23 @@ class LinearConstraint {
 
   WorkspaceLinear* workspace() { return &workspace_; }
 
+  int number_of_variables() { return constraint_matrix_.cols(); }
   friend int Rank(const LinearConstraint& o) { return o.workspace_.n_; };
   friend void SetIdentity(LinearConstraint* o);
-  friend void TakeStep(LinearConstraint* o, const StepOptions& opt,
-                       const Ref& y, StepInfo* data);
+  friend void PrepareStep(LinearConstraint* o, const StepOptions& opt,
+                          const Ref& y, StepInfo* data);
   friend void GetMuSelectionParameters(LinearConstraint* o, const Ref& y,
                                        MuSelectionParameters* p);
 
   friend void ConstructSchurComplementSystem(LinearConstraint* o,
                                              bool initialize,
                                              SchurComplementSystem* sys);
+  friend bool TakeStep(LinearConstraint*, const StepOptions&);
 
+ private:
   void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s);
   void GeodesicUpdate(const Ref& S, StepInfo* data);
   void AffineUpdate(const Ref& S);
-  int number_of_variables() { return constraint_matrix_.cols(); }
 
   WorkspaceLinear workspace_;
   const DenseMatrix constraint_matrix_;

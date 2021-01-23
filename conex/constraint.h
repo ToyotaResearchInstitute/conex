@@ -27,15 +27,20 @@ bool UpdateAffineTerm(T*, double, int, int, int) {
   CONEX_DEMAND(false, "Constraint does not support updates of affine term.");
 }
 
+// template <typename T>
+// bool TakeStep(T*, const StepOptions&) {
+//  return true;
+//}
+
 // A helper class for forwarding to different implementations of an "interface."
 // With this approach, implementations do not need to use inheritance or virtual
 // functions. Instead, they simply provide functions of appropriate name and
 // signature, e.g.,
 //
-//    void TakeStep(Implementation1*, {arguments});
+//    void PrepareStep(Implementation1*, {arguments});
 //    void Rank(Implementation1*, {arguments});
 //    ..
-//    void TakeStep(Implementation2*, {arguments});
+//    void PrepareStep(Implementation2*, {arguments});
 //    void Rank(Implementation2*, {arguments});
 //
 // Note that implementations can be ANSI C compliant when the signature is.
@@ -55,9 +60,9 @@ class Constraint {
 
   friend void SetIdentity(Constraint* o) { o->model->do_set_identity(); }
 
-  friend void TakeStep(Constraint* o, const StepOptions& opt, const Ref& y,
-                       StepInfo* info) {
-    o->model->do_take_step(opt, y, info);
+  friend void PrepareStep(Constraint* o, const StepOptions& opt, const Ref& y,
+                          StepInfo* info) {
+    o->model->do_prepare_step(opt, y, info);
   }
 
   friend void GetMuSelectionParameters(Constraint* o, const Ref& y,
@@ -86,6 +91,10 @@ class Constraint {
     return o->model->do_update_affine_term(val, row, col, hyper_complex_dim);
   }
 
+  friend bool TakeStep(Constraint* o, const StepOptions& opts) {
+    return o->model->do_take_step(opts);
+  }
+
  private:
   struct Concept {
     virtual void do_schur_complement(bool initialize,
@@ -93,9 +102,10 @@ class Constraint {
     virtual void do_set_identity() = 0;
     virtual void do_min_mu(const Ref& y, MuSelectionParameters* p) = 0;
     virtual Workspace do_get_workspace() = 0;
-    virtual void do_take_step(const StepOptions& opt, const Ref& y,
-                              StepInfo* info) = 0;
+    virtual void do_prepare_step(const StepOptions& opt, const Ref& y,
+                                 StepInfo* info) = 0;
     virtual void do_get_dual_variable(double*) = 0;
+    virtual bool do_take_step(const StepOptions&) = 0;
     virtual int do_dual_variable_size() = 0;
     virtual int do_number_of_variables() = 0;
     virtual bool do_update_linear_operator(double val, int var, int row,
@@ -151,9 +161,13 @@ class Constraint {
       return UpdateAffineTerm(data, val, row, col, hyper_complex_dim);
     }
 
-    void do_take_step(const StepOptions& opt, const Ref& y,
-                      StepInfo* info) override {
-      TakeStep(data, opt, y, info);
+    void do_prepare_step(const StepOptions& opt, const Ref& y,
+                         StepInfo* info) override {
+      PrepareStep(data, opt, y, info);
+    }
+
+    bool do_take_step(const StepOptions& opt) override {
+      return TakeStep(data, opt);
     }
 
     Implementation* data;

@@ -196,7 +196,7 @@ void SOCConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
   minus_s->noalias() -= (constraint_affine_)*inv_sqrt_mu;
 }
 
-// Combine this with TakeStep
+// Combine this with PrepareStep
 void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
   auto* workspace = &o->workspace_;
@@ -226,26 +226,20 @@ void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
   p->gw_trace += -Ws.sum();
 }
 
-void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
-              StepInfo* info) {
-  Eigen::VectorXd minus_s_data(o->workspace_.n_ + 1);
-  Ref minus_s(minus_s_data.data(), o->workspace_.n_ + 1, 1);
-  o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
+bool TakeStep(SOCConstraint* o, const StepOptions& opt) {
+  auto d1 = o->workspace_.temp1_1;
+  auto d0 = o->workspace_.d0;
 
-  // e - Q(w^{1/2})(C-A^y)
-  auto wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
-  int n = wsqrt.rows();
-  auto d = QuadraticRepresentation(wsqrt, minus_s);
-  d(0, 0) += 1;
+  int n = d1.rows() + 1;
+  Eigen::VectorXd wsqrt(n);
+  wsqrt(0, 0) = o->workspace_.W0;
+  wsqrt.bottomRows(n - 1) = o->workspace_.W1;
 
-  info->norminfd = NormInf(d(0, 0), d.bottomRows(n - 1));
-  info->normsqrd = d.squaredNorm();
-
-  double scale = info->norminfd * info->norminfd;
-  if (scale > 2.0) {
-    d = 2 * d / scale;
+  if (opt.step_size != 1.0) {
+    d0 *= opt.step_size;
+    d1 *= opt.step_size;
   }
-  auto expd = Exp(d(0, 0), d.bottomRows(n - 1));
+  auto expd = Exp(d0, d1);
   auto wn = QuadraticRepresentation(wsqrt, expd);
   o->workspace_.W0 = wn(0, 0);
   o->workspace_.W1 = wn.bottomRows(n - 1);
@@ -255,13 +249,28 @@ void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
     DUMP(o->workspace_.W0);
     assert(0);
   }
+  return true;
+}
 
-  // Q(w^{1/2}) exp Q(w^{1/2}) d
-  //                (w w^T - det w R) d
-  //  (w w^T  - det w R) exp  (w w^T - det w R) d
-  //
-  //  exp(ld1) lw1  d
-  //  exp(ld1) lw2  d
+void PrepareStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
+                 StepInfo* info) {
+  Eigen::VectorXd minus_s_data(o->workspace_.n_ + 1);
+  Ref minus_s(minus_s_data.data(), o->workspace_.n_ + 1, 1);
+  o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
+
+  // e - Q(w^{1/2})(C-A^y)
+  int n = minus_s.rows();
+  auto wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
+  o->workspace_.W0 = wsqrt(0, 0);
+  o->workspace_.W1 = wsqrt.bottomRows(n - 1);
+
+  auto d = QuadraticRepresentation(wsqrt, minus_s);
+  d(0, 0) += 1;
+  o->workspace_.temp1_1 = d.bottomRows(n - 1);
+  o->workspace_.d0 = d(0, 0);
+
+  info->norminfd = NormInf(d(0, 0), d.bottomRows(n - 1));
+  info->normsqrd = d.squaredNorm();
 }
 
 void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,

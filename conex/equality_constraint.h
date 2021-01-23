@@ -31,8 +31,11 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
 
   friend int Rank(const EqualityConstraints&) { return 0; };
   friend void SetIdentity(EqualityConstraints*){};
-  friend void TakeStep(EqualityConstraints*, const StepOptions&, const Ref&,
-                       StepInfo*){};
+  friend void PrepareStep(EqualityConstraints*, const StepOptions&, const Ref&,
+                          StepInfo*){};
+  friend bool TakeStep(EqualityConstraints*, const StepOptions&) {
+    return true;
+  };
   friend void GetMuSelectionParameters(EqualityConstraints*, const Ref&,
                                        MuSelectionParameters*){};
 

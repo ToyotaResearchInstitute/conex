@@ -28,6 +28,7 @@ struct StepOptions {
   // Take step of form  w_1 e + Q(w/2)(A^y - w_2 c)
   double c_weight = 0;
   double e_weight = 0;
+  double step_size = 1;
 };
 
 struct StepInfo {

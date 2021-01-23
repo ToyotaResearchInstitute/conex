@@ -24,6 +24,7 @@ cc_test(
     copts = ["-Iexternal/gtest/include"],
     deps = [
         "conex_lib",
+        "linear_constraint",
         "supernodal_solver",
         "@gtest//:main",
     ],
@@ -276,6 +277,39 @@ cc_library(
 )
 
 cc_library(
+    name = "core",
+    hdrs = [
+        "constraint.h",
+        "debug_macros.h",
+        "error_checking_macros.h",
+        "error_codes.h",
+        "memory_utils.h",
+        "newton_step.h",
+        "workspace.h",
+    ],
+    copts = COPTS,
+    visibility = ["//visibility:public"],
+    deps = ["@eigen"],
+)
+
+cc_library(
+    name = "linear_constraint",
+    srcs = [
+        "linear_constraint.cc",
+    ],
+    hdrs = [
+        "linear_constraint.h",
+        "linear_workspace.h",
+    ],
+    copts = COPTS,
+    visibility = ["//visibility:public"],
+    deps = [
+        "core",
+        "@eigen",
+    ],
+)
+
+cc_library(
     name = "divergence",
     srcs = [
         "divergence.cc",
@@ -297,7 +331,6 @@ cc_library(
         "cone_program.cc",
         "dense_lmi_constraint.cc",
         "hermitian_psd.cc",
-        "linear_constraint.cc",
         "psd_constraint.cc",
         "quadratic_cone_constraint.cc",
         "soc_constraint.cc",
@@ -310,7 +343,6 @@ cc_library(
         "error_checking_macros.h",
         "error_codes.h",
         "hermitian_psd.h",
-        "linear_constraint.h",
         "memory_utils.h",
         "newton_step.h",
         "psd_constraint.h",
@@ -329,6 +361,7 @@ cc_library(
         "exponential_map",
         "exponential_map_pade",
         "jordan_matrix_algebra",
+        "linear_constraint",
         "supernodal_solver",
         "@eigen",
     ],

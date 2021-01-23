@@ -55,8 +55,8 @@ Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
 
 using Eigen::MatrixXd;
 using std::vector;
-auto Combine(vector<MatrixXd> A, vector<MatrixXd> C,
-             vector<vector<int> > vars) {
+std::pair<MatrixXd, MatrixXd> Combine(vector<MatrixXd> A, vector<MatrixXd> C,
+                                      vector<vector<int> > vars) {
   int n = A.at(0).rows() * A.size();
   int m = A.at(0).cols() * A.size();
   Eigen::MatrixXd Af(n, m);
@@ -80,7 +80,10 @@ auto Combine(vector<MatrixXd> A, vector<MatrixXd> C,
 
   Eigen::MatrixXd Ac = Af.topLeftCorner(cnt, max_v + 1);
   Eigen::MatrixXd Cc = Cf.topLeftCorner(cnt, 1);
-  return LinearConstraint{Ac, Cc};
+  std::pair<MatrixXd, MatrixXd> output;
+  output.first = Ac;
+  output.second = Cc;
+  return output;
 }
 
 Eigen::VectorXd SolveSparseHelper(bool sparse) {
@@ -154,16 +157,17 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
     }
     EXPECT_NEAR((Ax - b).norm(), 0, 1e-8);
   } else {
-    prog.AddConstraint(Combine(A, C, variables));
+    prog.AddConstraint(LinearConstraint{Combine(A, C, variables).first,
+                                        Combine(A, C, variables).second});
     Solve(b, prog, config, y.data());
 
     auto res = b;
     auto L = Combine(A, C, variables);
-    VectorXd slack = L.constraint_affine_ - L.constraint_matrix_ * y;
+    VectorXd slack = L.second - L.first * y;
 
-    MatrixXd xi(L.constraint_affine_.rows(), 1);
+    MatrixXd xi(L.second.rows(), 1);
     prog.GetDualVariable(0, &xi);
-    EXPECT_NEAR((b - L.constraint_matrix_.transpose() * xi).norm(), 0, 1e-8);
+    EXPECT_NEAR((b - L.first.transpose() * xi).norm(), 0, 1e-8);
   }
 
   return y;
@@ -239,16 +243,17 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
     }
     EXPECT_NEAR((Ax - b).norm(), 0, 1e-8);
   } else {
-    prog.AddConstraint(Combine(A, C, variables));
+    prog.AddConstraint(LinearConstraint{Combine(A, C, variables).first,
+                                        Combine(A, C, variables).second});
     Solve(b, prog, config, y.data());
 
     auto res = b;
     auto L = Combine(A, C, variables);
-    VectorXd slack = L.constraint_affine_ - L.constraint_matrix_ * y;
+    VectorXd slack = L.second - L.first * y;
 
-    MatrixXd xi(L.constraint_affine_.rows(), 1);
+    MatrixXd xi(L.second.rows(), 1);
     prog.GetDualVariable(0, &xi);
-    EXPECT_NEAR((b - L.constraint_matrix_.transpose() * xi).norm(), 0, 1e-8);
+    EXPECT_NEAR((b - L.first.transpose() * xi).norm(), 0, 1e-8);
   }
 
   return y;

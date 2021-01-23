@@ -114,7 +114,7 @@ void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
   minus_s_1->noalias() -= C1_ * inv_sqrt_mu;
 }
 
-// Combine this with TakeStep
+// Combine this with PrepareStep
 void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
                               MuSelectionParameters* p) {
   Eigen::internal::set_is_malloc_allowed(false);
@@ -153,21 +153,21 @@ void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
   Eigen::internal::set_is_malloc_allowed(true);
 }
 
-void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
-              StepInfo* info) {
+void PrepareStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
+                 StepInfo* info) {
   Eigen::internal::set_is_malloc_allowed(false);
   // d =  e - Q(w^{1/2})(C-A^y)
-  double wsqrt_q0 = o->workspace_.W0;
+  double& wsqrt_q0 = o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;
-  wsqrt_q1 = o->workspace_.W1;
   auto& d_q1 = o->workspace_.temp2_1;
-  double d_q0;
+  double& d_q0 = o->workspace_.d0;
 
   {  // Use temp_1
     auto& minus_s_1 = o->workspace_.temp1_1;
     double minus_s_0;
     o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s_0, &minus_s_1);
 
+    wsqrt_q1 = o->workspace_.W1;
     Sqrt(Norm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1), &wsqrt_q0, &wsqrt_q1);
 
     QuadraticRepresentation(
@@ -185,10 +185,22 @@ void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
   }
   info->normsqrd = ev.squaredNorm();
 
-  double scale = info->norminfd * info->norminfd;
-  if (scale > 2.0) {
-    d_q0 = 2 * d_q0 / scale;
-    d_q1 = 2 * d_q1 / scale;
+  Eigen::internal::set_is_malloc_allowed(true);
+}
+
+void QuadraticConstraint::Initialize() {
+  DenseMatrix W;
+  A_gram_ = EvalAtQX(A1_, Q_, A1_, &W);
+}
+
+bool TakeStep(QuadraticConstraint* o, const StepOptions& options) {
+  auto& d_q1 = o->workspace_.temp2_1;
+  double& d_q0 = o->workspace_.d0;
+  double& wsqrt_q0 = o->workspace_.W0;
+  auto& wsqrt_q1 = o->workspace_.temp3_1;
+  if (options.step_size != 1) {
+    d_q0 = options.step_size * d_q0;
+    d_q1 = options.step_size * d_q1;
   }
 
   Exp(Norm(o->Q_, d_q1, &o->workspace_.temp1_1), &d_q0, &d_q1);
@@ -199,13 +211,7 @@ void TakeStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
       SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp1_1),
       InnerProduct(o->Q_, wsqrt_q1, expd_q1, &o->workspace_.temp1_1), wsqrt_q0,
       wsqrt_q1, expd_q0, expd_q1, &o->workspace_.W0, &o->workspace_.W1);
-
-  Eigen::internal::set_is_malloc_allowed(true);
-}
-
-void QuadraticConstraint::Initialize() {
-  DenseMatrix W;
-  A_gram_ = EvalAtQX(A1_, Q_, A1_, &W);
+  return true;
 }
 
 void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,

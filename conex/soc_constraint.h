@@ -26,8 +26,11 @@ class SOCConstraint {
     o->workspace_.W0 = 1;
     o->workspace_.W1.setZero();
   }
-  friend void TakeStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
-                       StepInfo* data);
+  friend void PrepareStep(SOCConstraint* o, const StepOptions& opt,
+                          const Ref& y, StepInfo* data);
+
+  friend bool TakeStep(SOCConstraint* o, const StepOptions& opt);
+
   friend void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
                                        MuSelectionParameters* p);
   friend void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,

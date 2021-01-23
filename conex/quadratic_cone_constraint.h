@@ -37,8 +37,10 @@ class QuadraticConstraint {
     o->workspace_.W0 = 1;
     o->workspace_.W1.setZero();
   }
-  friend void TakeStep(QuadraticConstraint* o, const StepOptions& opt,
-                       const Ref& y, StepInfo* data);
+  friend void PrepareStep(QuadraticConstraint* o, const StepOptions& opt,
+                          const Ref& y, StepInfo* data);
+
+  friend bool TakeStep(QuadraticConstraint* o, const StepOptions& opt);
   friend void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
                                        MuSelectionParameters* p);
   friend void ConstructSchurComplementSystem(QuadraticConstraint* o,

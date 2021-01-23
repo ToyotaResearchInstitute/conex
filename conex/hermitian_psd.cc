@@ -7,12 +7,30 @@ namespace conex {
 using Eigen::MatrixXd;
 
 template <typename T>
-void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt,
-              const Ref& y, StepInfo* info) {
-  typename T::Matrix minus_s;
+bool TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt) {
+  auto& WS = o->WS;
+  WS.at(0).diagonal().array() += opt.e_weight;
+  double scale = opt.step_size;
+  if (scale != 1.0) {
+    WS = T::ScalarMultiply(WS, scale);
+  }
+
+  int n = Rank(*o);
+  auto expWS = T::Zero(n, n);
+  ExponentialMap(WS, &expWS);
+  o->W = T::Multiply(expWS, o->W);
+  o->W = T::ScalarMultiply(T::Add(o->W, T::ConjugateTranspose(o->W)), .5);
+  return true;
+}
+
+template <typename T>
+void PrepareStep(HermitianPsdConstraint<T>* o, const StepOptions& opt,
+                 const Ref& y, StepInfo* info) {
+  auto& minus_s = o->minus_s;
+  auto& WS = o->WS;
   o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
 
-  auto WS = T::Multiply(o->W, minus_s);
+  WS = T::Multiply(o->W, minus_s);
   int n = Rank(*o);
   auto gw_eig = T::ApproximateEigenvalues(WS, o->W, T::Random(n, 1), n / 2);
   const double lambda_1 = std::fabs(opt.e_weight + gw_eig.minCoeff());
@@ -26,22 +44,6 @@ void TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt,
 
   info->norminfd = norminf;
   info->normsqrd = WSWS.at(0).trace() + 2 * WS.at(0).trace() + Rank(*o);
-
-  double scale = 1;
-  if (norminf * norminf > 2.0) {
-    scale = 2.0 / (norminf * norminf);
-    minus_s = T::ScalarMultiply(minus_s, scale);
-  }
-
-  WS.at(0).diagonal().array() += opt.e_weight;
-  if (scale != 1.0) {
-    WS = T::ScalarMultiply(WS, scale);
-  }
-
-  auto expWS = T::Zero(n, n);
-  ExponentialMap(WS, &expWS);
-  o->W = T::Multiply(expWS, o->W);
-  o->W = T::ScalarMultiply(T::Add(o->W, T::ConjugateTranspose(o->W)), .5);
 }
 
 template <typename T>
@@ -74,12 +76,18 @@ void GetMuSelectionParameters(HermitianPsdConstraint<T>* o, const Ref& y,
   p->gw_trace += -WS.at(0).trace();
 }
 
-template void TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt,
-                       const Ref& y, StepInfo* info);
-template void TakeStep(HermitianPsdConstraint<Complex>* o,
-                       const StepOptions& opt, const Ref& y, StepInfo* info);
-template void TakeStep(HermitianPsdConstraint<Quaternions>* o,
-                       const StepOptions& opt, const Ref& y, StepInfo* info);
+template void PrepareStep(HermitianPsdConstraint<Real>* o,
+                          const StepOptions& opt, const Ref& y, StepInfo* info);
+template void PrepareStep(HermitianPsdConstraint<Complex>* o,
+                          const StepOptions& opt, const Ref& y, StepInfo* info);
+template void PrepareStep(HermitianPsdConstraint<Quaternions>* o,
+                          const StepOptions& opt, const Ref& y, StepInfo* info);
+
+template bool TakeStep(HermitianPsdConstraint<Real>* o, const StepOptions& opt);
+template bool TakeStep(HermitianPsdConstraint<Complex>* o,
+                       const StepOptions& opt);
+template bool TakeStep(HermitianPsdConstraint<Quaternions>* o,
+                       const StepOptions& opt);
 
 template void GetMuSelectionParameters(HermitianPsdConstraint<Real>* o,
                                        const Ref& y, MuSelectionParameters* p);
@@ -89,13 +97,25 @@ template void GetMuSelectionParameters(HermitianPsdConstraint<Quaternions>* o,
                                        const Ref& y, MuSelectionParameters* p);
 
 template <>
-void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt,
-              const Ref& y, StepInfo* info) {
+bool TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt) {
   using T = Octonions;
-  typename T::Matrix minus_s;
-  o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
+  auto& minus_s = o->minus_s;
+  double scale = opt.step_size;
 
-  // TODO: fix this approximation.
+  if (scale != 1) {
+    minus_s = T::ScalarMultiply(minus_s, scale);
+  }
+
+  o->W = GeodesicUpdateScaled(o->W, minus_s);
+  return true;
+}
+
+template <>
+void PrepareStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt,
+                 const Ref& y, StepInfo* info) {
+  using T = Octonions;
+  auto& minus_s = o->minus_s;
+  o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
 
   // || e - Q(w^{1/2}) s\|
   double trace_ws = T::TraceInnerProduct(o->W, minus_s);
@@ -105,16 +125,6 @@ void TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt,
 
   // TODO(FrankPermenter): replace this heuristic approximation.
   info->norminfd = 1.0 / 3.0 * (trace_ws + Rank(*o));
-
-  // TODO(FrankPermenter): Update this to infinity norm or to a better upper
-  // bound.
-  double scale = 1;
-  if (info->normsqrd > 2.0) {
-    scale = 2.0 / (info->normsqrd);
-    minus_s = T::ScalarMultiply(minus_s, scale);
-  }
-
-  o->W = GeodesicUpdateScaled(o->W, minus_s);
 }
 
 template <>
@@ -132,6 +142,8 @@ void GetMuSelectionParameters(HermitianPsdConstraint<Octonions>* o,
   p->gw_lambda_max = std::fabs(normsqrd) /
                      (1e-15 + std::fabs(T::TraceInnerProduct(o->W, minus_s)));
 
+  // Heuristic.
+  p->gw_lambda_min = p->gw_lambda_max * .01;
   p->gw_trace -= T::TraceInnerProduct(o->W, minus_s);
   p->gw_norm_squared +=
       T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);

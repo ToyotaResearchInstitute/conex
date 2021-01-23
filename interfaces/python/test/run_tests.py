@@ -321,7 +321,18 @@ def SolveHermitianLMI(hyper_complex_dim):
 
     return la.norm(np.add(sol.y, np.ones((num_vars)))) < 1e-6 and sol.status
 
-def SolveRandomHermitianLMI():
+def SolveRandomHermitianLMI(hyper_complex_dim):
+    order = 20
+    num_vars = 10
+    if (hyper_complex_dim == 8):
+        order = 3
+    prog = Conex(num_vars)
+    prog, b = AddRandomLinearMatrixInequality(prog, num_vars, order, hyper_complex_dim)
+    sol = prog.Maximize(b)
+
+    return sol.status
+
+def SolveRandomMixedHermitian():
     order = 20
     num_vars = 10
     for i in [1, 2, 4, 8]:
@@ -367,9 +378,14 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(SolveHermitianLMI(2));
         self.assertTrue(SolveHermitianLMI(4));
         self.assertTrue(SolveHermitianLMI(8));
-    def test9(self):
-        self.assertTrue(SolveRandomHermitianLMI());
     def test10(self):
+        self.assertTrue(SolveRandomHermitianLMI(1));
+        self.assertTrue(SolveRandomHermitianLMI(2));
+        self.assertTrue(SolveRandomHermitianLMI(4));
+        self.assertTrue(SolveRandomHermitianLMI(8));
+    def test11(self):
+        self.assertTrue(SolveRandomMixedHermitian());
+    def test12(self):
         self.assertTrue(SolveRandomSOCP())
 
 if __name__ == '__main__':
