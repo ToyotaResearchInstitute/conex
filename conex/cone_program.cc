@@ -125,10 +125,20 @@ double UpdateMu(ConstraintManager<Container>& constraints,
   MuSelectionParameters mu_param;
   *temporary_memory = solver->Solve(AQc - b);
   GetMuSelectionParameters(&constraints, *temporary_memory, &mu_param);
+  mu_param.rank = rankK;
 
-  return DivergenceUpperBoundInverse(
-      config.divergence_upper_bound * rankK, mu_param.gw_norm_squared,
-      mu_param.gw_lambda_max, mu_param.gw_trace, rankK);
+  double divergence_bound = config.divergence_upper_bound * rankK;
+
+  double inv_sqrt_mu = 0;
+  inv_sqrt_mu = DivergenceUpperBoundInverse(divergence_bound, mu_param);
+
+  // If inverse evaluation has failed, choose mu that minimizes the norm of the
+  // Newton step.
+  if (inv_sqrt_mu < 0) {
+    inv_sqrt_mu = mu_param.gw_trace / mu_param.gw_norm_squared;
+  }
+
+  return inv_sqrt_mu;
 }
 
 void ApplyLimits(double* x, double lb, double ub) {
@@ -154,7 +164,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 #if CONEX_VERBOSE
   std::cout.precision(2);
   std::cout << std::scientific;
-  std::cout << "Initializing: \n";
+  std::cout << "Starting the Conex optimizer: \n";
 #endif
 
   CONEX_DEMAND(prog.GetNumberOfVariables() == bin.rows(),

@@ -8,22 +8,51 @@ namespace conex {
 
 using Eigen::MatrixXd;
 
+bool InLimits(double x, double lower, double upper) {
+  return x >= lower && x <= upper;
+}
+
+double Divergence(Eigen::VectorXd gw, double k) {
+  MatrixXd d = k * gw;
+  d.array() -= 1;
+  double dinf = d.array().abs().maxCoeff();
+  return d.squaredNorm() / (1 - dinf);
+}
+
 GTEST_TEST(MuSelection, DivergenceBound) {
   int n = 3;
   MatrixXd gw = Eigen::VectorXd::Random(n, 1).array().abs();
 
-  double gw_norm_squared = gw.squaredNorm();
-  double gw_norm_inf = gw.maxCoeff();
-  double gw_trace = gw.sum();
-  double hub_desired = 1;
-  double k = DivergenceUpperBoundInverse(hub_desired, gw_norm_squared,
-                                         gw_norm_inf, gw_trace, n);
-  double hub =
-      DivergenceUpperBound(k, gw_norm_squared, gw_norm_inf, gw_trace, n);
+  MuSelectionParameters p;
+  p.gw_norm_squared = gw.squaredNorm();
+  p.gw_lambda_max = gw.maxCoeff();
+  p.gw_lambda_min = gw.minCoeff();
+  p.gw_trace = gw.sum();
+  p.rank = gw.rows();
 
-  EXPECT_TRUE(k >= 0);
-  EXPECT_TRUE(2 - k * gw_norm_inf >= 0);
-  EXPECT_NEAR(hub, hub_desired, 1e-12);
+  // Div bound on one branch.
+  double k_ref = 2.0 / (p.gw_lambda_max + p.gw_lambda_min) * .8;
+  double hub_desired = Divergence(gw, k_ref);
+  EXPECT_NEAR(hub_desired, DivergenceUpperBound(k_ref, p), 1e-8);
+  double k = DivergenceUpperBoundInverse(hub_desired, p);
+  EXPECT_NEAR(hub_desired, Divergence(gw, k), 1e-8);
+  EXPECT_TRUE(k >= k_ref);
+
+  // Div bound on the other branch.
+  k_ref = 2.0 / (p.gw_lambda_max + p.gw_lambda_min) * 1.2;
+  hub_desired = Divergence(gw, k_ref);
+  EXPECT_NEAR(hub_desired, DivergenceUpperBound(k_ref, p), 1e-8);
+  k = DivergenceUpperBoundInverse(hub_desired, p);
+  EXPECT_NEAR(hub_desired, DivergenceUpperBound(k, p), 1e-8);
+  EXPECT_TRUE(k >= k_ref);
+
+  // Div bound undefined.
+  k_ref = 1000000;
+  hub_desired = Divergence(gw, k_ref);
+  EXPECT_NEAR(hub_desired, DivergenceUpperBound(k_ref, p), 1e-8);
+  k = DivergenceUpperBoundInverse(hub_desired, p);
+  EXPECT_TRUE(DivergenceUpperBound(k, p) < 0);
+  EXPECT_EQ(k, -1);
 }
 
 }  // namespace conex

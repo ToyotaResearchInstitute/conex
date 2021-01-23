@@ -1,8 +1,10 @@
+#include "conex/newton_step.h"
 namespace conex {
-double DivergenceUpperBoundInverse(double divergence_upper_bound,
-                                   double gw_norm, double gw_norm_inf,
-                                   double gw_trace, int rank);
 
-double DivergenceUpperBound(double k, double gw_norm, double gw_norm_inf,
-                            double gw_trace, int n);
+// Return -1 if divergence_upper_bound is not in range of
+// DivergenceUpperBound.
+double DivergenceUpperBoundInverse(double divergence_upper_bound,
+                                   MuSelectionParameters& p);
+
+double DivergenceUpperBound(double k, MuSelectionParameters& p);
 }  // namespace conex

@@ -107,7 +107,7 @@ GTEST_TEST(Eigenvalues, Profile) {
     auto duration2 =
         std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-    EXPECT_TRUE(duration1 < duration2);
+    EXPECT_LE(duration1, duration2);
     EXPECT_NEAR(eigWS.maxCoeff() / eigJ.maxCoeff(), 1, 1e-2);
   }
 }

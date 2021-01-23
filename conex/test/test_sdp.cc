@@ -37,7 +37,6 @@ int TestDiagonalSDP() {
   Eigen::VectorXd b(m);
   prog.AddConstraint(LMI, {0, 1});
   b = GetFeasibleObjective(&prog);
-  // b << 1.22, -.36;
   DenseMatrix y1(m, 1);
   Solve(b, prog, config, y1.data());
 

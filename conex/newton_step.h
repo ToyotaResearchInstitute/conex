@@ -14,6 +14,7 @@ struct MuSelectionParameters {
   double gw_trace = 0;
   double gw_lambda_min = 1e30;
   double gw_lambda_max = -1e30;
+  double rank;
 };
 
 struct IterationStats {
