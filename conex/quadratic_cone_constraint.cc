@@ -222,7 +222,9 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
   const auto& C1 = o->C1_;
   const auto& A_gram = o->A_gram_;
   auto& temp = o->workspace_.temp1_1;
-  const Eigen::MatrixXd& A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1, &temp);
+  auto& A_dot_x = o->A_dot_x_;
+
+  A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1, &temp);
 
   auto& Q_W1 = o->workspace_.temp2_1;
   double det_w = o->workspace_.W0 * o->workspace_.W0 -
@@ -233,7 +235,6 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
                     &sys->G);
     sys->AW.noalias() = A_dot_x + A0 * o->workspace_.W0;
     sys->AQc.noalias() = det_w * (EvalAtQX(A1, o->Q_, C1, &temp) - A0 * C0);
-
   } else {
     SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, false,
                     &sys->G);

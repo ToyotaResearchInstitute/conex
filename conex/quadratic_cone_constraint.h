@@ -62,7 +62,10 @@ class QuadraticConstraint {
   const Eigen::MatrixXd A1_;
   const double C0_;
   const Eigen::VectorXd C1_;
+
+  // TODO(FrankPermenter): Move to workspace.
   Eigen::MatrixXd A_gram_;
+  Eigen::MatrixXd A_dot_x_;
 };
 
 }  // namespace conex
