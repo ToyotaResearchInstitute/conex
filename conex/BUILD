@@ -326,14 +326,33 @@ cc_library(
 )
 
 cc_library(
+    name = "socp_constraints",
+    srcs = [
+        "quadratic_cone_constraint.cc",
+        "quadratic_epigraph.cc",
+        "soc_constraint.cc",
+        "workspace_soc.h",
+    ],
+    hdrs = [
+        "quadratic_cone_constraint.h",
+        "quadratic_cost.h",
+        "soc_constraint.h",
+    ],
+    copts = COPTS,
+    visibility = ["//visibility:public"],
+    deps = [
+        "core",
+        "@eigen",
+    ],
+)
+
+cc_library(
     name = "conex_lib",
     srcs = [
         "cone_program.cc",
         "dense_lmi_constraint.cc",
         "hermitian_psd.cc",
         "psd_constraint.cc",
-        "quadratic_cone_constraint.cc",
-        "soc_constraint.cc",
     ],
     hdrs = [
         "cone_program.h",
@@ -346,11 +365,7 @@ cc_library(
         "memory_utils.h",
         "newton_step.h",
         "psd_constraint.h",
-        "quadratic_cone_constraint.h",
-        "quadratic_cost.h",
-        "soc_constraint.h",
         "workspace.h",
-        "workspace_soc.h",
     ],
     copts = COPTS,
     linkopts = ["-lm"],
@@ -362,6 +377,7 @@ cc_library(
         "exponential_map_pade",
         "jordan_matrix_algebra",
         "linear_constraint",
+        "socp_constraints",
         "supernodal_solver",
         "@eigen",
     ],

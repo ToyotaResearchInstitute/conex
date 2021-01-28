@@ -92,22 +92,31 @@ void SchurComplement(const Eigen::VectorXd& A0, const Eigen::MatrixXd& A_gram,
   G->noalias() += (A_dot_w + A0 * W0) * (A_dot_w + A0 * W0).transpose();
 }
 
-template <typename T>
-DenseMatrix EvalAtQX(const DenseMatrix& A, const DenseMatrix& Q,
-                     const DenseMatrix& X, T* QX) {
-  if (Q.rows() > 0) {
-    QX->noalias() = Q * X;
-    return A.transpose() * (*QX);
+}  // namespace
+
+DenseMatrix QuadraticConstraintBase::EvalAtQX(const DenseMatrix& X,
+                                              DenseMatrix* QX) {
+  if (Q_.rows() > 0) {
+    QX->noalias() = Q_ * X;
+    return A1_.transpose() * (*QX);
   } else {
-    return A.transpose() * X;
+    return A1_.transpose() * X;
   }
 }
 
-}  // namespace
+DenseMatrix QuadraticConstraintBase::EvalAtQX(const DenseMatrix& X, Ref* QX) {
+  if (Q_.rows() > 0) {
+    QX->noalias() = Q_ * X;
+    return A1_.transpose() * (*QX);
+  } else {
+    return A1_.transpose() * X;
+  }
+}
 
-void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
-                                               double* minus_s_0,
-                                               Ref* minus_s_1) {
+void QuadraticConstraintBase::ComputeNegativeSlack(double inv_sqrt_mu,
+                                                   const Ref& y,
+                                                   double* minus_s_0,
+                                                   Ref* minus_s_1) {
   *minus_s_0 = A0_.dot(y.col(0));
   *minus_s_0 -= C0_ * inv_sqrt_mu;
   minus_s_1->noalias() = A1_ * y;
@@ -115,7 +124,7 @@ void QuadraticConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
 }
 
 // Combine this with PrepareStep
-void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
+void GetMuSelectionParameters(QuadraticConstraintBase* o, const Ref& y,
                               MuSelectionParameters* p) {
   Eigen::internal::set_is_malloc_allowed(false);
   auto* workspace = &o->workspace_;
@@ -153,8 +162,8 @@ void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
   Eigen::internal::set_is_malloc_allowed(true);
 }
 
-void PrepareStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
-                 StepInfo* info) {
+void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
+                 const Ref& y, StepInfo* info) {
   Eigen::internal::set_is_malloc_allowed(false);
   // d =  e - Q(w^{1/2})(C-A^y)
   double& wsqrt_q0 = o->workspace_.W0;
@@ -188,12 +197,12 @@ void PrepareStep(QuadraticConstraint* o, const StepOptions& opt, const Ref& y,
   Eigen::internal::set_is_malloc_allowed(true);
 }
 
-void QuadraticConstraint::Initialize() {
+void QuadraticConstraintBase::Initialize() {
   DenseMatrix W;
-  A_gram_ = EvalAtQX(A1_, Q_, A1_, &W);
+  A_gram_ = EvalAtQX(A1_, &W);
 }
 
-bool TakeStep(QuadraticConstraint* o, const StepOptions& options) {
+bool TakeStep(QuadraticConstraintBase* o, const StepOptions& options) {
   auto& d_q1 = o->workspace_.temp2_1;
   double& d_q0 = o->workspace_.d0;
   double& wsqrt_q0 = o->workspace_.W0;
@@ -214,17 +223,16 @@ bool TakeStep(QuadraticConstraint* o, const StepOptions& options) {
   return true;
 }
 
-void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
+void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
                                     SchurComplementSystem* sys) {
   const auto& A0 = o->A0_;
-  const auto& A1 = o->A1_;
   const auto& C0 = o->C0_;
   const auto& C1 = o->C1_;
   const auto& A_gram = o->A_gram_;
   auto& temp = o->workspace_.temp1_1;
   auto& A_dot_x = o->A_dot_x_;
 
-  A_dot_x = EvalAtQX(A1, o->Q_, o->workspace_.W1, &temp);
+  A_dot_x = o->EvalAtQX(o->workspace_.W1, &temp);
 
   auto& Q_W1 = o->workspace_.temp2_1;
   double det_w = o->workspace_.W0 * o->workspace_.W0 -
@@ -234,12 +242,12 @@ void ConstructSchurComplementSystem(QuadraticConstraint* o, bool initialize,
     SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, true,
                     &sys->G);
     sys->AW.noalias() = A_dot_x + A0 * o->workspace_.W0;
-    sys->AQc.noalias() = det_w * (EvalAtQX(A1, o->Q_, C1, &temp) - A0 * C0);
+    sys->AQc.noalias() = det_w * (o->EvalAtQX(C1, &temp) - A0 * C0);
   } else {
     SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, false,
                     &sys->G);
     sys->AW.noalias() += A_dot_x + A0 * o->workspace_.W0;
-    sys->AQc.noalias() += det_w * (EvalAtQX(A1, o->Q_, C1, &temp) - A0 * C0);
+    sys->AQc.noalias() += det_w * (o->EvalAtQX(C1, &temp) - A0 * C0);
   }
 
   double scale;

@@ -3,13 +3,13 @@
 
 namespace conex {
 
-class QuadraticConstraint {
+class QuadraticConstraintBase {
   using StorageType = DenseMatrix;
 
  public:
   template <typename T>
-  QuadraticConstraint(const DenseMatrix& Q, const T& constraint_matrix,
-                      const T& constraint_affine)
+  QuadraticConstraintBase(const DenseMatrix& Q, const T& constraint_matrix,
+                          const T& constraint_affine)
       : n_(constraint_matrix.rows() - 1),
         workspace_(n_),
         Q_(Q),
@@ -25,30 +25,36 @@ class QuadraticConstraint {
   }
 
   template <typename T>
-  QuadraticConstraint(const T& constraint_matrix, const T& constraint_affine)
-      : QuadraticConstraint(DenseMatrix(), constraint_matrix,
-                            constraint_affine) {}
+  QuadraticConstraintBase(const T& constraint_matrix,
+                          const T& constraint_affine)
+      : QuadraticConstraintBase(DenseMatrix(), constraint_matrix,
+                                constraint_affine) {}
 
   WorkspaceSOC* workspace() { return &workspace_; }
 
   int number_of_variables() { return A1_.cols(); }
-  friend int Rank(const QuadraticConstraint&) { return 2; };
-  friend void SetIdentity(QuadraticConstraint* o) {
+  friend int Rank(const QuadraticConstraintBase&) { return 2; };
+  friend void SetIdentity(QuadraticConstraintBase* o) {
     o->workspace_.W0 = 1;
     o->workspace_.W1.setZero();
   }
-  friend void PrepareStep(QuadraticConstraint* o, const StepOptions& opt,
+  friend void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
                           const Ref& y, StepInfo* data);
 
-  friend bool TakeStep(QuadraticConstraint* o, const StepOptions& opt);
-  friend void GetMuSelectionParameters(QuadraticConstraint* o, const Ref& y,
+  friend bool TakeStep(QuadraticConstraintBase* o, const StepOptions& opt);
+  friend void GetMuSelectionParameters(QuadraticConstraintBase* o, const Ref& y,
                                        MuSelectionParameters* p);
-  friend void ConstructSchurComplementSystem(QuadraticConstraint* o,
+  friend void ConstructSchurComplementSystem(QuadraticConstraintBase* o,
                                              bool initialize,
                                              SchurComplementSystem* sys);
 
+  virtual ~QuadraticConstraintBase(){};
+
  private:
-  void Initialize();
+  virtual void Initialize();
+  virtual DenseMatrix EvalAtQX(const DenseMatrix& X, DenseMatrix* QX);
+  virtual DenseMatrix EvalAtQX(const DenseMatrix& X, Ref* QX);
+
   void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, double* minus_s_0,
                             Ref* minus_s_1);
   void GeodesicUpdate(const Ref& S, StepInfo* data);
@@ -66,6 +72,18 @@ class QuadraticConstraint {
   // TODO(FrankPermenter): Move to workspace.
   Eigen::MatrixXd A_gram_;
   Eigen::MatrixXd A_dot_x_;
+};
+
+using QuadraticConstraint = QuadraticConstraintBase;
+
+class QuadraticEpigraph : public QuadraticConstraintBase {
+ public:
+  QuadraticEpigraph(const DenseMatrix& Qi);
+
+ private:
+  // virtual void Initialize();
+  // virtual DenseMatrix EvalAtQX(const DenseMatrix& X, DenseMatrix* QX);
+  // virtual DenseMatrix EvalAtQX(const DenseMatrix& X, Ref* QX);
 };
 
 }  // namespace conex
