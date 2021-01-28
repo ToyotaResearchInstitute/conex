@@ -10,9 +10,9 @@ class QuadraticConstraintBase {
   template <typename T>
   QuadraticConstraintBase(const DenseMatrix& Q, const T& constraint_matrix,
                           const T& constraint_affine)
-      : n_(constraint_matrix.rows() - 1),
+      : Q_(Q),
+        n_(constraint_matrix.rows() - 1),
         workspace_(n_),
-        Q_(Q),
         A0_(constraint_matrix.row(0)),
         A1_(constraint_matrix.bottomRows(n_)),
         C0_(constraint_affine(0, 0)),
@@ -50,11 +50,14 @@ class QuadraticConstraintBase {
 
   virtual ~QuadraticConstraintBase(){};
 
- private:
+ protected:
   virtual void Initialize();
   virtual DenseMatrix EvalAtQX(const DenseMatrix& X, DenseMatrix* QX);
   virtual DenseMatrix EvalAtQX(const DenseMatrix& X, Ref* QX);
 
+  const DenseMatrix Q_;
+
+ private:
   void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, double* minus_s_0,
                             Ref* minus_s_1);
   void GeodesicUpdate(const Ref& S, StepInfo* data);
@@ -62,7 +65,6 @@ class QuadraticConstraintBase {
 
   const int n_ = 0;
   WorkspaceSOC workspace_;
-  const DenseMatrix Q_;
 
   const Eigen::VectorXd A0_;
   const Eigen::MatrixXd A1_;
@@ -81,9 +83,9 @@ class QuadraticEpigraph : public QuadraticConstraintBase {
   QuadraticEpigraph(const DenseMatrix& Qi);
 
  private:
-  // virtual void Initialize();
-  // virtual DenseMatrix EvalAtQX(const DenseMatrix& X, DenseMatrix* QX);
-  // virtual DenseMatrix EvalAtQX(const DenseMatrix& X, Ref* QX);
+  void Initialize() override;
+  DenseMatrix EvalAtQX(const DenseMatrix& X, DenseMatrix* QX) override;
+  DenseMatrix EvalAtQX(const DenseMatrix& X, Ref* QX) override;
 };
 
 }  // namespace conex
