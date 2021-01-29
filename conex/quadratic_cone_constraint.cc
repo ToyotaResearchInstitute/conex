@@ -132,7 +132,7 @@ void GetMuSelectionParameters(QuadraticConstraintBase* o, const Ref& y,
   double minus_s_0;
   o->ComputeNegativeSlack(1, y, &minus_s_0, &minus_s_1);
 
-  double wsqrt_q0 = o->workspace_.W0;
+  double wsqrt_q0 = *o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;
   wsqrt_q1 = o->workspace_.W1;
 
@@ -166,7 +166,7 @@ void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
                  const Ref& y, StepInfo* info) {
   Eigen::internal::set_is_malloc_allowed(false);
   // d =  e - Q(w^{1/2})(C-A^y)
-  double& wsqrt_q0 = o->workspace_.W0;
+  double& wsqrt_q0 = *o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;
   auto& d_q1 = o->workspace_.temp2_1;
   double& d_q0 = o->workspace_.d0;
@@ -205,7 +205,7 @@ void QuadraticConstraintBase::Initialize() {
 bool TakeStep(QuadraticConstraintBase* o, const StepOptions& options) {
   auto& d_q1 = o->workspace_.temp2_1;
   double& d_q0 = o->workspace_.d0;
-  double& wsqrt_q0 = o->workspace_.W0;
+  double& wsqrt_q0 = *o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;
   if (options.step_size != 1) {
     d_q0 = options.step_size * d_q0;
@@ -219,7 +219,7 @@ bool TakeStep(QuadraticConstraintBase* o, const StepOptions& options) {
   QuadraticRepresentation(
       SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp1_1),
       InnerProduct(o->Q_, wsqrt_q1, expd_q1, &o->workspace_.temp1_1), wsqrt_q0,
-      wsqrt_q1, expd_q0, expd_q1, &o->workspace_.W0, &o->workspace_.W1);
+      wsqrt_q1, expd_q0, expd_q1, o->workspace_.W0, &o->workspace_.W1);
   return true;
 }
 
@@ -235,28 +235,28 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
   A_dot_x = o->EvalAtQX(o->workspace_.W1, &temp);
 
   auto& Q_W1 = o->workspace_.temp2_1;
-  double det_w = o->workspace_.W0 * o->workspace_.W0 -
+  double det_w = (*o->workspace_.W0) * (*o->workspace_.W0) -
                  SquaredNorm(o->Q_, o->workspace_.W1, &Q_W1);
 
   if (initialize) {
-    SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, true,
+    SchurComplement(A0, A_gram, *o->workspace_.W0, det_w, A_dot_x, true,
                     &sys->G);
-    sys->AW.noalias() = A_dot_x + A0 * o->workspace_.W0;
+    sys->AW.noalias() = A_dot_x + A0 * (*o->workspace_.W0);
     sys->AQc.noalias() = det_w * (o->EvalAtQX(C1, &temp) - A0 * C0);
   } else {
-    SchurComplement(A0, A_gram, o->workspace_.W0, det_w, A_dot_x, false,
+    SchurComplement(A0, A_gram, *o->workspace_.W0, det_w, A_dot_x, false,
                     &sys->G);
-    sys->AW.noalias() += A_dot_x + A0 * o->workspace_.W0;
+    sys->AW.noalias() += A_dot_x + A0 * (*o->workspace_.W0);
     sys->AQc.noalias() += det_w * (o->EvalAtQX(C1, &temp) - A0 * C0);
   }
 
   double scale;
   if (o->Q_.size() > 0) {
-    scale = Q_W1.col(0).dot(C1.col(0)) + C0 * o->workspace_.W0;
+    scale = Q_W1.col(0).dot(C1.col(0)) + C0 * (*o->workspace_.W0);
   } else {
-    scale = o->workspace_.W1.col(0).dot(C1.col(0)) + C0 * o->workspace_.W0;
+    scale = o->workspace_.W1.col(0).dot(C1.col(0)) + C0 * (*o->workspace_.W0);
   }
-  sys->AQc.noalias() += 2 * (A_dot_x + A0 * o->workspace_.W0) * scale;
+  sys->AQc.noalias() += 2 * (A_dot_x + A0 * (*o->workspace_.W0)) * scale;
 }
 
 }  // namespace conex

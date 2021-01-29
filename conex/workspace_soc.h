@@ -7,7 +7,9 @@ namespace conex {
 struct WorkspaceSOC {
   WorkspaceSOC(int n) : n_(n), W(n + 1, 1) {}
 
-  static constexpr int size_of(int n) { return 4 * get_size_aligned(n); }
+  static constexpr int size_of(int n) {
+    return get_size_aligned(n) + 4 * get_size_aligned(n);
+  }
 
   friend int SizeOf(const WorkspaceSOC& o) { return size_of(o.n_); }
 
@@ -18,6 +20,7 @@ struct WorkspaceSOC {
     new (&o->temp1_1) Map(data + get_size_aligned(n), n, 1);
     new (&o->temp2_1) Map(data + 2 * get_size_aligned(n), n, 1);
     new (&o->temp3_1) Map(data + 3 * get_size_aligned(n), n, 1);
+    o->W0 = data + 4 * get_size_aligned(n);
   }
 
   friend void print(const WorkspaceSOC& o) {
@@ -28,7 +31,7 @@ struct WorkspaceSOC {
     DUMP(o.temp3_1);
   }
 
-  double W0;
+  double* W0;
   double d0;
   // TODO(FrankPermenter): Reduce number of temporaries.
   Eigen::Map<DenseMatrix, Eigen::Aligned> W1{NULL, 0, 0};

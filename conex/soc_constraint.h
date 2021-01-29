@@ -23,7 +23,7 @@ class SOCConstraint {
   int number_of_variables() { return constraint_matrix_.cols(); }
   friend int Rank(const SOCConstraint&) { return 2; };
   friend void SetIdentity(SOCConstraint* o) {
-    o->workspace_.W0 = 1;
+    *o->workspace_.W0 = 1;
     o->workspace_.W1.setZero();
   }
   friend void PrepareStep(SOCConstraint* o, const StepOptions& opt,

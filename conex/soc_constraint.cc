@@ -206,7 +206,7 @@ void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
   Eigen::VectorXd Ws(n + 1);
   o->ComputeNegativeSlack(1, y, &minus_s);
 
-  auto wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
+  auto wsqrt = Sqrt(*o->workspace_.W0, o->workspace_.W1);
   Ws = QuadraticRepresentation(wsqrt, minus_s);
 
   SpectralDecompSpinFactor spec(n);
@@ -232,7 +232,7 @@ bool TakeStep(SOCConstraint* o, const StepOptions& opt) {
 
   int n = d1.rows() + 1;
   Eigen::VectorXd wsqrt(n);
-  wsqrt(0, 0) = o->workspace_.W0;
+  wsqrt(0, 0) = *o->workspace_.W0;
   wsqrt.bottomRows(n - 1) = o->workspace_.W1;
 
   if (opt.step_size != 1.0) {
@@ -241,10 +241,10 @@ bool TakeStep(SOCConstraint* o, const StepOptions& opt) {
   }
   auto expd = Exp(d0, d1);
   auto wn = QuadraticRepresentation(wsqrt, expd);
-  o->workspace_.W0 = wn(0, 0);
+  *o->workspace_.W0 = wn(0, 0);
   o->workspace_.W1 = wn.bottomRows(n - 1);
 
-  if (o->workspace_.W1.norm() > o->workspace_.W0) {
+  if (o->workspace_.W1.norm() > *o->workspace_.W0) {
     DUMP(o->workspace_.W1.norm());
     DUMP(o->workspace_.W0);
     assert(0);
@@ -260,8 +260,8 @@ void PrepareStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
 
   // e - Q(w^{1/2})(C-A^y)
   int n = minus_s.rows();
-  auto wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
-  o->workspace_.W0 = wsqrt(0, 0);
+  auto wsqrt = Sqrt(*o->workspace_.W0, o->workspace_.W1);
+  *o->workspace_.W0 = wsqrt(0, 0);
   o->workspace_.W1 = wsqrt.bottomRows(n - 1);
 
   auto d = QuadraticRepresentation(wsqrt, minus_s);
@@ -276,9 +276,9 @@ void PrepareStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
 void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
   int n = o->workspace_.n_;
-  auto Wsqrt = Sqrt(o->workspace_.W0, o->workspace_.W1);
+  auto Wsqrt = Sqrt(*o->workspace_.W0, o->workspace_.W1);
   DenseMatrix W(n + 1, 1);
-  W(0, 0) = o->workspace_.W0;
+  W(0, 0) = *o->workspace_.W0;
   W.bottomRows(n) = o->workspace_.W1;
 
   auto G = &sys->G;
