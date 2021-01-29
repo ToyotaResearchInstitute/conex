@@ -97,11 +97,13 @@ void ConstructSchurComplementSystem(std::vector<T*>* c, bool initialize,
 }
 
 bool Initialize(Program& prog, const SolverConfiguration& config) {
-  if (config.initialization_mode == 0) {
+  if (!prog.is_initialized || config.initialization_mode == 0) {
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
     prog.InitializeWorkspace();
-    SetIdentity(&prog.constraints);
+    if (config.initialization_mode == 0) {
+      SetIdentity(&prog.constraints);
+    }
 
     START_TIMER(Sparsity);
     solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
@@ -118,13 +120,10 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
     }
     solver->Bind(&kkt);
     END_TIMER
-
-  } else {
-    CONEX_DEMAND(prog.is_initialized, "Cannot warmstart without coldstart.");
   }
-
   return true;
 }
+
 double UpdateMu(ConstraintManager<Container>& constraints,
                 std::unique_ptr<Solver>& solver, const DenseMatrix& AQc,
                 const DenseMatrix& b, const SolverConfiguration& config,

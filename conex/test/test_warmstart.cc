@@ -2,6 +2,7 @@
 #include <Eigen/Dense>
 
 #include "conex/cone_program.h"
+#include "conex/debug_macros.h"
 #include "conex/dense_lmi_constraint.h"
 #include "conex/linear_constraint.h"
 #include "conex/test/test_util.h"
@@ -39,6 +40,39 @@ GTEST_TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
   }
   EXPECT_NEAR((y - ywarm).norm(), 0, 1e-12);
 }
+
+GTEST_TEST(Warmstart, TestWorkspaceInitialization) {
+  int n = 15;
+  int m = 13;
+  auto constraints2 = GetRandomDenseMatrices(n, m);
+  DenseMatrix affine2 = Eigen::MatrixXd::Identity(n, n);
+  DenseLMIConstraint LMI{n, constraints2, affine2};
+
+  DenseMatrix Alinear = DenseMatrix::Random(n, m);
+  DenseMatrix Clinear(n, 1);
+  Clinear.setConstant(1);
+  LinearConstraint linear_constraint{n, &Alinear, &Clinear};
+
+  DenseMatrix y(m, 1);
+
+  Program prog(m);
+  prog.AddConstraint(LMI);
+  prog.AddConstraint(linear_constraint);
+
+  auto b = GetFeasibleObjective(&prog);
+  Solve(b, prog, SolverConfiguration(), y.data());
+
+  Program prog2(m, &prog.memory_);
+  prog2.AddConstraint(LMI);
+  prog2.AddConstraint(linear_constraint);
+  SolverConfiguration config;
+  config.initialization_mode = 1;
+  config.max_iterations = 2;
+  DenseMatrix ywarm(m, 1);
+  Solve(b, prog2, config, ywarm.data());
+  EXPECT_NEAR((y - ywarm).norm(), 0, 1e-9);
+}
+
 /*
 GTEST_TEST(Warmstart, ObjectivePertubation) {
   SolverConfiguration config;

@@ -37,6 +37,12 @@ class Container {
 class Program {
  public:
   Program(int number_of_variables) {
+    workspace_data_ = &memory_;
+    SetNumberOfVariables(number_of_variables);
+  }
+
+  Program(int number_of_variables, Eigen::VectorXd* data) {
+    workspace_data_ = data;
     SetNumberOfVariables(number_of_variables);
   }
 
@@ -99,13 +105,14 @@ class Program {
   }
 
   void InitializeWorkspace() {
+    workspaces.clear();
     for (auto& constraint : kkt_system_manager_.eqs) {
       workspaces.push_back(constraint.constraint.workspace());
     }
     workspaces.push_back(Workspace{&stats});
     workspaces.push_back(Workspace{&sys});
-    memory.resize(SizeOf(workspaces));
-    Initialize(&workspaces, &memory[0]);
+    workspace_data_->conservativeResize(SizeOf(workspaces));
+    Initialize(&workspaces, workspace_data_->data());
 
     is_initialized = true;
   }
@@ -148,7 +155,8 @@ class Program {
   std::vector<Workspace> workspaces;
   std::unique_ptr<Solver> solver;
   std::vector<KKT_SystemAssembler> kkt;
-  Eigen::VectorXd memory;
+  Eigen::VectorXd memory_;
+  Eigen::VectorXd* workspace_data_;
   bool is_initialized = false;
 };
 
