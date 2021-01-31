@@ -120,7 +120,7 @@ void T::ApplyBlockInverseOfTransposeInPlace(
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
       // > i.
-      auto index_and_column_list = mat.intersection_position.at(i).at(jcnt++);
+      const auto& index_and_column_list = mat.intersection_position.at(i).at(jcnt++);
       for (const auto& pair : index_and_column_list) {
         residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
                           ypart.b_i_plus_1()(pair.first);
@@ -296,7 +296,6 @@ bool T::BlockLDLTInPlace(
 
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
-    C->diagonal.at(i) = C->diagonal.at(i).selfadjointView<Eigen::Lower>();
     llts.emplace_back(C->diagonal.at(i));
     if (llts.back().info() != Eigen::Success) {
       return false;
@@ -315,7 +314,7 @@ bool T::BlockLDLTInPlace(
           llts.back().vectorD().asDiagonal() * C->off_diagonal.at(i);
 
       int index = 0;
-      auto s_s = C->seperator_diagonal.at(i);
+      const auto& s_s = C->seperator_diagonal.at(i);
       for (int k = 0; k < temp.cols(); k++) {
         for (int j = k; j < temp.cols(); j++) {
           *s_s.at(index++) -= temp.col(k).dot(C->off_diagonal.at(i).col(j));
