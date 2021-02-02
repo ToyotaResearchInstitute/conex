@@ -77,7 +77,7 @@ void GetMuSelectionParameters(ConstraintManager<Container>* constraints,
   }
 }
 
-template <typename T>
+template <typename T> 
 int Rank(const std::vector<T*>& c) {
   int rank = 0;
   for (const auto& ci : c) {
@@ -212,6 +212,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   b.head(m) << bin;
 
   for (int i = 0; i < config.max_iterations; i++) {
+
+
+
 #if CONEX_VERBOSE
     if (i < 10) {
       std::cout << "i:  " << i << ", ";
@@ -235,6 +238,10 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     if (!solver->Factor()) {
       solver->Assemble(&AW, &AQc);
       solver->Factor();
+      if (i == 0 && config.initialization_mode)  {
+        SetIdentity(&prog.constraints);
+        continue;
+      }
       solved = 0;
       PRINTSTATUS("Factorization failed.");
       return solved;
@@ -277,7 +284,12 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     if (newton_step_parameters.step_size > 1) {
       newton_step_parameters.step_size = 1;
     }
-    TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
+
+    if (i == 0 && config.initialization_mode && info.norminfd > 1.1)  {
+      SetIdentity(&prog.constraints);
+    } else {
+      TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
+    }
     END_TIMER
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
