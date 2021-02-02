@@ -33,6 +33,7 @@ struct WorkspaceSOC {
 
   double* W0;
   double d0;
+  double wsqrt_q1_norm_sqr;
   // TODO(FrankPermenter): Reduce number of temporaries.
   Eigen::Map<DenseMatrix, Eigen::Aligned> W1{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> temp1_1{NULL, 0, 0};

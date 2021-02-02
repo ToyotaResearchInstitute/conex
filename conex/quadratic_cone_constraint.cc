@@ -170,6 +170,7 @@ void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
   auto& wsqrt_q1 = o->workspace_.temp3_1;
   auto& d_q1 = o->workspace_.temp2_1;
   double& d_q0 = o->workspace_.d0;
+  double& wsqrt_q1_norm_sqr = o->workspace_.wsqrt_q1_norm_sqr;
 
   {  // Use temp_1
     auto& minus_s_1 = o->workspace_.temp1_1;
@@ -179,8 +180,10 @@ void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
     wsqrt_q1 = o->workspace_.W1;
     Sqrt(Norm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1), &wsqrt_q0, &wsqrt_q1);
 
+    wsqrt_q1_norm_sqr = SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1);
+
     QuadraticRepresentation(
-        SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1),
+        wsqrt_q1_norm_sqr,
         InnerProduct(o->Q_, wsqrt_q1, minus_s_1, &o->workspace_.temp2_1),
         wsqrt_q0, wsqrt_q1, minus_s_0, minus_s_1, &d_q0, &d_q1);
     d_q0 += 1;
@@ -207,6 +210,7 @@ bool TakeStep(QuadraticConstraintBase* o, const StepOptions& options) {
   double& d_q0 = o->workspace_.d0;
   double& wsqrt_q0 = *o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;
+  double& wsqrt_q1_norm_sqr = o->workspace_.wsqrt_q1_norm_sqr;
   if (options.step_size != 1) {
     d_q0 = options.step_size * d_q0;
     d_q1 = options.step_size * d_q1;
@@ -217,7 +221,7 @@ bool TakeStep(QuadraticConstraintBase* o, const StepOptions& options) {
   const auto& expd_q0 = d_q0;
 
   QuadraticRepresentation(
-      SquaredNorm(o->Q_, wsqrt_q1, &o->workspace_.temp1_1),
+      wsqrt_q1_norm_sqr,
       InnerProduct(o->Q_, wsqrt_q1, expd_q1, &o->workspace_.temp1_1), wsqrt_q0,
       wsqrt_q1, expd_q0, expd_q1, o->workspace_.W0, &o->workspace_.W1);
   return true;
