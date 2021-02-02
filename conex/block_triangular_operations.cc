@@ -13,14 +13,18 @@ class PartitionVectorForwardIterator {
  public:
   PartitionVectorForwardIterator(VectorXd& b, const std::vector<int>& sizes)
       : b_(b), sizes_(sizes) {
-    i_ = 0;
-    size_i = sizes_.at(i_);
-    start_i = 0;
+    Reset();
   }
 
   Eigen::Ref<VectorXd> b_i() { return b_.segment(start_i, size_i); }
   Eigen::Ref<VectorXd> b_i_minus_1() {
     return b_.segment(start_i_minus_1, size_i_minus_1);
+  }
+
+  void Reset() {
+    i_ = 0;
+    size_i = sizes_.at(i_);
+    start_i = 0;
   }
   void Increment() {
     start_i_minus_1 = start_i;
@@ -53,15 +57,18 @@ class PartitionVectorForwardIterator {
 class PartitionVectorIterator {
  public:
   PartitionVectorIterator(VectorXd& b, int N, const std::vector<int>& sizes)
-      : b_(b), sizes_(sizes) {
-    i_ = sizes.size() - 1;
-    size_i = sizes_.at(i_);
-    start_i = N - size_i;
+      : b_(b), N_(N), sizes_(sizes) {
+    Reset();
   }
 
   Eigen::Ref<VectorXd> b_i() { return b_.segment(start_i, size_i); }
   Eigen::Ref<VectorXd> b_i_plus_1() {
     return b_.segment(start_i_plus_1, size_i_plus_1);
+  }
+  void Reset() {
+    i_ = sizes_.size() - 1;
+    size_i = sizes_.at(i_);
+    start_i = N_ - size_i;
   }
   void Decrement() {
     start_i_plus_1 = start_i;
@@ -77,6 +84,7 @@ class PartitionVectorIterator {
   int size_i_plus_1;
   int size_i;
   VectorXd& b_;
+  const int N_;
   const std::vector<int>& sizes_;
   void Set(int i) {
     if (i < 0) {
@@ -109,30 +117,25 @@ void T::ApplyBlockInverseOfTransposeInPlace(
       .triangularView<Eigen::Lower>()
       .solveInPlace<Eigen::OnTheRight>(ypart.b_i().transpose());
 
+  // Loop over partition {B_j} of c_{i+1}
+  PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
   for (int i = static_cast<int>(mat.diagonal.size() - 2); i >= 0; i--) {
     ypart.Decrement();
+    residual.Reset();
 
-    // Loop over partition {B_j} of c_{i+1}
-    PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
     int jcnt = 0;
     for (auto j : mat.column_intersections.at(i)) {
       residual.Set(j);
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
       // > i.
-      const auto& index_and_column_list = mat.intersection_position.at(i).at(jcnt++);
+      const auto& index_and_column_list =
+          mat.intersection_position.at(i).at(jcnt++);
       for (const auto& pair : index_and_column_list) {
         residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
                           ypart.b_i_plus_1()(pair.first);
       }
     }
-    // for (const auto& match : mat.index_and_column_list.at(i)) {
-    //   residual.Set(match.first);
-    //   for (const auto& pair : match.second) {
-    //     residual.b_i() -= mat.off_diagonal.at(match.first).col(pair.second) *
-    //                       ypart.b_i_plus_1()(pair.first);
-    //   }
-    //}
 
     mat.diagonal.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(
         ypart.b_i());
