@@ -43,9 +43,9 @@ int DoMain() {
   DenseMatrix Cs(n + 1, 1);
   Cs.setConstant(0.000);
   Cs(0) = 1;
-  SOCConstraint T(As, Cs);
+  SOCConstraint soc_constraint_with_squareroot(As, Cs);
 
-  QuadraticConstraint soc_constraint(As, Cs);
+  QuadraticConstraint quad_constraint_with_squareroot(As, Cs);
 
   DenseMatrix Q = Wsqrt.transpose() * Wsqrt;
   DenseMatrix Aq(n + 1, n);
@@ -58,7 +58,7 @@ int DoMain() {
     b += Eigen::VectorXd::Random(n, 1) * .02;
 
     Program prog1(n);
-    prog1.AddConstraint(T);
+    prog1.AddConstraint(soc_constraint_with_squareroot);
     DenseMatrix y1(n, 1);
     Solve(b, prog1, config, y1.data());
 
@@ -76,7 +76,7 @@ int DoMain() {
     EXPECT_NEAR((y1 - y3).norm(), 0, 8e-5);
 
     Program prog4(n);
-    prog4.AddConstraint(soc_constraint);
+    prog4.AddConstraint(quad_constraint_with_squareroot);
     DenseMatrix y4(n, 1);
     Solve(b, prog4, config, y4.data());
     EXPECT_NEAR((y1 - y4).norm(), 0, 8e-5);

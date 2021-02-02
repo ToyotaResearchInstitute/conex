@@ -222,8 +222,8 @@ void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
   if (p->gw_lambda_min > lamda_min) {
     p->gw_lambda_min = lamda_min;
   }
-  p->gw_norm_squared += Ws.squaredNorm();
-  p->gw_trace += -Ws.sum();
+  p->gw_norm_squared += std::pow(lamda_max, 2) + std::pow(lamda_min, 2);
+  p->gw_trace += (lamda_max + lamda_min);
 }
 
 bool TakeStep(SOCConstraint* o, const StepOptions& opt) {
@@ -270,7 +270,7 @@ void PrepareStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
   o->workspace_.d0 = d(0, 0);
 
   info->norminfd = NormInf(d(0, 0), d.bottomRows(n - 1));
-  info->normsqrd = d.squaredNorm();
+  info->normsqrd = 2 * d.squaredNorm();
 }
 
 void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
