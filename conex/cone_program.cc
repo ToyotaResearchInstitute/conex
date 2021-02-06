@@ -280,12 +280,12 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     StepInfo info;
     START_TIMER(Update)
     PrepareStep(&prog.kkt_system_manager_, newton_step_parameters, y, &info);
-    newton_step_parameters.step_size = 2.0 / info.norminfd * info.norminfd;
+    newton_step_parameters.step_size = 2.0 / (info.norminfd * info.norminfd);
     if (newton_step_parameters.step_size > 1) {
       newton_step_parameters.step_size = 1;
     }
 
-    if (i == 0 && config.initialization_mode && info.norminfd > 1.1)  {
+    if (i == 0 && config.initialization_mode && info.norminfd > 2)  {
       SetIdentity(&prog.constraints);
     } else {
       TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
