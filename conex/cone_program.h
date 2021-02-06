@@ -111,7 +111,10 @@ class Program {
     }
     workspaces.push_back(Workspace{&stats});
     workspaces.push_back(Workspace{&sys});
-    workspace_data_->conservativeResize(SizeOf(workspaces));
+    auto size = SizeOf(workspaces);
+    if (size > workspace_data_->size()) {
+      workspace_data_->resize(size);
+    }
     Initialize(&workspaces, workspace_data_->data());
 
     is_initialized = true;
