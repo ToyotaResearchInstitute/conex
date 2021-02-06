@@ -77,7 +77,7 @@ void GetMuSelectionParameters(ConstraintManager<Container>* constraints,
   }
 }
 
-template <typename T> 
+template <typename T>
 int Rank(const std::vector<T*>& c) {
   int rank = 0;
   for (const auto& ci : c) {
@@ -211,9 +211,18 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   b.setZero();
   b.head(m) << bin;
 
+  int initial_centering_steps = config.initial_centering_steps_coldstart;
+  int initial_centering = 1;
+
+  if (config.initialization_mode) {
+    PRINTSTATUS("Warmstarting...");
+    initial_centering_steps = config.initial_centering_steps_warmstart;
+  }
+
   for (int i = 0; i < config.max_iterations; i++) {
-
-
+    if (i >= initial_centering_steps) {
+      initial_centering = 0;
+    }
 
 #if CONEX_VERBOSE
     if (i < 10) {
@@ -223,8 +232,10 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     }
 #endif
     bool update_mu =
-        (i == 0) || ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) &&
-                     i < config.max_iterations - config.final_centering_steps);
+        (i == 0) ||
+        ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) &&
+         (i < config.max_iterations - config.final_centering_steps) &&
+         (initial_centering == 0));
 
     if (!update_mu && (centering_steps >= config.final_centering_steps)) {
       break;
@@ -238,7 +249,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     if (!solver->Factor()) {
       solver->Assemble(&AW, &AQc);
       solver->Factor();
-      if (i == 0 && config.initialization_mode)  {
+      if (i == 0 && config.initialization_mode) {
+        PRINTSTATUS("Aborting warmstart...");
         SetIdentity(&prog.constraints);
         continue;
       }
@@ -252,7 +264,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
       newton_step_parameters.inv_sqrt_mu =
           UpdateMu(prog.kkt_system_manager_, solver, AQc, b, config, rankK, &y);
     } else {
-      centering_steps++;
+      if (initial_centering == 0) {
+        centering_steps++;
+      }
     }
 
     const double max = config.inv_sqrt_mu_max;
@@ -285,7 +299,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
       newton_step_parameters.step_size = 1;
     }
 
-    if (i == 0 && config.initialization_mode && info.norminfd > 2)  {
+    if (i == 0 && config.initialization_mode &&
+        info.norminfd > config.warmstart_abort_threshold) {
+      PRINTSTATUS("Aborting warmstart...");
       SetIdentity(&prog.constraints);
     } else {
       TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
