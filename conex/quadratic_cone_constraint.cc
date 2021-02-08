@@ -20,9 +20,11 @@ double SquaredNorm(const T1& Q, const T2& x, T3* workspace) {
   }
 }
 
+double square_root(const double& x) { return std::sqrt(std::fabs(x)); }
+
 template <typename T1, typename T2, typename T3>
 double Norm(const T1& Q, const T2& x, T3* workspace) {
-  return std::sqrt(SquaredNorm(Q, x, workspace));
+  return square_root(SquaredNorm(Q, x, workspace));
 }
 
 template <typename T1, typename T2, typename T4, typename T3>
@@ -65,9 +67,9 @@ template <typename T>
 void Sqrt(double norm_x1, double* x0, T* x1) {
   double k = norm_x1;
   if (k > 0) {
-    (*x1) *= .5 * (std::sqrt(*x0 + k) - std::sqrt(*x0 - k)) / k;
+    (*x1) *= .5 * (square_root(*x0 + k) - square_root(*x0 - k)) / k;
   }
-  (*x0) = (.5 * (std::sqrt(*x0 + k) + std::sqrt(*x0 - k)));
+  (*x0) = (.5 * (square_root(*x0 + k) + square_root(*x0 - k)));
 }
 
 Eigen::Vector2d Eigenvalues(double norm_of_x1, double x0) {
