@@ -26,6 +26,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
   using Matrix = typename T::Matrix;
   SolverConfiguration config;
   config.inv_sqrt_mu_max = std::sqrt(1.0 / 1e-4);
+  config.final_centering_tolerance = 1e-8;
   int m = dim;
   std::vector<Matrix> constraint_matrices(m);
   Matrix constraint_affine = T::Identity(rank);
@@ -50,7 +51,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
                                          ToMat(constraint_affine)));
 
   bool solved_2 = Solve(b, prog2, config, y2.data());
-  EXPECT_TRUE((y2 - y).norm() < 1e-12);
+  EXPECT_NEAR((y2 - y).norm(), 0, 1e-12);
 
   return solved_1 && solved_2;
 }

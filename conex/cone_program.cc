@@ -105,7 +105,7 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
       SetIdentity(&prog.constraints);
     }
 
-    START_TIMER(Sparsity);
+    START_TIMER(Sparsity Analysis);
     solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
                                       prog.kkt_system_manager_.dual_vars);
 
@@ -170,7 +170,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 #if CONEX_VERBOSE
   std::cout.precision(2);
   std::cout << std::scientific;
-  std::cout << "Starting the Conex optimizer: \n";
+  std::cout << "Starting the Conex optimizer...\n";
 #endif
 
   CONEX_DEMAND(prog.GetNumberOfVariables() == bin.rows(),
@@ -185,9 +185,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     return solved;
   }
 
-  START_TIMER(Assemble)
   Initialize(prog, config);
-  END_TIMER
   std::cout << "\n";
 
   Eigen::MatrixXd ydata(prog.kkt_system_manager_.SizeOfKKTSystem(), 1);
@@ -231,14 +229,15 @@ bool Solve(const DenseMatrix& bin, Program& prog,
       std::cout << "i: " << i << ", ";
     }
 #endif
-    bool update_mu =
-        (i == 0) ||
-        ((newton_step_parameters.inv_sqrt_mu < inv_sqrt_mu_max) &&
-         (i < config.max_iterations - config.final_centering_steps) &&
-         (initial_centering == 0));
+    bool final_centering =
+        (newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) ||
+        i >= (config.max_iterations - config.final_centering_steps);
+    bool update_mu = (i == 0) || !(initial_centering || final_centering);
 
-    if (!update_mu && (centering_steps >= config.final_centering_steps)) {
-      break;
+    if (final_centering) {
+      if (centering_steps >= config.final_centering_steps) {
+        break;
+      }
     }
 
     START_TIMER(Assemble)
@@ -320,6 +319,13 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 #if CONEX_VERBOSE
     std::cout << std::endl;
 #endif
+
+    if (final_centering ||
+        newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) {
+      if (d_inf < config.final_centering_tolerance) {
+        break;
+      }
+    }
   }
 
   if (config.prepare_dual_variables) {

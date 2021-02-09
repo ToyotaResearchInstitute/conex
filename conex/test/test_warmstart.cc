@@ -60,12 +60,14 @@ GTEST_TEST(Warmstart, TestWorkspaceInitialization) {
   prog.AddConstraint(linear_constraint);
 
   auto b = GetFeasibleObjective(&prog);
-  Solve(b, prog, SolverConfiguration(), y.data());
+  auto config = SolverConfiguration();
+  config.final_centering_steps = 3;
+  config.final_centering_tolerance = .01;
+  Solve(b, prog, config, y.data());
 
   Program prog2(m, &prog.memory_);
   prog2.AddConstraint(LMI);
   prog2.AddConstraint(linear_constraint);
-  SolverConfiguration config;
   config.initialization_mode = 1;
   config.max_iterations = 2;
   DenseMatrix ywarm(m, 1);
