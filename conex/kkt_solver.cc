@@ -105,14 +105,17 @@ void T::Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler) {
   assembler = kkt_assembler;
 }
 
-void T::Assemble(Eigen::VectorXd* AW, Eigen::VectorXd* AQc) {
+void T::Assemble(Eigen::VectorXd* AW, Eigen::VectorXd* AQc,
+                 double* inner_product_of_c_and_w) {
   const auto& cliques = cliques_;
   AW->setZero();
   AQc->setZero();
+  *inner_product_of_c_and_w = 0;
   for (int e = static_cast<int>(cliques.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
     assembler.at(i)->UpdateBlocks();
     auto* rhs_i = assembler.at(i)->GetWorkspace();
+    *inner_product_of_c_and_w += rhs_i->inner_product_of_w_and_c;
     int cnt = 0;
     for (auto k : cliques.at(i)) {
       (*AW)(k) += rhs_i->AW(cnt);

@@ -87,7 +87,7 @@ bool BoundIsFinite(double k, MuSelectionParameters& p) {
   if (norm_inf < std::fabs(k * p.gw_lambda_min - 1)) {
     norm_inf = std::fabs(k * p.gw_lambda_min - 1);
   }
-  if (norm_inf <= 1) {
+  if (norm_inf < 1) {
     return 1;
   }
   return 0;
@@ -102,6 +102,7 @@ double DivergenceUpperBoundInverse(double divergence_upper_bound,
   if (BoundIsFinite(k1, p)) {
     k = k1;
   }
+
   if (k2 > k && BoundIsFinite(k2, p)) {
     k = k2;
   }

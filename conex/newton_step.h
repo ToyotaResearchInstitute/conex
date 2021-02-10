@@ -68,8 +68,7 @@ struct WorkspaceSchurComplement {
     DUMP(o.AQc);
   }
 
-  double QwCNorm;
-  double QwCTrace;
+  double inner_product_of_w_and_c;
   Eigen::Map<DenseMatrix, Eigen::Aligned> G{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> b{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> AW{NULL, 0, 0};

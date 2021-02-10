@@ -63,7 +63,9 @@ class Program {
     for (auto& ci : kkt_system_manager_.eqs) {
       if (cnt == i) {
         ci.constraint.get_dual_variable(xi->data());
-        xi->array() /= stats.sqrt_inv_mu[stats.num_iter - 1];
+        if (solved_) {
+          xi->array() /= stats.sqrt_inv_mu[stats.num_iter - 1];
+        }
         return;
       }
       cnt++;
@@ -165,6 +167,7 @@ class Program {
   Eigen::VectorXd memory_;
   Eigen::VectorXd* workspace_data_;
   bool is_initialized = false;
+  bool solved_ = false;
 };
 
 DenseMatrix GetFeasibleObjective(Program* prog);

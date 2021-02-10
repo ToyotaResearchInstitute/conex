@@ -12,7 +12,7 @@ using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 GTEST_TEST(LP, Dense) {
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 10; i++) {
     SolverConfiguration config;
     config.prepare_dual_variables = true;
     config.inv_sqrt_mu_max = 1000000;
@@ -22,8 +22,8 @@ GTEST_TEST(LP, Dense) {
     double eps = 1e-12;
 
     DenseMatrix Alinear = DenseMatrix::Random(n, m);
-    DenseMatrix Clinear(n, 1);
-    Clinear.setConstant(1);
+    DenseMatrix Clinear = DenseMatrix::Random(n, 1);
+    Clinear = Clinear.array().abs();
 
     LinearConstraint linear_constraint{n, &Alinear, &Clinear};
 
@@ -265,4 +265,130 @@ GTEST_TEST(LP, SparseWithFillIn) {
   EXPECT_NEAR((y1 - y2).norm(), 0, 1e-7);
 }
 
+void DoRandomPrimalFailsSlater(double distance_to_infeasible) {
+  SolverConfiguration config;
+  config.prepare_dual_variables = true;
+  config.inv_sqrt_mu_max = 10000;
+  config.maximum_mu = 10000000;
+  config.infeasibility_threshold = 2000000;
+  config.final_centering_steps = 5;
+
+  int m = 10;
+  int n1 = 3;  // The number of implicit equations
+  int n2 = 8;
+  int n = 2 * n1 + n2;
+  Eigen::MatrixXd yref = DenseMatrix::Random(m, 1);
+
+  DenseMatrix A1 = DenseMatrix::Random(n1, m);
+  DenseMatrix C1 = A1 * yref;
+  DenseMatrix A2 = DenseMatrix::Random(n2, m);
+  DenseMatrix C2 = A2 * yref;
+  C2.array() += 2;
+
+  DenseMatrix A = DenseMatrix::Random(n, m);
+  DenseMatrix C = DenseMatrix::Random(n, 1);
+  A << A1, -A1, A2;
+
+  DenseMatrix offset(n1, 1);
+  offset.setConstant(distance_to_infeasible);
+  C << C1, -(C1 - offset), C2;
+
+  LinearConstraint _constraint{n, &A, &C};
+
+  Program prog(m);
+  prog.SetNumberOfVariables(m);
+  prog.AddConstraint(_constraint);
+
+  VectorXd b(2);
+  VectorXd xref = VectorXd::Random(n);
+  xref = xref.array().abs();
+  b = A.transpose() * xref;
+
+  DenseMatrix y(m, 1);
+  Solve(b, prog, config, y.data());
+  VectorXd x(n);
+  prog.GetDualVariable(0, &x);
+
+  if (distance_to_infeasible < 0) {
+    double scale = (-C.transpose() * x)(0, 0);
+    EXPECT_NEAR((A.transpose() * x / scale).norm(), 0, 1e-5);
+    EXPECT_GE((-C.transpose() * x)(0, 0), 0);
+    EXPECT_GE(x.minCoeff() / scale, -1e-8);
+  } else {
+    EXPECT_NEAR((C.transpose() * x - b.transpose() * y).norm(), 0, 1e-5);
+    EXPECT_GE((C - A * y).minCoeff(), -1e-5);
+    EXPECT_NEAR((A.transpose() * x - b).norm(), 0, 1e-5);
+    EXPECT_GE(x.minCoeff(), -1e-8);
+  }
+}
+
+GTEST_TEST(LP, RandomPrimal) {
+  srand(0);
+  for (int i = 0; i < 3; i++) {
+    DoRandomPrimalFailsSlater(.1 * (-1 + i * 1));
+  }
+}
+
+void DoRandomDualFailsSlater(double distance_to_infeasible) {
+  SolverConfiguration config;
+  config.prepare_dual_variables = true;
+  config.inv_sqrt_mu_max = 10000;
+  config.divergence_upper_bound = 10000;
+  config.maximum_mu = 1e7;
+  config.infeasibility_threshold = 1e5;
+  config.final_centering_steps = 2;
+
+  int m1 = 4;
+  int m2 = 4;
+  int m = m1 + m2;
+  int n = 10;
+  Eigen::MatrixXd yref = DenseMatrix::Random(m, 1);
+
+  DenseMatrix A(n, m);
+  DenseMatrix A1 = DenseMatrix::Random(n, m1);
+  DenseMatrix A2 = DenseMatrix::Random(n, m2);
+  A2 = A2.array().abs();
+  A2.topRows(n - m2).setZero();
+  A1.bottomRows(m2).setZero();
+  A << A1, A2;
+
+  DenseMatrix C(n, 1);
+  C.setConstant(1);
+
+  Program prog(m);
+  prog.SetNumberOfVariables(m);
+
+  VectorXd xref = VectorXd::Random(n);
+  xref = xref.array().abs();
+  A.bottomRightCorner(m2, m2) = Eigen::MatrixXd::Identity(m2, m2);
+  VectorXd b = A.transpose() * xref;
+  b.bottomRows(m2).setConstant(distance_to_infeasible);
+
+  LinearConstraint constraint{n, &A, &C};
+  prog.AddConstraint(constraint);
+
+  DenseMatrix y(m, 1);
+  bool solved = Solve(b, prog, config, y.data());
+  VectorXd x(n);
+  prog.GetDualVariable(0, &x);
+
+  if (distance_to_infeasible < 0) {
+    EXPECT_EQ(solved, 0);
+    EXPECT_GE((-A * y).minCoeff(), -1e-8);
+    EXPECT_GE(b.col(0).dot(y.col(0)), 0);
+  } else {
+    EXPECT_EQ(solved, 1);
+    EXPECT_NEAR((C.transpose() * x - b.transpose() * y).norm(), 0, 1e-6);
+    EXPECT_NEAR((A.transpose() * x - b).norm(), 0, 1e-8);
+    EXPECT_GE((C - A * y).minCoeff(), -1e-8);
+  }
+}
+
+GTEST_TEST(LP, RandomDual) {
+  srand(0);
+  for (int i = 0; i < 3; i++) {
+    double distance_to_infeasibility = -1.0 + i * 1;
+    DoRandomDualFailsSlater(distance_to_infeasibility);
+  }
+}
 }  // namespace conex

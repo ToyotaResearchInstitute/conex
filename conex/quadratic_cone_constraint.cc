@@ -263,6 +263,11 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
     scale = o->workspace_.W1.col(0).dot(C1.col(0)) + C0 * (*o->workspace_.W0);
   }
   sys->AQc.noalias() += 2 * (A_dot_x + A0 * (*o->workspace_.W0)) * scale;
+  if (initialize) {
+    sys->inner_product_of_w_and_c = scale;
+  } else {
+    sys->inner_product_of_w_and_c += scale;
+  }
 }
 
 }  // namespace conex

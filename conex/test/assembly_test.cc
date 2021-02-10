@@ -123,7 +123,8 @@ GTEST_TEST(LDLT, TestAssembly) {
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(n + m);
   Eigen::VectorXd AQc(n + m);
-  solver.Assemble(&AW, &AQc);
+  double c_inner_product_w;
+  solver.Assemble(&AW, &AQc, &c_inner_product_w);
 
   MatrixXd error = (solver.KKTMatrix() - T);
   EXPECT_EQ(error.norm(), 0);
@@ -152,7 +153,8 @@ GTEST_TEST(LDLT, Benchmark2) {
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(prog.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.SizeOfKKTSystem());
-  solver.Assemble(&AW, &AQc);
+  double c_inner_product_w;
+  solver.Assemble(&AW, &AQc, &c_inner_product_w);
   Eigen::MatrixXd T = solver.KKTMatrix().selfadjointView<Eigen::Lower>();
 
   Eigen::VectorXd b(prog.SizeOfKKTSystem());
@@ -179,7 +181,8 @@ GTEST_TEST(Assemble, VariablesSpecifiedOutOfOrder) {
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(prog.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.SizeOfKKTSystem());
-  solver.Assemble(&AW, &AQc);
+  double c_inner_product_w;
+  solver.Assemble(&AW, &AQc, &c_inner_product_w);
   auto M = solver.KKTMatrix();
   Eigen::VectorXd expected(4);
   expected << 0, 2, 2, 3;

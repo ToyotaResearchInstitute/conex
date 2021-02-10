@@ -81,9 +81,6 @@ void LinearConstraint::AffineUpdate(const Ref& minus_s) {
   W += W.cwiseProduct(SW);
 }
 
-// WA = W * A -> Weight all the rows.
-// A' W W A   -> Compute dot product of columns.
-// Want random access to columns.
 void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
   const auto& W = o->workspace_.W;
@@ -97,6 +94,7 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
   WC = W.cwiseProduct(o->constraint_affine_);
 
   if (initialize) {
+    sys->inner_product_of_w_and_c = WC.sum();
     if (G->rows() != m) {
       G->setZero();
       sys->AW.setZero();
@@ -106,6 +104,7 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
     sys->AW.topRows(m).noalias() = o->constraint_matrix_.transpose() * W;
     sys->AQc.topRows(m).noalias() = WA.transpose() * WC;
   } else {
+    sys->inner_product_of_w_and_c += WC.sum();
     (*G).topLeftCorner(m, m).noalias() += WA.transpose() * WA;
     sys->AW.topRows(m).noalias() += o->constraint_matrix_.transpose() * W;
     sys->AQc.topRows(m).noalias() += WA.transpose() * WC;
