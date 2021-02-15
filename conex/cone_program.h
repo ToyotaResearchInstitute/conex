@@ -24,7 +24,7 @@ struct SolverConfiguration {
   double final_centering_tolerance = .01;
   int initial_centering_steps_warmstart = 0;
   int initial_centering_steps_coldstart = 0;
-  double warmstart_abort_threshold = 1;
+  double warmstart_abort_threshold = 2;
   int max_iterations = 25;
   double infeasibility_threshold = 1e5;
 };

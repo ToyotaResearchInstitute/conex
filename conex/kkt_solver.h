@@ -1,8 +1,8 @@
 #pragma once
 #include "constraint_manager.h"
 
-#include "conex/supernodal_solver.h"
 #include "conex/RLDLT.h"
+#include "conex/supernodal_solver.h"
 
 namespace conex {
 

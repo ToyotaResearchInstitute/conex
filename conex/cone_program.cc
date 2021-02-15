@@ -285,7 +285,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
       }
       prog.status_.solved = 0;
       PRINTSTATUS("Factorization failed.");
-      return prog.status_.solved = 0;
+      return prog.status_.solved;
     }
     END_TIMER
 

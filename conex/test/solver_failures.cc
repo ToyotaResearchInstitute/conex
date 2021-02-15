@@ -147,6 +147,6 @@ class MPCFailingLDLT {
 }  // namespace conex
 
 int main() {
-//  conex::EqualityConstraintFailingLDLT();
+  conex::EqualityConstraintFailingLDLT();
   conex::MPCFailingLDLT().Run(true /*trigger fail*/);
 }
