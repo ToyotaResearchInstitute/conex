@@ -2,6 +2,7 @@
 #include "constraint_manager.h"
 
 #include "conex/supernodal_solver.h"
+#include "conex/RLDLT.h"
 
 namespace conex {
 
@@ -35,7 +36,7 @@ class Solver {
   const std::vector<std::vector<int>> dual_variables_;
   MatrixData data;
   SparseTriangularMatrix mat;
-  std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
+  std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
   Eigen::PermutationMatrix<-1> Pt;
   std::vector<KKT_SystemAssembler*> assembler;
 };

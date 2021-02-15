@@ -2,6 +2,7 @@ COPTS = [
     "-DEIGEN_NO_DEBUG",
     "-O3",
     "-ffast-math",
+    "-g"
 ]
 
 cc_library(
@@ -246,6 +247,7 @@ cc_library(
         "debug_macros.h",
         "kkt_assembler.cc",
         "kkt_solver.cc",
+        "RLDLT.h",
         "supernodal_solver.cc",
         "tree_utils.cc",
         "triangular_matrix_workspace.cc",
@@ -396,7 +398,19 @@ cc_test(
 cc_binary(
     name = "solver_failures",
     srcs = ["test/solver_failures.cc"],
+    copts = ["-g"],
     deps = [
         "conex_lib",
     ],
 )
+
+cc_binary(
+    name = "regularized_factorization",
+    srcs = ["test/regularized_factorization.cc", "RLDLT.h"],
+    deps = [
+        "@eigen",
+        ":core",
+    ],
+)
+
+

@@ -1,4 +1,5 @@
 #include "conex/block_triangular_operations.h"
+#include "conex/RLDLT.h"
 #include "conex/debug_macros.h"
 
 namespace conex {
@@ -199,7 +200,7 @@ bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
 // Apply inv(M^T)  = inv(L^T P) = P^T inv(L^T)
 void T::ApplyBlockInverseOfMTranspose(
     const TriangularMatrixWorkspace& mat,
-    const std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization,
+    const std::vector<Eigen::RLDLT<Eigen::Ref<MatrixXd>>> factorization,
     VectorXd* y) {
   PartitionVectorIterator ypart(*y, mat.N, mat.supernode_size);
   // mat.diagonal.back().triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
@@ -242,7 +243,7 @@ void T::ApplyBlockInverseOfMTranspose(
 
 void T::ApplyBlockInverseOfMD(
     const TriangularMatrixWorkspace& mat,
-    const std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>> factorization,
+    const std::vector<Eigen::RLDLT<Eigen::Ref<MatrixXd>>> factorization,
     VectorXd* y) {
   // Apply inv(M) = inv(P^T L) = inv(L) P
   PartitionVectorForwardIterator ypart(*y, mat.supernode_size);
@@ -293,7 +294,7 @@ void T::ApplyBlockInverseOfMD(
 //          = inv(D_1) inv(L) P  * off_diag
 bool T::BlockLDLTInPlace(
     TriangularMatrixWorkspace* C,
-    std::vector<Eigen::LDLT<Eigen::Ref<MatrixXd>>>* factorization) {
+    std::vector<Eigen::RLDLT<Eigen::Ref<MatrixXd>>>* factorization) {
   auto& llts = *factorization;
   llts.clear();
 

@@ -134,13 +134,19 @@ class MPCFailingLDLT {
 
     Eigen::VectorXd var(num_vars);
     VectorXd linear_cost(num_vars);
-    conex::Solve(linear_cost, prog, conex::SolverConfiguration(), var.data());
+    linear_cost.setConstant(-1);
+    auto config = conex::SolverConfiguration();
+    config.inv_sqrt_mu_max = 1e4;
+    config.final_centering_steps = 10;
+    config.max_iterations = 50;
+    conex::Solve(linear_cost, prog, config, var.data());
+    DUMP(var);
   }
 };
 
 }  // namespace conex
 
 int main() {
-  conex::EqualityConstraintFailingLDLT();
+//  conex::EqualityConstraintFailingLDLT();
   conex::MPCFailingLDLT().Run(true /*trigger fail*/);
 }

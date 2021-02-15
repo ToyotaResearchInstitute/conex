@@ -11,7 +11,7 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
  public:
   EqualityConstraints(){};
   EqualityConstraints(const Eigen::MatrixXd& A, const Eigen::MatrixXd& b)
-      : A_(A), b_(b) {}
+      : A_(A), b_(b), lambda_(b_.rows()) {}
 
   virtual void SetDenseData() override {
     assert(schur_complement_data.G.rows() == schur_complement_data.G.cols());
@@ -28,11 +28,14 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
   int SizeOfDualVariable() { return A_.rows(); }
   Eigen::MatrixXd A_;
   Eigen::MatrixXd b_;
+  Eigen::VectorXd lambda_;
 
   friend int Rank(const EqualityConstraints&) { return 0; };
   friend void SetIdentity(EqualityConstraints*){};
-  friend void PrepareStep(EqualityConstraints*, const StepOptions&, const Ref&,
-                          StepInfo*){};
+  friend void PrepareStep(EqualityConstraints* o, const StepOptions&, const Ref&y,
+                          StepInfo*){
+    o->lambda_ = y.col(0).tail(o->b_.rows());
+  }
   friend bool TakeStep(EqualityConstraints*, const StepOptions&) {
     return true;
   };
@@ -52,10 +55,12 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
       sys.AQc.setZero();
       sys.AQc.bottomRows(A_.rows()) = b_;
       sys.AW.setZero();
+      sys.inner_product_of_w_and_c = o->lambda_.dot(b_.col(0));
     } else {
       sys.G.bottomLeftCorner(A_.rows(), A_.cols()) += A_;
       sys.G.topRightCorner(A_.cols(), A_.rows()) += A_.transpose();
       sys.AQc.bottomRows(A_.rows()) += b_;
+      sys.inner_product_of_w_and_c += o->lambda_.dot(b_.col(0));
     }
   }
 

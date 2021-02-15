@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "conex/triangular_matrix_workspace.h"
+#include "conex/RLDLT.h"
 #include <Eigen/Dense>
 
 namespace conex {
@@ -13,20 +14,20 @@ struct BlockTriangularOperations {
   static bool BlockCholeskyInPlace(TriangularMatrixWorkspace* mat);
   static bool BlockLDLTInPlace(
       TriangularMatrixWorkspace* mat,
-      std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>>* factorization);
+      std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>* factorization);
   static void ApplyBlockInverseOfMTranspose(
       const TriangularMatrixWorkspace& mat,
-      const std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization,
+      const std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization,
       Eigen::VectorXd* y);
 
   static void ApplyBlockInverseOfMD(
       const TriangularMatrixWorkspace& mat,
-      const std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization,
+      const std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization,
       Eigen::VectorXd* y);
 
   static void SolveInPlaceLDLT(
       const TriangularMatrixWorkspace& mat,
-      const std::vector<Eigen::LDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization,
+      const std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization,
       Eigen::VectorXd* y) {
     ApplyBlockInverseOfMD(mat, factorization, y);
     ApplyBlockInverseOfMTranspose(mat, factorization, y);
