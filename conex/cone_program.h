@@ -24,9 +24,15 @@ struct SolverConfiguration {
   double final_centering_tolerance = .01;
   int initial_centering_steps_warmstart = 0;
   int initial_centering_steps_coldstart = 0;
-  double warmstart_abort_threshold = 2;
+  double warmstart_abort_threshold = 1;
   int max_iterations = 25;
   double infeasibility_threshold = 1e5;
+};
+
+struct ConexStatus {
+  int solved = 0;
+  int primal_infeasible = 0;
+  int dual_infeasible = 0;
 };
 
 class Container {
@@ -63,7 +69,7 @@ class Program {
     for (auto& ci : kkt_system_manager_.eqs) {
       if (cnt == i) {
         ci.constraint.get_dual_variable(xi->data());
-        if (solved_) {
+        if (status_.solved) {
           xi->array() /= stats.sqrt_inv_mu[stats.num_iter - 1];
         }
         return;
@@ -156,6 +162,7 @@ class Program {
   }
 
   int NumberOfConstraints() { return kkt_system_manager_.eqs.size(); }
+  ConexStatus Status() { return status_; }
 
   ConstraintManager<Container> kkt_system_manager_;
   std::vector<Constraint*> constraints;
@@ -167,7 +174,7 @@ class Program {
   Eigen::VectorXd memory_;
   Eigen::VectorXd* workspace_data_;
   bool is_initialized = false;
-  bool solved_ = false;
+  ConexStatus status_;
 };
 
 DenseMatrix GetFeasibleObjective(Program* prog);

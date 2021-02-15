@@ -190,6 +190,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
   auto& constraints = prog.constraints;
   auto& solver = prog.solver;
+  prog.status_.solved = 0;
+  prog.status_.primal_infeasible = 0;
+  prog.status_.dual_infeasible = 0;
 
 #if CONEX_VERBOSE
   std::cout.precision(2);
@@ -204,9 +207,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   // Empty program
   if (prog.NumberOfConstraints() == 0) {
     Eigen::Map<DenseMatrix> ynan(primal_variable, m, 1);
-    prog.solved_ = 0;
+    prog.status_.solved = 0;
     ynan.array() = bin.array() * std::numeric_limits<double>::infinity();
-    return prog.solved_;
+    return prog.status_.solved;
   }
 
   Initialize(prog, config);
@@ -217,6 +220,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   Ref y(ydata.data(), prog.kkt_system_manager_.SizeOfKKTSystem(), 1);
 
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
+  double cw = 1;
+  double by = -1;
 
   StepOptions newton_step_parameters;
   newton_step_parameters.affine = 0;
@@ -278,9 +283,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
         SetIdentity(&prog.constraints);
         continue;
       }
-      prog.solved_ = 0;
+      prog.status_.solved = 0;
       PRINTSTATUS("Factorization failed.");
-      return prog.solved_;
+      return prog.status_.solved = 0;
     }
     END_TIMER
 
@@ -322,7 +327,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     }
 
     if (i == 0 && config.initialization_mode &&
-        info.norminfd > config.warmstart_abort_threshold) {
+        info.norminfd >= config.warmstart_abort_threshold) {
       PRINTSTATUS("Aborting warmstart...");
       SetIdentity(&prog.constraints);
     } else {
@@ -336,10 +341,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
-    double by =
-        b.col(0).dot(y.col(0)) * 1.0 / newton_step_parameters.inv_sqrt_mu;
-    double cw =
-        inner_product_of_c_and_w * 1.0 / newton_step_parameters.inv_sqrt_mu;
+    by = b.col(0).dot(y.col(0)) * 1.0 / newton_step_parameters.inv_sqrt_mu;
+    cw = inner_product_of_c_and_w * 1.0 / newton_step_parameters.inv_sqrt_mu;
+
     REPORT(by);
     REPORT(cw);
 
@@ -362,11 +366,17 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   double mu = 1.0 / (newton_step_parameters.inv_sqrt_mu);
   mu *= mu;
   if (mu > config.infeasibility_threshold) {
-    PRINTSTATUS("Infeasible Or Unbounded.");
-    prog.solved_ = 0;
+    PRINTSTATUS("Infeasible Or Unbounded!!.");
+    prog.status_.solved = 0;
+    DUMP(cw * newton_step_parameters.inv_sqrt_mu);
+    DUMP(by * newton_step_parameters.inv_sqrt_mu);
+    prog.status_.primal_infeasible =
+        cw * newton_step_parameters.inv_sqrt_mu <= -.5;
+    prog.status_.dual_infeasible =
+        by * newton_step_parameters.inv_sqrt_mu >= .5;
   } else {
     PRINTSTATUS("Solved.");
-    prog.solved_ = 1;
+    prog.status_.solved = 1;
   }
 
   if (config.prepare_dual_variables) {
@@ -386,10 +396,10 @@ bool Solve(const DenseMatrix& bin, Program& prog,
                 &info);
   }
 
-  if (prog.solved_) {
+  if (prog.status_.solved) {
     yout /= newton_step_parameters.inv_sqrt_mu;
   }
-  return prog.solved_;
+  return prog.status_.solved;
 }
 
 DenseMatrix GetFeasibleObjective(Program* prg) {
