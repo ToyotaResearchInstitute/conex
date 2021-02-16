@@ -55,10 +55,6 @@ void T::RelabelCliques(MatrixData* data_ptr) {
   auto cliques = cliques_;
   auto& data = *data_ptr;
 
-  std::vector<int> order;
-  std::vector<std::vector<int>> separators;
-  std::vector<std::vector<int>> supernodes;
-
   data.supernodes_original_labels.resize(cliques.size());
   data.separators_original_labels.resize(cliques.size());
   // Match to original variables.

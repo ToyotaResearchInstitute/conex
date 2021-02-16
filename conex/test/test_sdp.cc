@@ -11,6 +11,50 @@ namespace conex {
 using DenseMatrix = Eigen::MatrixXd;
 #define TEST_OR_PROFILE 1
 #if TEST_OR_PROFILE
+
+GTEST_TEST(SDP, Mixed) {
+  using Eigen::MatrixXd;
+  int m = 3;
+  int n = 2;
+  std::vector<MatrixXd> A(m);
+  for (int i = 0; i < m; i++) {
+    A.at(i).resize(n, n);
+  }
+  A.at(0) << -1, 0, 0, 0;
+
+  A.at(1) << 0, -1, -1, 0;
+
+  A.at(2) << 0, 0, 0, -1;
+
+  Eigen::MatrixXd C = MatrixXd::Zero(n, n);
+
+  Eigen::MatrixXd b(m, 1);
+  b << -1, 0, -1;
+
+  Program prog(m);
+
+  Eigen::VectorXd upper_bound(1);
+  upper_bound << 1;
+  Eigen::VectorXd lower_bound(1);
+  lower_bound << 1;
+  prog.AddConstraint(UpperBound(upper_bound), {1});
+  prog.AddConstraint(LowerBound(lower_bound), {1});
+  prog.AddConstraint(DenseLMIConstraint(A, C));
+
+  Eigen::MatrixXd y(m, 1);
+  auto config = SolverConfiguration();
+  config.max_iterations = 30;
+  Solve(b, prog, config, y.data());
+
+  MatrixXd S = MatrixXd::Zero(2, 2);
+  for (int i = 0; i < m; i++) {
+    S -= y(i) * A.at(i);
+  }
+  MatrixXd S_expected = MatrixXd::Zero(2, 2);
+  S_expected.setConstant(1);
+  EXPECT_NEAR((S - S_expected).norm(), 0, 1e-6);
+}
+
 int TestDiagonalSDP() {
   srand(1);
   int n = 5;
@@ -162,6 +206,7 @@ GTEST_TEST(SDP, ProfileSDP) {
     TestSDP(i);
   }
 }
+
 #endif
 
 }  // namespace conex

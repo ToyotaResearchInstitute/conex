@@ -62,7 +62,11 @@ double T::GetCoeff(int i, int j) {
     // Fill in is
     return 0;
   }
-  return schur_complement_data.G(i, j);
+  if (i >= j) {
+    return schur_complement_data.G(i, j);
+  } else {
+    return schur_complement_data.G(j, i);
+  }
 }
 
 void T::BindDiagonalBlock(const DiagonalBlock* data) {
