@@ -263,7 +263,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     bool final_centering =
         (newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) ||
         i >= (config.max_iterations - config.final_centering_steps);
-    bool update_mu = (i == 0) || !(initial_centering || final_centering) || warmstart_aborted;
+    bool update_mu = (i == 0) || !(initial_centering || final_centering) ||
+                     warmstart_aborted;
     warmstart_aborted = false;
 
     if (final_centering) {

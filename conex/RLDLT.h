@@ -1,5 +1,5 @@
-#include <Eigen/Dense>
 #include "conex/debug_macros.h"
+#include <Eigen/Dense>
 // This file is part of Eigen, a lightweight C++ template library
 // for linear algebra.
 //
@@ -304,11 +304,11 @@ struct rldlt_inplace<Lower> {
 
     if (size <= 1) {
       if (std::fabs(mat.coeff(0, 0)) < 1e-8) {
-          if (mat.coeff(0, 0) < 0) {
-            mat.coeffRef(0, 0) = -1e-9;
-          } else {
-            mat.coeffRef(0, 0) = 1e-9;
-          }
+        if (mat.coeff(0, 0) < 0) {
+          mat.coeffRef(0, 0) = -1e-9;
+        } else {
+          mat.coeffRef(0, 0) = 1e-9;
+        }
       }
       transpositions.setIdentity();
       if (size == 0)
