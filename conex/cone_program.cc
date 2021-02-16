@@ -231,6 +231,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
   int rankK = Rank(constraints);
   int centering_steps = 0;
+  bool warmstart_aborted = false;
   double inner_product_of_c_and_w;
 
   Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
@@ -262,7 +263,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     bool final_centering =
         (newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) ||
         i >= (config.max_iterations - config.final_centering_steps);
-    bool update_mu = (i == 0) || !(initial_centering || final_centering);
+    bool update_mu = (i == 0) || !(initial_centering || final_centering) || warmstart_aborted;
+    warmstart_aborted = false;
 
     if (final_centering) {
       if (centering_steps >= config.final_centering_steps) {
@@ -281,6 +283,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
       if (i == 0 && config.initialization_mode) {
         PRINTSTATUS("Aborting warmstart...");
         SetIdentity(&prog.constraints);
+        warmstart_aborted = true;
         continue;
       }
       prog.status_.solved = 0;
@@ -330,6 +333,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
         info.norminfd >= config.warmstart_abort_threshold) {
       PRINTSTATUS("Aborting warmstart...");
       SetIdentity(&prog.constraints);
+      warmstart_aborted = true;
     } else {
       TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
     }
