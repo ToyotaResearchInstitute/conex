@@ -303,7 +303,7 @@ struct rldlt_inplace<Lower> {
     bool ret = true;
 
     if (size <= 1) {
-      if (std::fabs(mat.coeff(0, 0)) < 1e-8) {
+      if (std::fabs(mat.coeff(0, 0)) < 1e-9) {
         if (mat.coeff(0, 0) < 0) {
           mat.coeffRef(0, 0) = -1e-9;
         } else {
@@ -372,14 +372,14 @@ struct rldlt_inplace<Lower> {
       // introduce INF or NaN values. Remark that LAPACK also uses 0 as the
       // cutoff value.
       RealScalar realAkk = numext::real(mat.coeffRef(k, k));
-      bool pivot_is_valid = (abs(realAkk) > RealScalar(0));
+      bool pivot_is_valid = (abs(realAkk) > 1e-9);
 
       if (!pivot_is_valid) {
         pivot_is_valid = true;
         if (mat.coeffRef(k, k) < 0) {
-          mat.coeffRef(k, k) = -(RealScalar(0) + 1e-9);
+          mat.coeffRef(k, k) = -(1e-9);
         } else {
-          mat.coeffRef(k, k) = (RealScalar(0) + 1e-9);
+          mat.coeffRef(k, k) = (1e-9);
         }
         realAkk = numext::real(mat.coeffRef(k, k));
       }
