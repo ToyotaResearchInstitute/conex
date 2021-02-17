@@ -75,7 +75,7 @@ void DoBadInitialization(bool fail) {
   Bi << 1, 2, 3;
   for (int i = 0; i < num_equalities; i++) {
     std::vector<int> vars{0, i + 1, num_vars - 1};
-    for (int j = 0; j < vars.size(); j++) {
+    for (size_t j = 0; j < vars.size(); j++) {
       eq(i, vars.at(j)) = Bi(0, j);
     }
     // prog.AddConstraint(EqualityConstraints{Bi, eq.row(i) * optimal_y    },
