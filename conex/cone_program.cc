@@ -373,8 +373,6 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   if (mu > config.infeasibility_threshold) {
     PRINTSTATUS("Infeasible Or Unbounded!!.");
     prog.status_.solved = 0;
-    DUMP(cw * newton_step_parameters.inv_sqrt_mu);
-    DUMP(by * newton_step_parameters.inv_sqrt_mu);
     prog.status_.primal_infeasible =
         cw * newton_step_parameters.inv_sqrt_mu <= -.5;
     prog.status_.dual_infeasible =
