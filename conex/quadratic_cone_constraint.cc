@@ -270,4 +270,9 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
   }
 }
 
+void SetIdentity(QuadraticConstraintBase* o) {
+  *o->workspace_.W0 = 1;
+  o->workspace_.W1.setZero();
+}
+
 }  // namespace conex

@@ -34,10 +34,7 @@ class QuadraticConstraintBase {
 
   int number_of_variables() { return A1_.cols(); }
   friend int Rank(const QuadraticConstraintBase&) { return 2; };
-  friend void SetIdentity(QuadraticConstraintBase* o) {
-    *o->workspace_.W0 = 1;
-    o->workspace_.W1.setZero();
-  }
+  friend void SetIdentity(QuadraticConstraintBase* o);
   friend void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
                           const Ref& y, StepInfo* data);
 
