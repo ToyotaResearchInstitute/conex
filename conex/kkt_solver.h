@@ -11,6 +11,13 @@ class Solver {
   Solver(const std::vector<std::vector<int>>& cliques,
          const std::vector<std::vector<int>>& dual_vars);
 
+  Solver(const std::vector<std::vector<int>>& cliques,
+          int num_vars, std::vector<int>& order, 
+          const std::vector<std::vector<int>>& supernodes,
+          const std::vector<std::vector<int>>& separators);
+
+
+
   void Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler);
 
   void Bind(std::vector<KKT_SystemAssembler>* kkt_assembler) {

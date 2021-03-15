@@ -19,9 +19,10 @@ using std::vector;
 namespace {
 
 vector<int> Relabel(const vector<int>& x, const vector<int>& labels) {
-  vector<int> y;
+  vector<int> y(x.size());
+  int i = 0;
   for (auto& xi : x) {
-    y.push_back(labels.at(xi));
+    y.at(i++) = labels.at(xi);
   }
   return y;
 }
@@ -430,18 +431,30 @@ std::vector<int> UnionOfSorted(const std::vector<int>& x1,
   return y;
 }
 
+MatrixData SupernodesToData(int num_vars, std::vector<int>& order, 
+                            const std::vector<std::vector<int>>& supernodes,
+                            const std::vector<std::vector<int>>& separators);
+
+
 MatrixData GetData(const vector<vector<int>>& cliques, int init) {
   vector<vector<int>> separators;
   vector<vector<int>> supernodes;
-  MatrixData d;
-  d.cliques = cliques;
-  Sort(&d.cliques);
-  auto& order = d.clique_order;
+  vector<std::vector<int>> cliques_sorted = cliques; 
+  Sort(&cliques_sorted);
+  vector<int> order; 
 
-  PickCliqueOrder(d.cliques, init, &order, &supernodes, &separators);
+  PickCliqueOrder(cliques_sorted, init, &order, &supernodes, &separators);
 
-  d.permutation.resize(GetMax(cliques) + 1);
-  d.permutation_inverse.resize(GetMax(cliques) + 1);
+  return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
+}
+
+MatrixData SupernodesToData(int num_vars, std::vector<int>& order, 
+                            const std::vector<std::vector<int>>& supernodes,
+                            const std::vector<std::vector<int>>& separators) {
+  MatrixData d; 
+  d.clique_order = order;
+  d.permutation.resize(num_vars);
+  d.permutation_inverse.resize(num_vars);
   int i = 0;
   for (auto& e : order) {
     for (auto& sn_ii : supernodes.at(e)) {
@@ -460,6 +473,7 @@ MatrixData GetData(const vector<vector<int>>& cliques, int init) {
   i = 0;
 
   for (auto e : order) {
+    // Replace original labels with their elimination position.
     supernodes_.at(i) = Relabel(supernodes.at(e), d.permutation);
     separators_.at(i) = Relabel(separators.at(e), d.permutation);
     i++;
@@ -467,6 +481,7 @@ MatrixData GetData(const vector<vector<int>>& cliques, int init) {
 
   Sort(&separators_);
   Sort(&supernodes_);
+  DUMP(supernodes_);
 
   int cnt = 0;
   auto& supernode_size = d.supernode_size;
@@ -476,10 +491,14 @@ MatrixData GetData(const vector<vector<int>>& cliques, int init) {
     cnt++;
   }
   d.N = std::accumulate(supernode_size.begin(), supernode_size.end(), 0);
-  for (size_t i = 0; i < d.cliques.size(); i++) {
+
+  d.cliques.resize(supernodes.size());
+  for (size_t i = 0; i < supernodes.size(); i++) {
     d.cliques.at(i) = UnionOfSorted(supernodes_.at(i), separators_.at(i));
   }
   return d;
 }
+
+
 
 }  // namespace conex

@@ -96,6 +96,20 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
 }
 
+T::Solver(const std::vector<std::vector<int>>& cliques,
+          int num_vars, std::vector<int>& order, 
+          const std::vector<std::vector<int>>& supernodes,
+          const std::vector<std::vector<int>>& separators) 
+    : cliques_(cliques),
+      data(SupernodesToData(num_vars, order, supernodes, separators)),
+      mat(data),
+      Pt(data.N) {
+  RelabelCliques(&data);
+  Pt.indices() =
+      Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
+}
+
+
 void T::Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler) {
   DoBind(data, mat.workspace_, kkt_assembler);
   assembler = kkt_assembler;

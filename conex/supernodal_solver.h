@@ -11,6 +11,8 @@ namespace conex {
 
 using Clique = std::vector<int>;
 
+
+
 // TODO(FrankPermenter): Deprecate this class.
 
 std::vector<int> UnionOfSorted(const std::vector<int>& x1,
@@ -126,5 +128,10 @@ class TriangularMatrixOperations {
   static Eigen::VectorXd ApplyInverseOfTranspose(SparseTriangularMatrix* L,
                                                  const Eigen::VectorXd& b);
 };
+
+
+MatrixData SupernodesToData(int num_vars, std::vector<int>& order, 
+                            const std::vector<std::vector<int>>& supernodes,
+                            const std::vector<std::vector<int>>& separators);
 
 }  // namespace conex
