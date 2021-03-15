@@ -431,27 +431,26 @@ std::vector<int> UnionOfSorted(const std::vector<int>& x1,
   return y;
 }
 
-MatrixData SupernodesToData(int num_vars, std::vector<int>& order, 
+MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators);
-
 
 MatrixData GetData(const vector<vector<int>>& cliques, int init) {
   vector<vector<int>> separators;
   vector<vector<int>> supernodes;
-  vector<std::vector<int>> cliques_sorted = cliques; 
+  vector<std::vector<int>> cliques_sorted = cliques;
   Sort(&cliques_sorted);
-  vector<int> order; 
+  vector<int> order;
 
   PickCliqueOrder(cliques_sorted, init, &order, &supernodes, &separators);
 
   return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
 }
 
-MatrixData SupernodesToData(int num_vars, std::vector<int>& order, 
+MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators) {
-  MatrixData d; 
+  MatrixData d;
   d.clique_order = order;
   d.permutation.resize(num_vars);
   d.permutation_inverse.resize(num_vars);
@@ -464,41 +463,32 @@ MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
     }
   }
 
-  auto& separators_ = d.separators;
-  auto& supernodes_ = d.supernodes;
-
-  supernodes_.resize(order.size());
-  separators_.resize(order.size());
-
-  i = 0;
-
-  for (auto e : order) {
-    // Replace original labels with their elimination position.
-    supernodes_.at(i) = Relabel(supernodes.at(e), d.permutation);
-    separators_.at(i) = Relabel(separators.at(e), d.permutation);
-    i++;
-  }
-
-  Sort(&separators_);
-  Sort(&supernodes_);
-  DUMP(supernodes_);
-
-  int cnt = 0;
   auto& supernode_size = d.supernode_size;
   supernode_size.resize(order.size());
-  for (auto& si : supernode_size) {
-    si = supernodes_.at(cnt).size();
-    cnt++;
+  d.supernodes_original_labels.resize(order.size());
+  d.separators_original_labels.resize(order.size());
+  d.cliques.resize(supernodes.size());
+  i = 0;
+  for (auto e : order) {
+    d.cliques.at(i) = supernodes.at(e);
+
+    auto temp = Relabel(separators.at(e), d.permutation);
+    std::sort(temp.begin(), temp.end());
+    auto sep = Relabel(temp, d.permutation_inverse);
+
+    for (auto si : sep) {
+      d.cliques.at(i).push_back(si);
+    }
+    d.cliques.at(i) = Relabel(d.cliques.at(i), d.permutation);
+    supernode_size.at(i) = supernodes.at(e).size();
+
+    d.supernodes_original_labels.at(i) = supernodes.at(e);
+    d.separators_original_labels.at(i) = sep;
+
+    i++;
   }
   d.N = std::accumulate(supernode_size.begin(), supernode_size.end(), 0);
-
-  d.cliques.resize(supernodes.size());
-  for (size_t i = 0; i < supernodes.size(); i++) {
-    d.cliques.at(i) = UnionOfSorted(supernodes_.at(i), separators_.at(i));
-  }
   return d;
 }
-
-
 
 }  // namespace conex

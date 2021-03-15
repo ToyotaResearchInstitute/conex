@@ -18,15 +18,6 @@ std::vector<int> ConcatFirstN(const std::vector<int>& a, int N,
   return y;
 }
 
-std::vector<int> Relabel(const std::vector<int>& x,
-                         const std::vector<int>& labels) {
-  std::vector<int> y;
-  for (auto& xi : x) {
-    y.push_back(labels.at(xi));
-  }
-  return y;
-}
-
 std::vector<int> ReplaceWithPosition(const std::vector<int>& a,
                                      const std::vector<int>& b,
                                      bool label_fill_in) {
@@ -54,16 +45,6 @@ using T = Solver;
 void T::RelabelCliques(MatrixData* data_ptr) {
   auto cliques = cliques_;
   auto& data = *data_ptr;
-
-  data.supernodes_original_labels.resize(cliques.size());
-  data.separators_original_labels.resize(cliques.size());
-  // Match to original variables.
-  for (int e = 0; e < static_cast<int>(cliques.size()); e++) {
-    data.supernodes_original_labels.at(e) =
-        Relabel(data.supernodes.at(e), data.permutation_inverse);
-    data.separators_original_labels.at(e) =
-        Relabel(data.separators.at(e), data.permutation_inverse);
-  }
 
   // Replace original variables with their position in the
   // constraint clique.
@@ -94,12 +75,15 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
   RelabelCliques(&data);
   Pt.indices() =
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
+  DUMP(cliques_);
+  DUMP(data.supernodes_original_labels);
+  DUMP(data.supernode_size);
 }
 
-T::Solver(const std::vector<std::vector<int>>& cliques,
-          int num_vars, std::vector<int>& order, 
+T::Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
+          std::vector<int>& order,
           const std::vector<std::vector<int>>& supernodes,
-          const std::vector<std::vector<int>>& separators) 
+          const std::vector<std::vector<int>>& separators)
     : cliques_(cliques),
       data(SupernodesToData(num_vars, order, supernodes, separators)),
       mat(data),
@@ -108,7 +92,6 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
   Pt.indices() =
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
 }
-
 
 void T::Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler) {
   DoBind(data, mat.workspace_, kkt_assembler);

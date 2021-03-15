@@ -14,7 +14,8 @@ int LookupSuperNode(const T& o, int index, int start) {
       }
     }
   }
-  throw "Sparse matrix is malformed: invalid supernode partition.";
+  throw std::runtime_error(
+      "Sparse matrix is malformed: invalid supernode partition.");
 }
 
 template <typename T>
@@ -42,7 +43,8 @@ double* LookupAddress(T& o, int r, int c) {
     }
     cnt++;
   }
-  throw "Specified entry of sparse matrix is not accessible.";
+  throw std::runtime_error(
+      "Specified entry of sparse matrix is not accessible.");
 }
 
 }  // namespace

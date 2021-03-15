@@ -11,8 +11,6 @@ namespace conex {
 
 using Clique = std::vector<int>;
 
-
-
 // TODO(FrankPermenter): Deprecate this class.
 
 std::vector<int> UnionOfSorted(const std::vector<int>& x1,
@@ -20,8 +18,6 @@ std::vector<int> UnionOfSorted(const std::vector<int>& x1,
 
 struct MatrixData {
   std::vector<std::vector<int>> cliques;
-  std::vector<std::vector<int>> supernodes;
-  std::vector<std::vector<int>> separators;
   std::vector<std::vector<int>> supernodes_original_labels;
   std::vector<std::vector<int>> separators_original_labels;
   std::vector<int> supernode_size;
@@ -129,8 +125,7 @@ class TriangularMatrixOperations {
                                                  const Eigen::VectorXd& b);
 };
 
-
-MatrixData SupernodesToData(int num_vars, std::vector<int>& order, 
+MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators);
 
