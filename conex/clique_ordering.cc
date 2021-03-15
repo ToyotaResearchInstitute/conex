@@ -5,7 +5,6 @@
 
 #include "conex/debug_macros.h"
 #include "conex/supernodal_solver.h"
-#include "conex/tree_utils.h"
 
 namespace conex {
 
@@ -233,19 +232,17 @@ auto FindSupernode(const std::vector<int>& separator, const T& b, const T& c,
   return c;
 }
 
-void PickCliqueOrder(const vector<vector<int>>& cliques_sorted, int root,
+void GetCliqueEliminationOrder(const vector<vector<int>>& cliques_sorted, int root,
                      vector<int>* order, vector<vector<int>>* supernodes,
-                     vector<vector<int>>* separators,
-                     vector<vector<vector<int>>>* post_order_pointer) {
+                     vector<vector<int>>* separators, RootedTree* tree) {
   size_t n = cliques_sorted.size();
   order->clear();
   order->resize(n);
   separators->clear();
   separators->resize(n);
   SymmetricMatrix<vector<int>> intersections(n);
-  RootedTree tree(n);
   int better_root = PickCliqueOrderHelper(cliques_sorted, root, &intersections,
-                                          separators, order, &tree);
+                                          separators, order, tree);
 
   if (root == -1) {
     order->clear();
@@ -255,7 +252,7 @@ void PickCliqueOrder(const vector<vector<int>>& cliques_sorted, int root,
     RootedTree tree_i(n);
     PickCliqueOrderHelper(cliques_sorted, better_root, &intersections,
                           separators, order, &tree_i);
-    tree = tree_i;
+    *tree = tree_i;
   }
 
   supernodes->resize(n);
@@ -268,7 +265,17 @@ void PickCliqueOrder(const vector<vector<int>>& cliques_sorted, int root,
                           separators->at(e).end(), supernodes->at(e).begin());
     }
   }
+}
 
+
+void PickCliqueOrder(const vector<vector<int>>& cliques_sorted, int root,
+                     vector<int>* order, vector<vector<int>>* supernodes,
+                     vector<vector<int>>* separators,
+                     vector<vector<vector<int>>>* post_order_pointer) {
+
+  size_t n = cliques_sorted.size();
+  RootedTree tree(n);
+  GetCliqueEliminationOrder(cliques_sorted, root, order, supernodes, separators, &tree);
   int num_vars = GetMax(cliques_sorted) + 1;
   FillIn(tree, num_vars, order, supernodes, separators);
 
