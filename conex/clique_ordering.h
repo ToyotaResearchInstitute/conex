@@ -6,7 +6,7 @@ namespace conex {
 
 
 void FillIn(const RootedTree& tree, int num_variables,
-            const std::vector<int>* order, vector<std::vector<int>>* supernodes,
+            const std::vector<int>& order, vector<std::vector<int>>* supernodes,
             vector<std::vector<int>>* separators);
 
 void GetCliqueEliminationOrder(const vector<vector<int>>& cliques_sorted, int root,

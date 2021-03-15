@@ -170,10 +170,10 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
 }  // namespace
 
 void FillIn(const RootedTree& tree, int num_variables,
-            const std::vector<int>* order, vector<std::vector<int>>* supernodes,
+            const std::vector<int>& order, vector<std::vector<int>>* supernodes,
             vector<std::vector<int>>* separators) {
   std::vector<int> eliminated(num_variables);
-  int num_cliques = order->size();
+  int num_cliques = order.size();
   for (auto& e : eliminated) {
     e = num_cliques + 1;
   }
@@ -184,18 +184,18 @@ void FillIn(const RootedTree& tree, int num_variables,
   //  1) Make a supernode of the clique closest to the root.
   //  2) Make a separator of all other cliques.
   //
-  for (size_t i = 0; i < order->size(); i++) {
-    for (int v : supernodes->at(order->at(i))) {
+  for (size_t i = 0; i < order.size(); i++) {
+    for (int v : supernodes->at(order.at(i))) {
       if (eliminated.at(v) < num_cliques) {
         auto fill_in =
-            path(order->at(i), eliminated.at(v), tree.parent, tree.height);
+            path(order.at(i), eliminated.at(v), tree.parent, tree.height);
         for (size_t j = 0; j < fill_in.size() - 1; j++) {
           auto e = fill_in.at(j);
           separators->at(e) = UnionOfSorted(separators->at(e), {v});
         }
         eliminated.at(v) = fill_in.back();
       } else {
-        eliminated.at(v) = order->at(i);
+        eliminated.at(v) = order.at(i);
       }
     }
   }
@@ -277,7 +277,7 @@ void PickCliqueOrder(const vector<vector<int>>& cliques_sorted, int root,
   RootedTree tree(n);
   GetCliqueEliminationOrder(cliques_sorted, root, order, supernodes, separators, &tree);
   int num_vars = GetMax(cliques_sorted) + 1;
-  FillIn(tree, num_vars, order, supernodes, separators);
+  FillIn(tree, num_vars, *order, supernodes, separators);
 
   if (post_order_pointer) {
     int count = 0;
