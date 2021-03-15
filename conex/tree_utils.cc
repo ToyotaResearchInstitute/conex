@@ -8,8 +8,8 @@ using std::vector;
 
 namespace conex {
 
-vector<int> path(int x, int y, const std::vector<int>& tree,
-                 const std::vector<int>& height) {
+vector<int> PathInTree(int x, int y, const std::vector<int>& tree,
+                       const std::vector<int>& height) {
   std::vector<int> path;
   while (x != y) {
     if (height[x] < height[y]) {
