@@ -82,6 +82,7 @@ T::Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
           const std::vector<std::vector<int>>& supernodes,
           const std::vector<std::vector<int>>& separators)
     : cliques_(cliques),
+      dual_variables_(std::vector<std::vector<int>>(cliques.size()) ),
       data(SupernodesToData(num_vars, order, supernodes, separators)),
       mat(data),
       Pt(data.N) {
