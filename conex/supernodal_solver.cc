@@ -431,7 +431,7 @@ std::vector<int> UnionOfSorted(const std::vector<int>& x1,
   return y;
 }
 
-MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
+MatrixData SupernodesToData(int num_vars, const std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators);
 
@@ -447,7 +447,7 @@ MatrixData GetData(const vector<vector<int>>& cliques, int init) {
   return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
 }
 
-MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
+MatrixData SupernodesToData(int num_vars, const std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators) {
   MatrixData d;

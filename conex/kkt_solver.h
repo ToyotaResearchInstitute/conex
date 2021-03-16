@@ -12,7 +12,7 @@ class Solver {
          const std::vector<std::vector<int>>& dual_vars);
 
   Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
-         std::vector<int>& order,
+         const std::vector<int>& order,
          const std::vector<std::vector<int>>& supernodes,
          const std::vector<std::vector<int>>& separators);
 

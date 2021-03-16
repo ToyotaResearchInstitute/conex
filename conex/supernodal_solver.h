@@ -125,7 +125,7 @@ class TriangularMatrixOperations {
                                                  const Eigen::VectorXd& b);
 };
 
-MatrixData SupernodesToData(int num_vars, std::vector<int>& order,
+MatrixData SupernodesToData(int num_vars, const std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators);
 

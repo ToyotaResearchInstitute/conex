@@ -75,13 +75,10 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
   RelabelCliques(&data);
   Pt.indices() =
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
-  DUMP(cliques_);
-  DUMP(data.supernodes_original_labels);
-  DUMP(data.supernode_size);
 }
 
 T::Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
-          std::vector<int>& order,
+          const std::vector<int>& order,
           const std::vector<std::vector<int>>& supernodes,
           const std::vector<std::vector<int>>& separators)
     : cliques_(cliques),
