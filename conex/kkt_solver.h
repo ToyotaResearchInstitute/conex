@@ -16,7 +16,19 @@ class Solver {
          const std::vector<std::vector<int>>& supernodes,
          const std::vector<std::vector<int>>& separators);
 
-  void Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler);
+  template <typename T>
+  void Bind(const std::vector<T*>& kkt_assembler) {
+    DoBind(data, mat.workspace_, kkt_assembler);
+  }
+
+  template <typename T>
+  void AssembleFromCliques(const std::vector<T*>& assemblers) {
+    const auto& cliques = cliques_;
+    for (int e = static_cast<int>(cliques.size()) - 1; e >= 0; e--) {
+      int i = data.clique_order.at(e);
+      assemblers.at(i)->UpdateBlocks();
+    }
+  }
 
   void Bind(std::vector<KKT_SystemAssembler>* kkt_assembler) {
     std::vector<KKT_SystemAssembler*> pointers;
@@ -24,6 +36,11 @@ class Solver {
       pointers.push_back(&e);
     }
     Bind(pointers);
+  }
+
+  void Bind(const std::vector<KKT_SystemAssembler*>& kkt_assembler) {
+    DoBind(data, mat.workspace_, kkt_assembler);
+    assembler = kkt_assembler;
   }
 
   void RelabelCliques(MatrixData* data_ptr);
