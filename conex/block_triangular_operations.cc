@@ -172,7 +172,10 @@ void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat,
 
 bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
   assert(C->diagonal.size() == C->off_diagonal.size());
-  std::vector<Eigen::LLT<Eigen::Ref<MatrixXd>>> llts;
+  auto& llts = C->llts;
+  if (llts.size() > 0) {
+    llts.clear();
+  }
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
     llts.emplace_back(C->diagonal.at(i));
