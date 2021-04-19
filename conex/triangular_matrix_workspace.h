@@ -94,6 +94,11 @@ struct TriangularMatrixWorkspace {
     }
     o->SetIntersections();
     o->llts.reserve(o->snodes.size());
+
+    o->temporaries.resize(o->snodes.size());
+    for (size_t j = 0; j < o->snodes.size(); j++) {
+      o->temporaries.at(j).resize(o->separators.at(j).size());
+    }
   }
 
   // Find the points in both separator(j) and supernode(i) for i + 1 > j.
@@ -109,12 +114,12 @@ struct TriangularMatrixWorkspace {
       intersection_position;
 
   std::vector<Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>> llts;
+  mutable std::vector<Eigen::VectorXd> temporaries;
+
  private:
   void SetIntersections();
   // TODO(FrankPermenter): Remove this method.
   std::vector<double*> S_S(int clique);
-
-
 };
 
 }  // namespace conex

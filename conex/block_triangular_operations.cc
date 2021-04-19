@@ -114,9 +114,8 @@ class PartitionVectorIterator {
 void T::ApplyBlockInverseOfTransposeInPlace(
     const TriangularMatrixWorkspace& mat, VectorXd* y) {
   PartitionVectorIterator ypart(*y, mat.N, mat.supernode_size);
-  mat.diagonal.back()
-      .triangularView<Eigen::Lower>()
-      .solveInPlace<Eigen::OnTheRight>(ypart.b_i().transpose());
+  mat.diagonal.back().triangularView<Eigen::Lower>().transpose().solveInPlace(
+      ypart.b_i());
 
   // Loop over partition {B_j} of c_{i+1}
   PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
@@ -133,8 +132,8 @@ void T::ApplyBlockInverseOfTransposeInPlace(
       const auto& index_and_column_list =
           mat.intersection_position.at(i).at(jcnt++);
       for (const auto& pair : index_and_column_list) {
-        residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
-                          ypart.b_i_plus_1()(pair.first);
+        residual.b_i().noalias() -= mat.off_diagonal.at(j).col(pair.second) *
+                                    ypart.b_i_plus_1()(pair.first);
       }
     }
 
@@ -158,11 +157,11 @@ void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat,
   for (size_t i = 1; i < mat.diagonal.size(); i++) {
     ypart.Increment();
     if (mat.off_diagonal.at(i - 1).size() > 0) {
-      VectorXd temp =
+      mat.temporaries.at(i - 1).noalias() =
           mat.off_diagonal.at(i - 1).transpose() * ypart.b_i_minus_1();
       int cnt = 0;
       for (auto si : mat.separators.at(i - 1)) {
-        (*y)(si) -= temp(cnt);
+        (*y)(si) -= mat.temporaries.at(i - 1)(cnt);
         cnt++;
       }
     }

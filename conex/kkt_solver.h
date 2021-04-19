@@ -60,6 +60,7 @@ class Solver {
   SparseTriangularMatrix mat;
   std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
   Eigen::PermutationMatrix<-1> Pt;
+  Eigen::VectorXd b_permuted_;
   std::vector<KKT_SystemAssembler*> assembler;
 };
 

@@ -71,7 +71,8 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
       dual_variables_(dual_vars),
       data(GetData(cliques)),
       mat(data),
-      Pt(data.N) {
+      Pt(data.N),
+      b_permuted_(data.N) {
   RelabelCliques(&data);
   Pt.indices() =
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
@@ -87,7 +88,8 @@ T::Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
       dual_variables_(vector<vector<int>>(cliques.size())),
       data(SupernodesToData(num_vars, order, supernodes, separators)),
       mat(data),
-      Pt(data.N) {
+      Pt(data.N),
+      b_permuted_(data.N) {
   RelabelCliques(&data);
   Pt.indices() =
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
@@ -139,21 +141,30 @@ bool T::Factor() {
 // TODO(FrankPermenter): Reimplement Solve using SolveInPlace.
 Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) {
   assert(b.rows() == Pt.rows());
-  Eigen::VectorXd y = Pt.transpose() * b;
+  b_permuted_ = Pt.transpose() * b;
 
   if (use_cholesky_) {
-    BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_, &y);
+    BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_,
+                                                    &b_permuted_);
   } else {
     BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
-                                                &y);
+                                                &b_permuted_);
   }
 
-  return Pt * y;
+  return Pt * b_permuted_;
 }
 
 void T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
-  auto temp = T::Solve(*b);
-  *b = temp;
+  b_permuted_ = Pt.transpose() * (*b);
+
+  if (use_cholesky_) {
+    BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_,
+                                                    &b_permuted_);
+  } else {
+    BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
+                                                &b_permuted_);
+  }
+  *b = Pt * b_permuted_;
 }
 
 Eigen::MatrixXd T::KKTMatrix() {
