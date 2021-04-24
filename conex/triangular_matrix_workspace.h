@@ -15,6 +15,11 @@ struct TriangularMatrixWorkspace {
   TriangularMatrixWorkspace(const std::vector<Clique>& path_,
                             const std::vector<int>& supernode_size_)
       : supernode_size(supernode_size_) {
+
+    N = std::accumulate(supernode_size.begin(), supernode_size.end(), 0);
+    variable_to_supernode_.resize(N);
+    variable_to_supernode_position_.resize(N);
+
     separators.resize(path_.size());
     int cnt = 0;
     for (auto& si : separators) {
@@ -25,29 +30,23 @@ struct TriangularMatrixWorkspace {
     }
 
     cnt = 0;
+    int var = 0;
     snodes.resize(path_.size());
     for (auto& si : snodes) {
+      si.resize(supernode_size.at(cnt));
       for (int i = 0; i < supernode_size.at(cnt); i++) {
-        si.push_back(path_.at(cnt).at(i));
+        if (var >= N) {
+          std::runtime_error("Invalid variable index.");  
+        }
+        si.at(i) = path_.at(cnt).at(i);
+        variable_to_supernode_[var] = cnt;
+        variable_to_supernode_position_[var] = i;
+        var++;
       }
       cnt++;
     }
 
-    N = std::accumulate(supernode_size.begin(), supernode_size.end(), 0);
   }
-
-  TriangularMatrixWorkspace(const std::vector<Clique>& snodes_,
-                            const std::vector<Clique>& separators_)
-      : snodes(snodes_), separators(separators_) {
-    int cnt = 0;
-    supernode_size.resize(snodes.size());
-    for (auto& si : supernode_size) {
-      si = snodes.at(cnt).size();
-      cnt++;
-    }
-    N = std::accumulate(supernode_size.begin(), supernode_size.end(), 0);
-  }
-
   int N;
   // TODO(FrankPermenter): Remove all of these members.
   std::vector<int> supernode_size;
@@ -121,10 +120,13 @@ struct TriangularMatrixWorkspace {
   // Needed for solving linear systems.
   mutable std::vector<Eigen::VectorXd> temporaries;
 
+  std::vector<int> variable_to_supernode_;
+  std::vector<int> variable_to_supernode_position_;
  private:
   void SetIntersections();
   // TODO(FrankPermenter): Remove this method.
   void S_S(int clique, std::vector<double*>*);
+
 };
 
 }  // namespace conex

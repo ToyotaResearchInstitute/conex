@@ -7,33 +7,18 @@ using T = TriangularMatrixWorkspace;
 namespace {
 template <typename T>
 int LookupSuperNode(const T& o, int index, int start) {
-  for (int j = static_cast<int>(o.snodes.size()) - 1; j >= 0; j--) {
-    if (o.snodes.at(j).size() > 0) {
-      if (index >= o.snodes.at(j).at(0)) {
-        return j;
-      }
-    }
-  }
-  throw std::runtime_error(
-      "Sparse matrix is malformed: invalid supernode partition.");
+  return o.variable_to_supernode_.at(index);
 }
 
 template <typename T>
 double* LookupAddress(T& o, int r, int c) {
   int node = LookupSuperNode(o, c, 0);
-  int j = 0;
-  for (auto sj : o.snodes.at(node)) {
-    if (sj == c) {
-      break;
-    }
-    j++;
-  }
+  int node_r = LookupSuperNode(o, r, 0);
 
-  int n = o.diagonal.at(node).rows();
-  for (int i = j; i < n; i++) {
-    if (o.snodes.at(node).at(i) == r) {
-      return &o.diagonal.at(node)(i, j);
-    }
+  int j = o.variable_to_supernode_position_.at(c);
+  if (node == node_r) {
+    int i = o.variable_to_supernode_position_.at(r);
+    return &o.diagonal.at(node)(i, j);
   }
 
   int cnt = 0;
