@@ -234,7 +234,7 @@ class LowerTriangularSuperNodal {
   }
 
  public:
-  using MapT = Eigen::Map<Eigen::MatrixXd>;
+  using MapT = Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>;
   std::vector<MapT>& supernodes_;
   std::vector<int>& supernode_size_;
   std::vector<Clique>& path_;

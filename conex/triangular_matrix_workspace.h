@@ -51,8 +51,8 @@ struct TriangularMatrixWorkspace {
   int N;
   // TODO(FrankPermenter): Remove all of these members.
   std::vector<int> supernode_size;
-  std::vector<Eigen::Map<Eigen::MatrixXd>> diagonal;
-  std::vector<Eigen::Map<Eigen::MatrixXd>> off_diagonal;
+  std::vector<Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>> diagonal;
+  std::vector<Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>> off_diagonal;
   std::vector<std::vector<double*>> seperator_diagonal;
 
   std::vector<std::vector<int>> snodes;
@@ -82,8 +82,7 @@ struct TriangularMatrixWorkspace {
     for (size_t j = 0; j < o->snodes.size(); j++) {
       o->diagonal.emplace_back(data, o->supernode_size.at(j),
                                o->supernode_size.at(j));
-      Eigen::Map<Eigen::MatrixXd> test(data, o->supernode_size.at(j),
-                                       o->supernode_size.at(j));
+
       data += o->SizeOfSupernode(j);
       o->off_diagonal.emplace_back(data, o->supernode_size.at(j),
                                    o->separators.at(j).size());

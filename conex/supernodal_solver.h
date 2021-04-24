@@ -88,9 +88,9 @@ struct SparseTriangularMatrix {
   Eigen::VectorXd memory_;
   std::vector<Clique> path;
   std::vector<int>& supernode_size;
-  std::vector<Eigen::Map<Eigen::MatrixXd>>& supernodes;
+  std::vector<Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>>& supernodes;
   std::vector<std::vector<int>>& snodes;
-  std::vector<Eigen::Map<Eigen::MatrixXd>>& separator;
+  std::vector<Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>>& separator;
 
   SparseTriangularMatrix(const SparseTriangularMatrix& s)
       : SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_) {}
