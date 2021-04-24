@@ -88,10 +88,14 @@ struct TriangularMatrixWorkspace {
                                    o->separators.at(j).size());
       data += o->SizeOfSeparator(j);
     }
+
+    o->seperator_diagonal.resize(o->snodes.size());
     for (size_t j = 0; j < o->snodes.size(); j++) {
-      o->seperator_diagonal.push_back(o->S_S(j));
+      o->S_S(j, &o->seperator_diagonal.at(j));
     }
     o->SetIntersections();
+
+    // Use reserve so that we can call default constructor of LLT objects.
     o->llts.reserve(o->snodes.size());
 
     o->temporaries.resize(o->snodes.size());
@@ -113,12 +117,14 @@ struct TriangularMatrixWorkspace {
       intersection_position;
 
   std::vector<Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>> llts;
+
+  // Needed for solving linear systems.
   mutable std::vector<Eigen::VectorXd> temporaries;
 
  private:
   void SetIntersections();
   // TODO(FrankPermenter): Remove this method.
-  std::vector<double*> S_S(int clique);
+  void S_S(int clique, std::vector<double*>*);
 };
 
 }  // namespace conex

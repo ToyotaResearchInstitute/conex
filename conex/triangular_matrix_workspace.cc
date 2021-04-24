@@ -49,18 +49,16 @@ double* LookupAddress(T& o, int r, int c) {
 
 }  // namespace
 
-std::vector<double*> TriangularMatrixWorkspace::S_S(int clique) {
-  std::vector<double*> y;
+void TriangularMatrixWorkspace::S_S(int clique, std::vector<double*>* y) {
   auto& s = separators.at(clique);
   int size = .5 * (s.size() * s.size() + s.size());
-  y.resize(size);
+  y->resize(size);
   int cnt = 0;
   for (size_t j = 0; j < s.size(); j++) {
     for (size_t i = j; i < s.size(); i++) {
-      y[cnt++] = LookupAddress(*this, s[i], s[j]);
+      (*y)[cnt++] = LookupAddress(*this, s[i], s[j]);
     }
   }
-  return y;
 }
 
 // Given supernode N and separator S, returns (i, j) pairs for which
