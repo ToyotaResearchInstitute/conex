@@ -52,10 +52,12 @@ double* LookupAddress(T& o, int r, int c) {
 std::vector<double*> TriangularMatrixWorkspace::S_S(int clique) {
   std::vector<double*> y;
   auto& s = separators.at(clique);
+  int size = .5 * (s.size() * s.size() + s.size());
+  y.resize(size);
+  int cnt = 0;
   for (size_t j = 0; j < s.size(); j++) {
     for (size_t i = j; i < s.size(); i++) {
-      auto temp = LookupAddress(*this, s.at(i), s.at(j));
-      y.push_back(temp);
+      y[cnt++] = LookupAddress(*this, s[i], s[j]);
     }
   }
   return y;
