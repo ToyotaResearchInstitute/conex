@@ -124,20 +124,20 @@ void T::ApplyBlockInverseOfTransposeInPlace(
     residual.Reset();
 
     int jcnt = 0;
-    for (auto j : mat.column_intersections.at(i)) {
+    for (auto j : mat.column_intersections[i]) {
       residual.Set(j);
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
       // > i.
       const auto& index_and_column_list =
-          mat.intersection_position.at(i).at(jcnt++);
+          mat.intersection_position[i][jcnt++];
       for (const auto& pair : index_and_column_list) {
-        residual.b_i().noalias() -= mat.off_diagonal.at(j).col(pair.second) *
+        residual.b_i().noalias() -= mat.off_diagonal[j].col(pair.second) *
                                     ypart.b_i_plus_1()(pair.first);
       }
     }
 
-    mat.diagonal.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(
+    mat.diagonal[i].triangularView<Eigen::Lower>().transpose().solveInPlace(
         ypart.b_i());
   }
 }

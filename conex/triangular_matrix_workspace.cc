@@ -66,6 +66,48 @@ TriangularMatrixWorkspace::TriangularMatrixWorkspace(
     }
     cnt++;
   }
+
+  std::vector<std::vector<int>> separators2;
+  separators2.resize(path_.size());
+  cnt = 0;
+  column_intersections.resize(snodes.size() - 1);
+  intersection_position.resize(snodes.size() - 1);
+  cnt = separators2.size() - 1;
+  cnt = 0; 
+
+  for (auto& si : separators2) {
+     for (size_t ii = supernode_size.at(cnt); ii < path_.at(cnt).size(); ii++) {
+        int i = ii; //path_.at(cnt).size() - 1 - ii;
+        if (i < 0) {
+          throw std::runtime_error("NOP!");
+         }
+       int var = path_.at(cnt).at(i);
+       si.push_back(var);
+
+       // Need to decide if supernode already has a list for
+       // Fill a list of list 
+       //  list(supernode) = list of pairs 
+       //  list(supernode) = list of separators2
+       int sn = variable_to_supernode_.at(var) - 1;
+       if (sn < 0) {
+        continue;
+       }
+       if (column_intersections.at(sn).size() == 0 ||  
+           column_intersections.at(sn).back() != cnt) {
+         column_intersections.at(sn).push_back(cnt);
+         intersection_position.at(sn).emplace_back(std::vector<std::pair<int, int>>());
+       }
+       std::pair<int, int> pair{variable_to_supernode_position_[var], si.size() - 1};
+       intersection_position.at(sn).back().push_back(pair);
+     }
+    cnt++;
+  }
+  for (auto& l : column_intersections) {
+    std::reverse(l.begin(), l.end());
+  }
+  for (auto& l : intersection_position) {
+    std::reverse(l.begin(), l.end());
+  }
 }
 
 void Initialize(TriangularMatrixWorkspace* o, double* data_start) {
@@ -128,16 +170,33 @@ std::vector<Match> T::IntersectionOfSupernodeAndSeparator(int supernode,
 }
 
 void T::SetIntersections() {
+  return;
+  DUMP("BEFORE");
+  DUMP(column_intersections);
+  DUMP(intersection_position);
+
+  auto i1 = column_intersections;
+  auto i2 = intersection_position;
+
+  column_intersections.clear();
+  intersection_position.clear();
   column_intersections.resize(snodes.size() - 1);
   intersection_position.resize(snodes.size() - 1);
   for (int i = static_cast<int>(diagonal.size() - 2); i >= 0; i--) {
     for (int j = i; j >= 0; j--) {
       const auto& temp = IntersectionOfSupernodeAndSeparator(i + 1, j);
       if (temp.size() > 0) {
+        // For each supernode i, save separator j.
+        // For each supernode i, save (supernode position, separator position)
         column_intersections.at(i).push_back(j);
         intersection_position.at(i).push_back(temp);
       }
     }
   }
+  DUMP("AFTER");
+  DUMP(column_intersections);
+  DUMP(intersection_position);
+  column_intersections = i1;
+  intersection_position = i2; 
 }
 }  // namespace conex
