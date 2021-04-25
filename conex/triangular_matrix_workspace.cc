@@ -7,7 +7,7 @@ using T = TriangularMatrixWorkspace;
 namespace {
 template <typename T>
 int LookupSuperNode(const T& o, int index, int start) {
-  return o.variable_to_supernode_.at(index);
+  return o.variable_to_supernode_[index];
 }
 
 template <typename T>
@@ -15,16 +15,16 @@ double* LookupAddress(T& o, int r, int c) {
   int node = LookupSuperNode(o, c, 0);
   int node_r = LookupSuperNode(o, r, 0);
 
-  int j = o.variable_to_supernode_position_.at(c);
+  int j = o.variable_to_supernode_position_[c];
   if (node == node_r) {
-    int i = o.variable_to_supernode_position_.at(r);
-    return &o.diagonal.at(node)(i, j);
+    int i = o.variable_to_supernode_position_[r];
+    return &o.diagonal[node](i, j);
   }
 
   int cnt = 0;
-  for (auto si : o.separators.at(node)) {
+  for (auto si : o.separators[node]) {
     if (si == r) {
-      return &o.off_diagonal.at(node)(j, cnt);
+      return &o.off_diagonal[node](j, cnt);
     }
     cnt++;
   }
