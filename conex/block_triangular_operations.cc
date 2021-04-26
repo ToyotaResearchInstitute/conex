@@ -24,14 +24,14 @@ class PartitionVectorForwardIterator {
 
   void Reset() {
     i_ = 0;
-    size_i = sizes_.at(i_);
+    size_i = sizes_[i_];
     start_i = 0;
   }
   void Increment() {
     start_i_minus_1 = start_i;
     size_i_minus_1 = size_i;
     i_++;
-    size_i = sizes_.at(i_);
+    size_i = sizes_[i_];
     start_i = start_i_minus_1 + size_i_minus_1;
   }
 
@@ -68,14 +68,14 @@ class PartitionVectorIterator {
   }
   void Reset() {
     i_ = sizes_.size() - 1;
-    size_i = sizes_.at(i_);
+    size_i = sizes_[i_];
     start_i = N_ - size_i;
   }
   void Decrement() {
     start_i_plus_1 = start_i;
     size_i_plus_1 = size_i;
     i_--;
-    size_i = sizes_.at(i_);
+    size_i = sizes_[i_];
     start_i = start_i_plus_1 - size_i;
   }
 
@@ -152,20 +152,20 @@ void T::ApplyBlockInverseOfTransposeInPlace(
 void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat,
                                  VectorXd* y) {
   PartitionVectorForwardIterator ypart(*y, mat.supernode_size);
-  mat.diagonal.at(0).triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
+  mat.diagonal[0].triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
 
   for (size_t i = 1; i < mat.diagonal.size(); i++) {
     ypart.Increment();
-    if (mat.off_diagonal.at(i - 1).size() > 0) {
-      mat.temporaries.at(i - 1).noalias() =
-          mat.off_diagonal.at(i - 1).transpose() * ypart.b_i_minus_1();
+    if (mat.off_diagonal[i - 1].size() > 0) {
+      mat.temporaries[i - 1].noalias() =
+          mat.off_diagonal[i - 1].transpose() * ypart.b_i_minus_1();
       int cnt = 0;
-      for (auto si : mat.separators.at(i - 1)) {
-        (*y)(si) -= mat.temporaries.at(i - 1)(cnt);
+      for (auto si : mat.separators[i - 1]) {
+        (*y)(si) -= mat.temporaries[i - 1](cnt);
         cnt++;
       }
     }
-    mat.diagonal.at(i).triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
+    mat.diagonal[i].triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
   }
 }
 
@@ -177,21 +177,21 @@ bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
   }
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
-    llts.emplace_back(C->diagonal.at(i));
+    llts.emplace_back(C->diagonal[i]);
     if (llts.back().info() != Eigen::Success) {
       return false;
     }
 
     // Construction of [n, s] block
-    if (C->off_diagonal.at(i).size() > 0) {
-      llts.back().matrixL().solveInPlace(C->off_diagonal.at(i));
-      auto& temp = C->off_diagonal.at(i);
+    if (C->off_diagonal[i].size() > 0) {
+      llts.back().matrixL().solveInPlace(C->off_diagonal[i]);
+      auto& temp = C->off_diagonal[i];
 
       int index = 0;
-      const auto& s_s = C->seperator_diagonal.at(i);
+      const auto& s_s = C->seperator_diagonal[i];
       for (int k = 0; k < temp.cols(); k++) {
         for (int j = k; j < temp.cols(); j++) {
-          *s_s.at(index++) -= temp.col(k).dot(temp.col(j));
+          *s_s[index++] -= temp.col(k).dot(temp.col(j));
         }
       }
     }
@@ -217,7 +217,7 @@ void T::ApplyBlockInverseOfMTranspose(
     PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
 
     int jcnt = 0;
-    for (auto j : mat.column_intersections.at(i)) {
+    for (auto j : mat.column_intersections[i]) {
       residual.Set(j);
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
@@ -225,20 +225,20 @@ void T::ApplyBlockInverseOfMTranspose(
       // auto index_and_column_list =
       //    IntersectionOfSupernodeAndSeparator(mat, i + 1, j);
       // for (const auto& pair : index_and_column_list) {
-      //  residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
+      //  residual.b_i() -= mat.off_diagonal[j].col(pair.second) *
       //                    ypart.b_i_plus_1()(pair.first);
       //}
 
-      auto index_and_column_list = mat.intersection_position.at(i).at(jcnt++);
+      auto index_and_column_list = mat.intersection_position[i][jcnt++];
       for (const auto& pair : index_and_column_list) {
-        residual.b_i() -= mat.off_diagonal.at(j).col(pair.second) *
+        residual.b_i() -= mat.off_diagonal[j].col(pair.second) *
                           ypart.b_i_plus_1()(pair.first);
       }
     }
 
-    // mat.diagonal.at(i).triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
-    factorization.at(i).matrixL().transpose().solveInPlace(ypart.b_i());
-    Eigen::PermutationMatrix<-1> Pi(factorization.at(i).transpositionsP());
+    // mat.diagonal[i].triangularView<Eigen::Lower>().transpose().solveInPlace(ypart.b_i());
+    factorization[i].matrixL().transpose().solveInPlace(ypart.b_i());
+    Eigen::PermutationMatrix<-1> Pi(factorization[i].transpositionsP());
     ypart.b_i() = Pi.transpose() * ypart.b_i();
   }
 }
@@ -249,34 +249,34 @@ void T::ApplyBlockInverseOfMD(
     VectorXd* y) {
   // Apply inv(M) = inv(P^T L) = inv(L) P
   PartitionVectorForwardIterator ypart(*y, mat.supernode_size);
-  Eigen::PermutationMatrix<-1> P0(factorization.at(0).transpositionsP());
+  Eigen::PermutationMatrix<-1> P0(factorization[0].transpositionsP());
   ypart.b_i() = P0 * ypart.b_i();
-  factorization.at(0).matrixL().solveInPlace(ypart.b_i());
+  factorization[0].matrixL().solveInPlace(ypart.b_i());
 
   for (size_t i = 1; i < mat.diagonal.size(); i++) {
     ypart.Increment();
-    if (mat.off_diagonal.at(i - 1).size() > 0) {
+    if (mat.off_diagonal[i - 1].size() > 0) {
       VectorXd temp =
-          mat.off_diagonal.at(i - 1).transpose() * ypart.b_i_minus_1();
+          mat.off_diagonal[i - 1].transpose() * ypart.b_i_minus_1();
       int cnt = 0;
-      for (auto si : mat.separators.at(i - 1)) {
+      for (auto si : mat.separators[i - 1]) {
         (*y)(si) -= temp(cnt);
         cnt++;
       }
     }
-    Eigen::PermutationMatrix<-1> Pi(factorization.at(i).transpositionsP());
+    Eigen::PermutationMatrix<-1> Pi(factorization[i].transpositionsP());
     ypart.b_i() = Pi * ypart.b_i();
-    factorization.at(i).matrixL().solveInPlace(ypart.b_i());
+    factorization[i].matrixL().solveInPlace(ypart.b_i());
   }
 
   // Apply D inverse
   PartitionVectorForwardIterator ypart2(*y, mat.supernode_size);
   ypart2.b_i() =
-      factorization.at(0).vectorD().cwiseInverse().cwiseProduct(ypart2.b_i());
+      factorization[0].vectorD().cwiseInverse().cwiseProduct(ypart2.b_i());
   for (size_t i = 1; i < mat.diagonal.size(); i++) {
     ypart2.Increment();
     ypart2.b_i() =
-        factorization.at(i).vectorD().cwiseInverse().cwiseProduct(ypart2.b_i());
+        factorization[i].vectorD().cwiseInverse().cwiseProduct(ypart2.b_i());
   }
 }
 
@@ -302,28 +302,28 @@ bool T::BlockLDLTInPlace(
 
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
-    llts.emplace_back(C->diagonal.at(i));
+    llts.emplace_back(C->diagonal[i]);
     if (llts.back().info() != Eigen::Success) {
       return false;
     }
-    Eigen::PermutationMatrix<-1> P(llts.at(i).transpositionsP());
+    Eigen::PermutationMatrix<-1> P(llts[i].transpositionsP());
 
     //   Q^T = inv(D_1) inv(L) inv(P)  * off_diag
-    if (C->off_diagonal.at(i).size() > 0) {
-      C->off_diagonal.at(i) = P * C->off_diagonal.at(i);
-      llts.back().matrixL().solveInPlace(C->off_diagonal.at(i));
-      C->off_diagonal.at(i).noalias() =
+    if (C->off_diagonal[i].size() > 0) {
+      C->off_diagonal[i] = P * C->off_diagonal[i];
+      llts.back().matrixL().solveInPlace(C->off_diagonal[i]);
+      C->off_diagonal[i].noalias() =
           llts.back().vectorD().asDiagonal().inverse() *
-          (C->off_diagonal.at(i));
+          (C->off_diagonal[i]);
 
       MatrixXd temp =
-          llts.back().vectorD().asDiagonal() * C->off_diagonal.at(i);
+          llts.back().vectorD().asDiagonal() * C->off_diagonal[i];
 
       int index = 0;
-      const auto& s_s = C->seperator_diagonal.at(i);
+      const auto& s_s = C->seperator_diagonal[i];
       for (int k = 0; k < temp.cols(); k++) {
         for (int j = k; j < temp.cols(); j++) {
-          *s_s.at(index++) -= temp.col(k).dot(C->off_diagonal.at(i).col(j));
+          *s_s[index++] -= temp.col(k).dot(C->off_diagonal[i].col(j));
         }
       }
     }
