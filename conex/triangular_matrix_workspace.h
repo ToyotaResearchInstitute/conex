@@ -45,11 +45,6 @@ struct TriangularMatrixWorkspace {
 
   friend void Initialize(TriangularMatrixWorkspace* o, double* data_start);
 
-  // Find the points in both separator(j) and supernode(i) for i + 1 > j.
-  // For each point, returns the position in the separator and the
-  // position in the supernode.
-  std::vector<std::pair<int, int>> IntersectionOfSupernodeAndSeparator(
-      int supernode, int separator) const;
   // A cache of IntersectionOfSupernodeAndSeparator. The first records
   // the j for which IntersectionOfSupernodeAndSeparator(i+1, j) is nonempty.
   // The second returns the output.
@@ -66,7 +61,6 @@ struct TriangularMatrixWorkspace {
   std::vector<int> variable_to_supernode_position_;
 
  private:
-  void SetIntersections();
   // TODO(FrankPermenter): Remove this method.
   void S_S(int clique, std::vector<double*>*);
 };

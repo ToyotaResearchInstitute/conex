@@ -41,16 +41,15 @@ TriangularMatrixWorkspace::TriangularMatrixWorkspace(
   variable_to_supernode_.resize(N);
   variable_to_supernode_position_.resize(N);
 
-  separators.resize(path_.size());
-  int cnt = 0;
-  for (auto& si : separators) {
-    for (size_t i = supernode_size.at(cnt); i < path_.at(cnt).size(); i++) {
-      si.push_back(path_.at(cnt).at(i));
-    }
-    cnt++;
-  }
+  // separators.resize(path_.size());
+  // for (auto& si : separators) {
+  //  for (size_t i = supernode_size.at(cnt); i < path_.at(cnt).size(); i++) {
+  //    si.push_back(path_.at(cnt).at(i));
+  //  }
+  //  cnt++;
+  //}
 
-  cnt = 0;
+  int cnt = 0;
   int var = 0;
   snodes.resize(path_.size());
   for (auto& si : snodes) {
@@ -67,41 +66,52 @@ TriangularMatrixWorkspace::TriangularMatrixWorkspace(
     cnt++;
   }
 
-  std::vector<std::vector<int>> separators2;
-  separators2.resize(path_.size());
-  cnt = 0;
+  separators.resize(path_.size());
   column_intersections.resize(snodes.size() - 1);
   intersection_position.resize(snodes.size() - 1);
-  cnt = separators2.size() - 1;
-  cnt = 0; 
+  cnt = 0;
 
-  for (auto& si : separators2) {
-     for (size_t ii = supernode_size.at(cnt); ii < path_.at(cnt).size(); ii++) {
-        int i = ii; //path_.at(cnt).size() - 1 - ii;
-        if (i < 0) {
-          throw std::runtime_error("NOP!");
-         }
-       int var = path_.at(cnt).at(i);
-       si.push_back(var);
+  // For each supernode [sn], find cliques that overlap. Store
+  // this using two list of lists:.
+  //  seperator_list(supernode) = list of separators
+  //  column_intersection(supernode) = list of (i, j) pairs indexed by k, where
+  //  supernode[i] = separator_list(supernode)[k][j]
+  for (auto& sep_i : separators) {
+    int seperator_size = path_.at(cnt).size() - supernode_size.at(cnt);
+    sep_i.resize(seperator_size);
+    for (int i = 0; i < seperator_size; i++) {
+      int var = path_.at(cnt).at(i + supernode_size.at(cnt));
+      sep_i[i] = var;
 
-       // Need to decide if supernode already has a list for
-       // Fill a list of list 
-       //  list(supernode) = list of pairs 
-       //  list(supernode) = list of separators2
-       int sn = variable_to_supernode_.at(var) - 1;
-       if (sn < 0) {
-        continue;
-       }
-       if (column_intersections.at(sn).size() == 0 ||  
-           column_intersections.at(sn).back() != cnt) {
-         column_intersections.at(sn).push_back(cnt);
-         intersection_position.at(sn).emplace_back(std::vector<std::pair<int, int>>());
-       }
-       std::pair<int, int> pair{variable_to_supernode_position_[var], si.size() - 1};
-       intersection_position.at(sn).back().push_back(pair);
-     }
+      int sn = variable_to_supernode_[var] - 1;
+#ifndef NDEBUG
+      if (sn < 0) {
+        throw std::runtime_error("Invalid supernode index.");
+      }
+#endif
+
+#ifndef NDEBUG
+      if (cnt > sn) {
+        throw std::runtime_error(
+            "Supernode has already been eliminated. The sparsity pattern is "
+            "malformed.");
+      }
+#endif
+
+      // Create list for this separator if supernode doesn't have one.
+      if (column_intersections[sn].size() == 0 ||
+          column_intersections[sn].back() != cnt) {
+        column_intersections[sn].push_back(cnt);
+        intersection_position[sn].emplace_back(
+            std::vector<std::pair<int, int>>());
+      }
+      std::pair<int, int> pair{variable_to_supernode_position_[var], i};
+      intersection_position[sn].back().push_back(pair);
+    }
     cnt++;
   }
+
+  // TODO(FrankPermenter): Remove this.
   for (auto& l : column_intersections) {
     std::reverse(l.begin(), l.end());
   }
@@ -126,7 +136,6 @@ void Initialize(TriangularMatrixWorkspace* o, double* data_start) {
   for (size_t j = 0; j < o->snodes.size(); j++) {
     o->S_S(j, &o->seperator_diagonal.at(j));
   }
-  o->SetIntersections();
 
   // Use reserve so that we can call default constructor of LLT objects.
   o->llts.reserve(o->snodes.size());
@@ -149,54 +158,4 @@ void TriangularMatrixWorkspace::S_S(int clique, std::vector<double*>* y) {
   }
 }
 
-// Given supernode N and separator S, returns (i, j) pairs for which
-// S(i) == N(j).
-using Match = std::pair<int, int>;
-std::vector<Match> T::IntersectionOfSupernodeAndSeparator(int supernode,
-                                                          int seperator) const {
-  std::vector<Match> y;
-  int i = 0;
-  for (auto si : snodes.at(supernode)) {
-    int j = 0;
-    for (auto sj : separators.at(seperator)) {
-      if (si == sj) {
-        y.emplace_back(i, j);
-      }
-      j++;
-    }
-    i++;
-  }
-  return y;
-}
-
-void T::SetIntersections() {
-  return;
-  DUMP("BEFORE");
-  DUMP(column_intersections);
-  DUMP(intersection_position);
-
-  auto i1 = column_intersections;
-  auto i2 = intersection_position;
-
-  column_intersections.clear();
-  intersection_position.clear();
-  column_intersections.resize(snodes.size() - 1);
-  intersection_position.resize(snodes.size() - 1);
-  for (int i = static_cast<int>(diagonal.size() - 2); i >= 0; i--) {
-    for (int j = i; j >= 0; j--) {
-      const auto& temp = IntersectionOfSupernodeAndSeparator(i + 1, j);
-      if (temp.size() > 0) {
-        // For each supernode i, save separator j.
-        // For each supernode i, save (supernode position, separator position)
-        column_intersections.at(i).push_back(j);
-        intersection_position.at(i).push_back(temp);
-      }
-    }
-  }
-  DUMP("AFTER");
-  DUMP(column_intersections);
-  DUMP(intersection_position);
-  column_intersections = i1;
-  intersection_position = i2; 
-}
 }  // namespace conex

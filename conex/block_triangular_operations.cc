@@ -129,8 +129,7 @@ void T::ApplyBlockInverseOfTransposeInPlace(
       // Find columns of B_j that are nonzero on columns c_{i+1} of supernode
       // i+1. This corresponds to separators(i) that contain supernode(j) for j
       // > i.
-      const auto& index_and_column_list =
-          mat.intersection_position[i][jcnt++];
+      const auto& index_and_column_list = mat.intersection_position[i][jcnt++];
       for (const auto& pair : index_and_column_list) {
         residual.b_i().noalias() -= mat.off_diagonal[j].col(pair.second) *
                                     ypart.b_i_plus_1()(pair.first);
@@ -256,8 +255,7 @@ void T::ApplyBlockInverseOfMD(
   for (size_t i = 1; i < mat.diagonal.size(); i++) {
     ypart.Increment();
     if (mat.off_diagonal[i - 1].size() > 0) {
-      VectorXd temp =
-          mat.off_diagonal[i - 1].transpose() * ypart.b_i_minus_1();
+      VectorXd temp = mat.off_diagonal[i - 1].transpose() * ypart.b_i_minus_1();
       int cnt = 0;
       for (auto si : mat.separators[i - 1]) {
         (*y)(si) -= temp(cnt);
@@ -313,11 +311,9 @@ bool T::BlockLDLTInPlace(
       C->off_diagonal[i] = P * C->off_diagonal[i];
       llts.back().matrixL().solveInPlace(C->off_diagonal[i]);
       C->off_diagonal[i].noalias() =
-          llts.back().vectorD().asDiagonal().inverse() *
-          (C->off_diagonal[i]);
+          llts.back().vectorD().asDiagonal().inverse() * (C->off_diagonal[i]);
 
-      MatrixXd temp =
-          llts.back().vectorD().asDiagonal() * C->off_diagonal[i];
+      MatrixXd temp = llts.back().vectorD().asDiagonal() * C->off_diagonal[i];
 
       int index = 0;
       const auto& s_s = C->seperator_diagonal[i];
