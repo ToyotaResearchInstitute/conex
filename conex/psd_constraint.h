@@ -45,8 +45,8 @@ class PsdConstraint {
                           const Ref& y, StepInfo*);
 
   friend bool TakeStep(PsdConstraint*, const StepOptions&);
-  friend void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
-                                       MuSelectionParameters* p);
+  friend void GetWeightedSlackEigenvalues(PsdConstraint* o, const Ref& y,
+                                          WeightedSlackEigenvalues* p);
   int number_of_variables() { return num_dual_constraints_; }
 
  protected:

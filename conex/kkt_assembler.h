@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include "conex/linear_workspace.h"
 #include "conex/supernodal_cholesky_data.h"
 
 #include "conex/constraint.h"

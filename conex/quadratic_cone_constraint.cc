@@ -126,8 +126,8 @@ void QuadraticConstraintBase::ComputeNegativeSlack(double inv_sqrt_mu,
 }
 
 // Combine this with PrepareStep
-void GetMuSelectionParameters(QuadraticConstraintBase* o, const Ref& y,
-                              MuSelectionParameters* p) {
+void GetWeightedSlackEigenvalues(QuadraticConstraintBase* o, const Ref& y,
+                                 WeightedSlackEigenvalues* p) {
   Eigen::internal::set_is_malloc_allowed(false);
   auto* workspace = &o->workspace_;
   auto& minus_s_1 = workspace->temp1_1;
@@ -153,14 +153,10 @@ void GetMuSelectionParameters(QuadraticConstraintBase* o, const Ref& y,
   const double lamda_max = -ev.minCoeff();
   const double lamda_min = -ev.maxCoeff();
 
-  if (p->gw_lambda_max < lamda_max) {
-    p->gw_lambda_max = lamda_max;
-  }
-  if (p->gw_lambda_min > lamda_min) {
-    p->gw_lambda_min = lamda_min;
-  }
-  p->gw_norm_squared += std::pow(lamda_max, 2) + std::pow(lamda_min, 2);
-  p->gw_trace += (lamda_max + lamda_min);
+  p->lambda_max = lamda_max;
+  p->lambda_min = lamda_min;
+  p->frobenius_norm_squared = std::pow(lamda_max, 2) + std::pow(lamda_min, 2);
+  p->trace = (lamda_max + lamda_min);
   Eigen::internal::set_is_malloc_allowed(true);
 }
 

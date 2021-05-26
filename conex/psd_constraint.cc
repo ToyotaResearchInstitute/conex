@@ -94,8 +94,8 @@ void SetIdentity(PsdConstraint* o) {
   o->workspace_.W.diagonal().setConstant(1);
 }
 
-void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
-                              MuSelectionParameters* p) {
+void GetWeightedSlackEigenvalues(PsdConstraint* o, const Ref& y,
+                                 WeightedSlackEigenvalues* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& WSWS = workspace->temp_1;
@@ -120,15 +120,11 @@ void GetMuSelectionParameters(PsdConstraint* o, const Ref& y,
   const double lamda_min = -gw_eig.first;
 #endif
 
-  if (p->gw_lambda_max < lamda_max) {
-    p->gw_lambda_max = lamda_max;
-  }
-  if (p->gw_lambda_min > lamda_min) {
-    p->gw_lambda_min = lamda_min;
-  }
+  p->lambda_max = lamda_max;
+  p->lambda_min = lamda_min;
   WSWS = WS * WS;
-  p->gw_norm_squared += WSWS.trace();
-  p->gw_trace += -WS.trace();
+  p->frobenius_norm_squared = WSWS.trace();
+  p->trace = -WS.trace();
 }
 
 }  // namespace conex

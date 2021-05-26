@@ -39,8 +39,9 @@ class QuadraticConstraintBase {
                           const Ref& y, StepInfo* data);
 
   friend bool TakeStep(QuadraticConstraintBase* o, const StepOptions& opt);
-  friend void GetMuSelectionParameters(QuadraticConstraintBase* o, const Ref& y,
-                                       MuSelectionParameters* p);
+  friend void GetWeightedSlackEigenvalues(QuadraticConstraintBase* o,
+                                          const Ref& y,
+                                          WeightedSlackEigenvalues* p);
   friend void ConstructSchurComplementSystem(QuadraticConstraintBase* o,
                                              bool initialize,
                                              SchurComplementSystem* sys);

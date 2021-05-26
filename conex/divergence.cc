@@ -24,14 +24,14 @@ double SolveRationalEquation(double a, double b, double c, double d, double k) {
 }  // namespace
 
 double InverseLambdaMaxBranch(double divergence_upper_bound,
-                              const MuSelectionParameters& p) {
-  double a = p.gw_norm_squared;
-  double b = -2 * p.gw_trace;
+                              const WeightedSlackEigenvalues& p) {
+  double a = p.frobenius_norm_squared;
+  double b = -2 * p.trace;
   double c = p.rank;
-  double d = p.gw_lambda_max;
+  double d = p.lambda_max;
 
   double x = SolveRationalEquation(a, b, c, d, divergence_upper_bound);
-  double lower_bound = 2.0 / (p.gw_lambda_max + p.gw_lambda_min);
+  double lower_bound = 2.0 / (p.lambda_max + p.lambda_min);
 
   double k = -1;
   if (x >= lower_bound) {
@@ -62,13 +62,13 @@ bool SolveQuadratic(double a, double b, double n, double c,
 // TODO(FrankPermenter): Analyze if both solutions of Quadratic
 // are needed.
 double InverseLambdaMinBranch(double divergence_upper_bound,
-                              const MuSelectionParameters& p) {
+                              const WeightedSlackEigenvalues& p) {
   double lower_bound = 0;
-  double upper_bound = 2.0 / (p.gw_lambda_max + p.gw_lambda_min);
+  double upper_bound = 2.0 / (p.lambda_max + p.lambda_min);
   double k = -1;
   std::pair<double, double> k2;
-  if (SolveQuadratic(p.gw_norm_squared / p.gw_lambda_min,
-                     2 * p.gw_trace / p.gw_lambda_min, p.rank / p.gw_lambda_min,
+  if (SolveQuadratic(p.frobenius_norm_squared / p.lambda_min,
+                     2 * p.trace / p.lambda_min, p.rank / p.lambda_min,
                      divergence_upper_bound, &k2)) {
     if (InLimits(k2.first, lower_bound, upper_bound)) {
       k = k2.first;
@@ -82,10 +82,10 @@ double InverseLambdaMinBranch(double divergence_upper_bound,
   return k;
 }
 
-bool BoundIsFinite(double k, MuSelectionParameters& p) {
-  double norm_inf = std::fabs(k * p.gw_lambda_max - 1);
-  if (norm_inf < std::fabs(k * p.gw_lambda_min - 1)) {
-    norm_inf = std::fabs(k * p.gw_lambda_min - 1);
+bool BoundIsFinite(double k, WeightedSlackEigenvalues& p) {
+  double norm_inf = std::fabs(k * p.lambda_max - 1);
+  if (norm_inf < std::fabs(k * p.lambda_min - 1)) {
+    norm_inf = std::fabs(k * p.lambda_min - 1);
   }
   if (norm_inf < 1) {
     return 1;
@@ -94,7 +94,7 @@ bool BoundIsFinite(double k, MuSelectionParameters& p) {
 }
 
 double DivergenceUpperBoundInverse(double divergence_upper_bound,
-                                   MuSelectionParameters& p) {
+                                   WeightedSlackEigenvalues& p) {
   double k = -1;
   double k1 = InverseLambdaMinBranch(divergence_upper_bound, p);
   double k2 = InverseLambdaMaxBranch(divergence_upper_bound, p);
@@ -110,11 +110,12 @@ double DivergenceUpperBoundInverse(double divergence_upper_bound,
   return k;
 }
 
-double DivergenceUpperBound(double k, MuSelectionParameters& p) {
-  double numerator = k * k * p.gw_norm_squared - 2 * k * p.gw_trace + p.rank;
-  double norm_inf = std::fabs(k * p.gw_lambda_max - 1);
-  if (norm_inf < std::fabs(k * p.gw_lambda_min - 1)) {
-    norm_inf = std::fabs(k * p.gw_lambda_min - 1);
+double DivergenceUpperBound(double k, WeightedSlackEigenvalues& p) {
+  double numerator =
+      k * k * p.frobenius_norm_squared - 2 * k * p.trace + p.rank;
+  double norm_inf = std::fabs(k * p.lambda_max - 1);
+  if (norm_inf < std::fabs(k * p.lambda_min - 1)) {
+    norm_inf = std::fabs(k * p.lambda_min - 1);
   }
   return numerator / (1 - norm_inf);
 }

@@ -47,8 +47,9 @@ bool TakeStep(LinearConstraint* o, const StepOptions& options) {
   return true;
 }
 
-void GetMuSelectionParameters(LinearConstraint* o, const Ref& y,
-                              MuSelectionParameters* p) {
+// Eigenvalues of Q(w/2)(C - A'y).
+void GetWeightedSlackEigenvalues(LinearConstraint* o, const Ref& y,
+                                 WeightedSlackEigenvalues* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;
@@ -58,14 +59,10 @@ void GetMuSelectionParameters(LinearConstraint* o, const Ref& y,
   const double lamda_max = -Ws.minCoeff();
   const double lamda_min = -Ws.maxCoeff();
 
-  if (p->gw_lambda_max < lamda_max) {
-    p->gw_lambda_max = lamda_max;
-  }
-  if (p->gw_lambda_min > lamda_min) {
-    p->gw_lambda_min = lamda_min;
-  }
-  p->gw_norm_squared += Ws.squaredNorm();
-  p->gw_trace += -Ws.sum();
+  p->lambda_max = lamda_max;
+  p->lambda_min = lamda_min;
+  p->frobenius_norm_squared = Ws.squaredNorm();
+  p->trace = -Ws.sum();
 }
 
 void LinearConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,

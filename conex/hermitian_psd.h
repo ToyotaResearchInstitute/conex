@@ -57,8 +57,9 @@ class HermitianPsdConstraint {
   friend int Rank(const HermitianPsdConstraint& o) { return o.rank_; };
 
   template <typename H>
-  friend void GetMuSelectionParameters(HermitianPsdConstraint<H>* o,
-                                       const Ref& y, MuSelectionParameters* p);
+  friend void GetWeightedSlackEigenvalues(HermitianPsdConstraint<H>* o,
+                                          const Ref& y,
+                                          WeightedSlackEigenvalues* p);
 
   int number_of_variables() { return constraint_matrices_.size(); }
 

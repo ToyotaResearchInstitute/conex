@@ -31,8 +31,8 @@ class SOCConstraint {
 
   friend bool TakeStep(SOCConstraint* o, const StepOptions& opt);
 
-  friend void GetMuSelectionParameters(SOCConstraint* o, const Ref& y,
-                                       MuSelectionParameters* p);
+  friend void GetWeightedSlackEigenvalues(SOCConstraint* o, const Ref& y,
+                                          WeightedSlackEigenvalues* p);
   friend void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
                                              SchurComplementSystem* sys);
 

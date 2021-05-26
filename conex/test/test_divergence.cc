@@ -23,15 +23,15 @@ GTEST_TEST(MuSelection, DivergenceBound) {
   int n = 3;
   MatrixXd gw = Eigen::VectorXd::Random(n, 1).array().abs();
 
-  MuSelectionParameters p;
-  p.gw_norm_squared = gw.squaredNorm();
-  p.gw_lambda_max = gw.maxCoeff();
-  p.gw_lambda_min = gw.minCoeff();
-  p.gw_trace = gw.sum();
+  WeightedSlackEigenvalues p;
+  p.frobenius_norm_squared = gw.squaredNorm();
+  p.lambda_max = gw.maxCoeff();
+  p.lambda_min = gw.minCoeff();
+  p.trace = gw.sum();
   p.rank = gw.rows();
 
   // Div bound on one branch.
-  double k_ref = 2.0 / (p.gw_lambda_max + p.gw_lambda_min) * .8;
+  double k_ref = 2.0 / (p.lambda_max + p.lambda_min) * .8;
   double hub_desired = Divergence(gw, k_ref);
   EXPECT_NEAR(hub_desired, DivergenceUpperBound(k_ref, p), 1e-8);
   double k = DivergenceUpperBoundInverse(hub_desired, p);
@@ -39,7 +39,7 @@ GTEST_TEST(MuSelection, DivergenceBound) {
   EXPECT_TRUE(k >= k_ref);
 
   // Div bound on the other branch.
-  k_ref = 2.0 / (p.gw_lambda_max + p.gw_lambda_min) * 1.2;
+  k_ref = 2.0 / (p.lambda_max + p.lambda_min) * 1.2;
   hub_desired = Divergence(gw, k_ref);
   EXPECT_NEAR(hub_desired, DivergenceUpperBound(k_ref, p), 1e-8);
   k = DivergenceUpperBoundInverse(hub_desired, p);

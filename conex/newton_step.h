@@ -8,12 +8,12 @@ namespace conex {
 using DenseMatrix = Eigen::MatrixXd;
 using Ref = Eigen::Map<DenseMatrix, Eigen::Aligned>;
 
-struct MuSelectionParameters {
+struct WeightedSlackEigenvalues {
   double limit = 0;
-  double gw_norm_squared = 0;
-  double gw_trace = 0;
-  double gw_lambda_min = 1e30;
-  double gw_lambda_max = -1e30;
+  double frobenius_norm_squared = 0;
+  double trace = 0;
+  double lambda_min = 1e30;
+  double lambda_max = -1e30;
   double rank;
 };
 

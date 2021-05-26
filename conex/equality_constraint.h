@@ -1,11 +1,21 @@
 #pragma once
 
 #include <vector>
-#include "conex/supernodal_cholesky_data.h"
 #include "kkt_assembler.h"
 #include <Eigen/Dense>
 
 namespace conex {
+
+struct WorkspaceEqualityConstraints {
+  using DenseMatrix = Eigen::MatrixXd;
+
+  friend int SizeOf(const WorkspaceEqualityConstraints& o) { return 0; }
+
+  friend void Initialize(WorkspaceEqualityConstraints*, double*) {}
+
+  friend void print(const WorkspaceEqualityConstraints&) {}
+  Eigen::Map<DenseMatrix, Eigen::Aligned> W{NULL, 0, 0};
+};
 
 class EqualityConstraints : public LinearKKTAssemblerBase {
  public:
@@ -39,8 +49,8 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
   friend bool TakeStep(EqualityConstraints*, const StepOptions&) {
     return true;
   };
-  friend void GetMuSelectionParameters(EqualityConstraints*, const Ref&,
-                                       MuSelectionParameters*){};
+  friend void GetWeightedSlackEigenvalues(EqualityConstraints*, const Ref&,
+                                          WeightedSlackEigenvalues*){};
 
   friend void ConstructSchurComplementSystem(EqualityConstraints* o,
                                              bool initialize,
@@ -65,10 +75,8 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
   }
 
   int number_of_variables() { return 0; }
-  WorkspaceLinear* workspace() { return &workspace_; }
-
- private:
-  WorkspaceLinear workspace_{0, 0};
+  WorkspaceEqualityConstraints workspace_;
+  WorkspaceEqualityConstraints* workspace() { return &workspace_; }
 };
 
 }  // namespace conex

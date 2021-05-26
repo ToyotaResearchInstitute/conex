@@ -5,7 +5,6 @@
 #include "conex/error_checking_macros.h"
 #include "conex/kkt_assembler.h"
 #include "conex/kkt_solver.h"
-#include "conex/linear_constraint.h"
 #include "workspace.h"
 
 namespace conex {

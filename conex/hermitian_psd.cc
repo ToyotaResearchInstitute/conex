@@ -47,8 +47,8 @@ void PrepareStep(HermitianPsdConstraint<T>* o, const StepOptions& opt,
 }
 
 template <typename T>
-void GetMuSelectionParameters(HermitianPsdConstraint<T>* o, const Ref& y,
-                              MuSelectionParameters* p) {
+void GetWeightedSlackEigenvalues(HermitianPsdConstraint<T>* o, const Ref& y,
+                                 WeightedSlackEigenvalues* p) {
   typename T::Matrix minus_s;
   o->ComputeNegativeSlack(1, y, &minus_s);
 
@@ -59,21 +59,11 @@ void GetMuSelectionParameters(HermitianPsdConstraint<T>* o, const Ref& y,
   const double lamda_max = -gw_eig.minCoeff();
   const double lamda_min = -gw_eig.maxCoeff();
 
-  if (p->gw_lambda_max < lamda_max) {
-    p->gw_lambda_max = lamda_max;
-  }
-  if (p->gw_lambda_min > lamda_min) {
-    p->gw_lambda_min = lamda_min;
-  }
-  if (p->gw_lambda_max < lamda_max) {
-    p->gw_lambda_max = lamda_max;
-  }
-  if (p->gw_lambda_min > lamda_min) {
-    p->gw_lambda_min = lamda_min;
-  }
+  p->lambda_max = lamda_max;
+  p->lambda_min = lamda_min;
   auto WSWS = T::Multiply(WS, WS);
-  p->gw_norm_squared += WSWS.at(0).trace();
-  p->gw_trace += -WS.at(0).trace();
+  p->frobenius_norm_squared = WSWS.at(0).trace();
+  p->trace = -WS.at(0).trace();
 }
 
 template void PrepareStep(HermitianPsdConstraint<Real>* o,
@@ -89,12 +79,15 @@ template bool TakeStep(HermitianPsdConstraint<Complex>* o,
 template bool TakeStep(HermitianPsdConstraint<Quaternions>* o,
                        const StepOptions& opt);
 
-template void GetMuSelectionParameters(HermitianPsdConstraint<Real>* o,
-                                       const Ref& y, MuSelectionParameters* p);
-template void GetMuSelectionParameters(HermitianPsdConstraint<Complex>* o,
-                                       const Ref& y, MuSelectionParameters* p);
-template void GetMuSelectionParameters(HermitianPsdConstraint<Quaternions>* o,
-                                       const Ref& y, MuSelectionParameters* p);
+template void GetWeightedSlackEigenvalues(HermitianPsdConstraint<Real>* o,
+                                          const Ref& y,
+                                          WeightedSlackEigenvalues* p);
+template void GetWeightedSlackEigenvalues(HermitianPsdConstraint<Complex>* o,
+                                          const Ref& y,
+                                          WeightedSlackEigenvalues* p);
+template void GetWeightedSlackEigenvalues(
+    HermitianPsdConstraint<Quaternions>* o, const Ref& y,
+    WeightedSlackEigenvalues* p);
 
 template <>
 bool TakeStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt) {
@@ -128,8 +121,8 @@ void PrepareStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt,
 }
 
 template <>
-void GetMuSelectionParameters(HermitianPsdConstraint<Octonions>* o,
-                              const Ref& y, MuSelectionParameters* p) {
+void GetWeightedSlackEigenvalues(HermitianPsdConstraint<Octonions>* o,
+                                 const Ref& y, WeightedSlackEigenvalues* p) {
   using T = Octonions;
   typename T::Matrix minus_s;
   o->ComputeNegativeSlack(1, y, &minus_s);
@@ -139,13 +132,13 @@ void GetMuSelectionParameters(HermitianPsdConstraint<Octonions>* o,
 
   // Heuristic approximation based off of inequality:  |x|_1 |x|_{\infty} >=
   // |x|^2_2.
-  p->gw_lambda_max = std::fabs(normsqrd) /
-                     (1e-15 + std::fabs(T::TraceInnerProduct(o->W, minus_s)));
+  p->lambda_max = std::fabs(normsqrd) /
+                  (1e-15 + std::fabs(T::TraceInnerProduct(o->W, minus_s)));
 
   // Heuristic.
-  p->gw_lambda_min = p->gw_lambda_max * .01;
-  p->gw_trace -= T::TraceInnerProduct(o->W, minus_s);
-  p->gw_norm_squared +=
+  p->lambda_min = p->lambda_max * .01;
+  p->trace = -T::TraceInnerProduct(o->W, minus_s);
+  p->frobenius_norm_squared =
       T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);
 }
 

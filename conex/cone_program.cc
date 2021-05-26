@@ -8,7 +8,7 @@
 
 namespace conex {
 
-double CalcMinMu(double lambda_max, double, MuSelectionParameters* p) {
+double CalcMinMu(double lambda_max, double, WeightedSlackEigenvalues* p) {
   const double kMaxNormInfD = p->limit;
   double inv_sqrt_mu = (1.0 + kMaxNormInfD) / (lambda_max + 1e-12);
   if (inv_sqrt_mu < 1e-3) {
@@ -63,16 +63,29 @@ void TakeStep(ConstraintManager<Container>* kkt,
   }
 }
 
-void GetMuSelectionParameters(ConstraintManager<Container>* constraints,
-                              const Ref& y, MuSelectionParameters* p) {
-  p->gw_norm_squared = 0;
-  p->gw_lambda_max = -1000;
+void GetWeightedSlackEigenvalues(ConstraintManager<Container>* constraints,
+                                 const Ref& y, WeightedSlackEigenvalues* p) {
+  p->frobenius_norm_squared = 0;
+  p->trace = 0;
+  p->lambda_max = -30000;
+  p->lambda_min = 30000;
   int i = 0;
   for (auto& ci : constraints->eqs) {
     auto ysegment = Vars(y, constraints->cliques.at(i));
     Eigen::Map<Eigen::MatrixXd, Eigen::Aligned> z(ysegment.data(),
                                                   ysegment.size(), 1);
-    GetMuSelectionParameters(&ci.constraint, z, p);
+    WeightedSlackEigenvalues temp;
+    GetWeightedSlackEigenvalues(&ci.constraint, z, &temp);
+
+    if (p->lambda_max < temp.lambda_max) {
+      p->lambda_max = temp.lambda_max;
+    }
+    if (p->lambda_min > temp.lambda_min) {
+      p->lambda_min = temp.lambda_min;
+    }
+    p->frobenius_norm_squared += temp.frobenius_norm_squared;
+    p->trace += temp.trace;
+
     i++;
   }
 }
@@ -124,21 +137,23 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
   return true;
 }
 
-double MinimizeNormInf(MuSelectionParameters& p) {
+double MinimizeNormInf(WeightedSlackEigenvalues& p) {
   double y = -1;
-  if (p.gw_lambda_min + p.gw_lambda_max > 0) {
-    y = 2.0 / (p.gw_lambda_min + p.gw_lambda_max);
+  if (p.lambda_min + p.lambda_max > 0) {
+    y = 2.0 / (p.lambda_min + p.lambda_max);
   }
   return y;
 }
 
-double UpdateMu(ConstraintManager<Container>& constraints,
-                std::unique_ptr<Solver>& solver, const DenseMatrix& AQc,
-                const DenseMatrix& b, const SolverConfiguration& config,
-                int rankK, Ref* temporary_memory) {
-  MuSelectionParameters mu_param;
-  *temporary_memory = solver->Solve(AQc - b);
-  GetMuSelectionParameters(&constraints, *temporary_memory, &mu_param);
+double ComputeMuFromDivergence(ConstraintManager<Container>& constraints,
+                               std::unique_ptr<Solver>& solver,
+                               const DenseMatrix& AQc, const DenseMatrix& b,
+                               const SolverConfiguration& config, int rankK,
+                               Ref* workspace_y) {
+  WeightedSlackEigenvalues mu_param;
+  *workspace_y = AQc - b;
+  solver->SolveInPlace(workspace_y);
+  GetWeightedSlackEigenvalues(&constraints, *workspace_y, &mu_param);
   mu_param.rank = rankK;
 
   double divergence_bound = config.divergence_upper_bound * rankK;
@@ -150,20 +165,20 @@ double UpdateMu(ConstraintManager<Container>& constraints,
     inv_sqrt_mu = MinimizeNormInf(mu_param);
   }
 
-  if (inv_sqrt_mu < 0 && mu_param.gw_trace > 1e-12) {
+  if (inv_sqrt_mu < 0 && mu_param.trace > 1e-12) {
     // If inverse evaluation has failed, choose mu that satisfies norm bound.
-    double kstar = mu_param.gw_trace / mu_param.gw_norm_squared;
-    double norm_bound = 1.5 * (mu_param.gw_norm_squared * kstar * kstar -
-                               2 * mu_param.gw_trace * kstar + rankK);
+    double kstar = mu_param.trace / mu_param.frobenius_norm_squared;
+    double norm_bound = 1.5 * (mu_param.frobenius_norm_squared * kstar * kstar -
+                               2 * mu_param.trace * kstar + rankK);
     if (norm_bound > rankK * .7) {
       norm_bound = rankK * .7;
     }
 
-    double a = mu_param.gw_norm_squared;
-    double b = -2 * mu_param.gw_trace;
+    double a = mu_param.frobenius_norm_squared;
+    double b = -2 * mu_param.trace;
     double c = rankK - norm_bound;
     if (b * b - 4 * a * c < 0) {
-      inv_sqrt_mu = mu_param.gw_trace / mu_param.gw_norm_squared;
+      inv_sqrt_mu = mu_param.trace / mu_param.frobenius_norm_squared;
     } else {
       inv_sqrt_mu = (-b + std::sqrt(b * b - 4 * a * c)) / (2 * a);
     }
@@ -294,8 +309,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     END_TIMER
 
     if (update_mu) {
-      double temp =
-          UpdateMu(prog.kkt_system_manager_, solver, AQc, b, config, rankK, &y);
+      double temp = ComputeMuFromDivergence(prog.kkt_system_manager_, solver,
+                                            AQc, b, config, rankK, &y);
       if (temp > 0) {
         newton_step_parameters.inv_sqrt_mu = temp;
       } else {

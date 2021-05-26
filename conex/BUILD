@@ -2,7 +2,7 @@ COPTS = [
     "-DEIGEN_NO_DEBUG",
     "-DNDEBUG",
     "-O3",
-    "-ffast-math",
+    #    "-ffast-math",
 ]
 
 cc_library(
@@ -24,7 +24,7 @@ cc_test(
     srcs = glob(["test/test_lp.cc"]),
     copts = ["-Iexternal/gtest/include"],
     deps = [
-        "conex_lib",
+        "core",
         "linear_constraint",
         "supernodal_solver",
         "@gtest//:main",
@@ -280,18 +280,29 @@ cc_library(
 
 cc_library(
     name = "core",
+    srcs = ["cone_program.cc"],
     hdrs = [
+        "cone_program.h",
         "constraint.h",
+        "constraint_manager.h",
         "debug_macros.h",
+        "equality_constraint.h",
         "error_checking_macros.h",
         "error_codes.h",
+        "kkt_assembler.h",
+        "kkt_system_assembler.h",
         "memory_utils.h",
         "newton_step.h",
+        "supernodal_cholesky_data.h",
         "workspace.h",
     ],
     copts = COPTS,
     visibility = ["//visibility:public"],
-    deps = ["@eigen"],
+    deps = [
+        "divergence",
+        ":supernodal_solver",
+        "@eigen",
+    ],
 )
 
 cc_library(

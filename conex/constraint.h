@@ -65,8 +65,8 @@ class Constraint {
     o->model->do_prepare_step(opt, y, info);
   }
 
-  friend void GetMuSelectionParameters(Constraint* o, const Ref& y,
-                                       MuSelectionParameters* p) {
+  friend void GetWeightedSlackEigenvalues(Constraint* o, const Ref& y,
+                                          WeightedSlackEigenvalues* p) {
     o->model->do_min_mu(y, p);
   }
 
@@ -100,7 +100,7 @@ class Constraint {
     virtual void do_schur_complement(bool initialize,
                                      SchurComplementSystem* sys) = 0;
     virtual void do_set_identity() = 0;
-    virtual void do_min_mu(const Ref& y, MuSelectionParameters* p) = 0;
+    virtual void do_min_mu(const Ref& y, WeightedSlackEigenvalues* p) = 0;
     virtual Workspace do_get_workspace() = 0;
     virtual void do_prepare_step(const StepOptions& opt, const Ref& y,
                                  StepInfo* info) = 0;
@@ -127,8 +127,8 @@ class Constraint {
 
     void do_set_identity() override { SetIdentity(data); }
 
-    void do_min_mu(const Ref& y, MuSelectionParameters* p) override {
-      GetMuSelectionParameters(data, y, p);
+    void do_min_mu(const Ref& y, WeightedSlackEigenvalues* p) override {
+      GetWeightedSlackEigenvalues(data, y, p);
     }
 
     int do_rank() override { return Rank(*data); }
