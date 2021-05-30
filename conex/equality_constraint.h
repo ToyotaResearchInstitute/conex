@@ -9,7 +9,7 @@ namespace conex {
 struct WorkspaceEqualityConstraints {
   using DenseMatrix = Eigen::MatrixXd;
 
-  friend int SizeOf(const WorkspaceEqualityConstraints& o) { return 0; }
+  friend int SizeOf(const WorkspaceEqualityConstraints&) { return 0; }
 
   friend void Initialize(WorkspaceEqualityConstraints*, double*) {}
 

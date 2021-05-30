@@ -156,7 +156,8 @@ Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) {
 
 void T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
   if (b->rows() != Pt.rows()) {
-    throw std::runtime_error("Supernodal solver input error: invalid dimensions.");
+    throw std::runtime_error(
+        "Supernodal solver input error: invalid dimensions.");
   }
   b_permuted_ = Pt.transpose() * (*b);
 

@@ -39,6 +39,8 @@ inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
 
   for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
+    eqs.at(i)->SetNumberOfVariables(sn.at(e).size() + sep.at(e).size());
+
     if (sep.at(e).size() > 0 && sn.at(e).size() > 0) {
       auto block = BuildBlock(&sn.at(e), &sep.at(e),
                               workspace.off_diagonal.at(e).data());

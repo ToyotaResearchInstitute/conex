@@ -70,9 +70,10 @@ double T::GetCoeff(int i, int j) {
 }
 
 void T::BindDiagonalBlock(const DiagonalBlock* data) {
-  assert(!direct_update);
+  if (direct_update) {
+    throw std::runtime_error("Cannot bind multiple diagonal blocks");
+  }
   diag.push_back(*data);
-  UpdateNumberOfVariables();
   int m = NumberOfVariables();
 
   schur_complement_data.m_ = m;
@@ -96,14 +97,15 @@ void T::BindDiagonalBlock(const DiagonalBlock* data) {
 }
 
 void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
-  assert(!direct_update);
+  if (direct_update) {
+    throw std::runtime_error("Cannot bind multiple off-diagonal blocks");
+  }
   if (data->stride != -1) {
     off_diag.push_back(*data);
   } else {
     scatter_block.push_back(*data);
   }
 
-  UpdateNumberOfVariables();
   int m = NumberOfVariables();
   schur_complement_data.m_ = m;
   memory.resize(SizeOf(schur_complement_data));
@@ -118,47 +120,6 @@ void T::Scatter(const int* r, int sizer, const int* c, int sizec,
       *data[cnt++] += GetCoeff(*(r + i), *(c + j));
     }
   }
-}
-
-void T::UpdateNumberOfVariables() {
-  int max = 0;
-  for (const auto& d : diag) {
-    auto v = InitVector(d.var_data, d.num_vars);
-    for (auto vi : v) {
-      if (vi >= max) {
-        max = vi + 1;
-      }
-    }
-  }
-  for (const auto& d : off_diag) {
-    auto v = InitVector(d.row_data, d.num_rows);
-    for (auto vi : v) {
-      if (vi >= max) {
-        max = vi + 1;
-      }
-    }
-    v = InitVector(d.col_data, d.num_cols);
-    for (auto vi : v) {
-      if (vi >= max) {
-        max = vi + 1;
-      }
-    }
-  }
-  for (const auto& d : scatter_block) {
-    auto v = InitVector(d.row_data, d.num_rows);
-    for (auto vi : v) {
-      if (vi >= max) {
-        max = vi + 1;
-      }
-    }
-    v = InitVector(d.col_data, d.num_cols);
-    for (auto vi : v) {
-      if (vi >= max) {
-        max = vi + 1;
-      }
-    }
-  }
-  num_variables_ = max;
 }
 
 void T::UpdateBlocks() {
