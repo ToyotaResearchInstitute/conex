@@ -34,7 +34,6 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
     schur_complement_data.AQc.bottomRows(A_.rows()) = b_;
     schur_complement_data.AW.setZero();
   }
-
   int SizeOfDualVariable() { return A_.rows(); }
   Eigen::MatrixXd A_;
   Eigen::MatrixXd b_;
@@ -46,33 +45,17 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
                           const Ref& y, StepInfo*) {
     o->lambda_ = y.col(0).tail(o->b_.rows());
   }
+
   friend bool TakeStep(EqualityConstraints*, const StepOptions&) {
     return true;
   };
+
   friend void GetWeightedSlackEigenvalues(EqualityConstraints*, const Ref&,
                                           WeightedSlackEigenvalues*){};
 
   friend void ConstructSchurComplementSystem(EqualityConstraints* o,
                                              bool initialize,
-                                             SchurComplementSystem* sys_) {
-    auto& sys = *sys_;
-    auto& A_ = o->A_;
-    auto& b_ = o->b_;
-    if (initialize) {
-      sys.G.setZero();
-      sys.G.bottomLeftCorner(A_.rows(), A_.cols()) = A_;
-      sys.G.topRightCorner(A_.cols(), A_.rows()) = A_.transpose();
-      sys.AQc.setZero();
-      sys.AQc.bottomRows(A_.rows()) = b_;
-      sys.AW.setZero();
-      sys.inner_product_of_w_and_c = o->lambda_.dot(b_.col(0));
-    } else {
-      sys.G.bottomLeftCorner(A_.rows(), A_.cols()) += A_;
-      sys.G.topRightCorner(A_.cols(), A_.rows()) += A_.transpose();
-      sys.AQc.bottomRows(A_.rows()) += b_;
-      sys.inner_product_of_w_and_c += o->lambda_.dot(b_.col(0));
-    }
-  }
+                                             SchurComplementSystem* sys_);
 
   int number_of_variables() { return 0; }
   WorkspaceEqualityConstraints workspace_;
