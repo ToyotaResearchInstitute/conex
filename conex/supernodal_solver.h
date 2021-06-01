@@ -31,6 +31,15 @@ struct MatrixData {
 
 MatrixData GetData(const std::vector<Clique>& cliques, int init = 0);
 
+inline int SizeOfOriginalClique(const std::vector<int>& d) {
+  int size = 0;
+  for (auto di : d) {
+    if (di >= 0) {
+      size++;
+    }
+  }
+  return size;
+}
 template <typename T>
 inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
                    const std::vector<T*>& eqs) {
@@ -39,7 +48,8 @@ inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
 
   for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
-    eqs.at(i)->SetNumberOfVariables(sn.at(e).size() + sep.at(e).size());
+    eqs.at(i)->SetNumberOfVariables(SizeOfOriginalClique(sn.at(e)) + 
+                                    SizeOfOriginalClique(sep.at(e)));
 
     if (sep.at(e).size() > 0 && sn.at(e).size() > 0) {
       auto block = BuildBlock(&sn.at(e), &sep.at(e),
