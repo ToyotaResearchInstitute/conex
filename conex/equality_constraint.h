@@ -20,8 +20,7 @@ struct WorkspaceEqualityConstraints {
 class EqualityConstraints : public LinearKKTAssemblerBase {
  public:
   EqualityConstraints(){};
-  EqualityConstraints(const Eigen::MatrixXd& A, const Eigen::MatrixXd& b)
-      : A_(A), b_(b), lambda_(Eigen::VectorXd::Zero(b_.rows())) {}
+  EqualityConstraints(const Eigen::MatrixXd& A, const Eigen::MatrixXd& b);
 
   virtual void SetDenseData() override {
     assert(schur_complement_data.G.rows() == schur_complement_data.G.cols());

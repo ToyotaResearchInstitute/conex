@@ -7,6 +7,8 @@ using T = EqualityConstraints;
 using Eigen::MatrixXd;
 using std::vector;
 
+T::EqualityConstraints(const Eigen::MatrixXd& A, const Eigen::MatrixXd& b)
+      : A_(A), b_(b), lambda_(Eigen::VectorXd::Zero(b_.rows())) { }
 // void T::SetDenseData() {
 //  DUMP("IN DENSE!");
 //  assert(schur_complement_data.G.rows() == schur_complement_data.G.cols());
