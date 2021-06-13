@@ -12,8 +12,8 @@ struct WeightedSlackEigenvalues {
   double limit = 0;
   double frobenius_norm_squared = 0;
   double trace = 0;
-  double lambda_min = 1e30;
-  double lambda_max = -1e30;
+  double lambda_min = std::numeric_limits<double>::max();
+  double lambda_max = -std::numeric_limits<double>::max();
   double rank;
 };
 
@@ -24,7 +24,6 @@ struct IterationStats {
 struct StepOptions {
   bool affine = true;
   double inv_sqrt_mu = 0;
-  double stepsize = 0;
   // Take step of form  w_1 e + Q(w/2)(A^y - w_2 c)
   double c_weight = 0;
   double e_weight = 0;
@@ -32,8 +31,8 @@ struct StepOptions {
 };
 
 struct StepInfo {
-  double normsqrd;
-  double norminfd;
+  double normsqrd = 0;
+  double norminfd = 0;
 };
 
 using DenseMatrix = Eigen::MatrixXd;
