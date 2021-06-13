@@ -424,26 +424,11 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 DenseMatrix GetFeasibleObjective(Program* prg) {
   auto& prog = *prg;
   Initialize(prog, SolverConfiguration());
-  Solver solver(prog.kkt_system_manager_.cliques,
-                prog.kkt_system_manager_.dual_vars);
-  std::vector<KKT_SystemAssembler> kkt;
-  std::list<LinearKKTAssembler> kkt_;
-  int i = 0;
-  for (auto& c : prog.kkt_system_manager_.eqs) {
-    kkt_.push_back(LinearKKTAssembler());
-    kkt_.back().workspace_ = &c.constraint;
-    kkt_.back().SetNumberOfVariables(
-        prog.kkt_system_manager_.cliques.at(i).size());
-
-    kkt.push_back(&kkt_.back());
-    i++;
-  }
-  solver.Bind(&kkt);
 
   Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
   double inner_product_of_c_and_w;
-  solver.Assemble(&AW, &AQc, &inner_product_of_c_and_w);
+  prog.solver->Assemble(&AW, &AQc, &inner_product_of_c_and_w);
 
   return .5 * AW;
 }
