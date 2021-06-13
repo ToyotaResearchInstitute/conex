@@ -8,7 +8,7 @@ Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& S,
                                        int num_iterations);
 
 // Approximate eigenvalues of SW where S is symmetric and W is PSD.
-Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& S,
+Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& SW,
                                        const Eigen::MatrixXd& W,
                                        const Eigen::MatrixXd& r,
                                        int num_iterations, bool compressed);
