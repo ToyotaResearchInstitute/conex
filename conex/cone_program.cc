@@ -111,6 +111,7 @@ void ConstructSchurComplementSystem(std::vector<T*>* c, bool initialize,
 
 bool Initialize(Program& prog, const SolverConfiguration& config) {
   if (!prog.is_initialized || config.initialization_mode == 0) {
+    prog.stats = std::make_unique<WorkspaceStats>(config.max_iterations);
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
     prog.InitializeWorkspace();
@@ -367,8 +368,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     REPORT(by);
     REPORT(cw);
 
-    prog.stats.num_iter = i + 1;
-    prog.stats.sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
+    prog.stats->num_iter = i + 1;
+    prog.stats->sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
 #if CONEX_VERBOSE
     std::cout << std::endl;
 #endif

@@ -176,22 +176,22 @@ void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,
 
   auto& program = *reinterpret_cast<Program*>(prog);
 
-  if (!program.stats.IsInitialized()) {
+  if (!program.stats->IsInitialized()) {
     std::cerr << "No statistics available.";
     return;
   }
 
   int iter_num = iter_num_circular;
   if (iter_num_circular < 0) {
-    iter_num = program.stats.num_iter + iter_num_circular;
+    iter_num = program.stats->num_iter + iter_num_circular;
   }
 
-  if ((program.stats.num_iter <= iter_num) || (iter_num < 0)) {
+  if ((program.stats->num_iter <= iter_num) || (iter_num < 0)) {
     std::cerr << "Specified iteration is out of bounds.";
     return;
   }
-  stats->mu = 1.0 / (program.stats.sqrt_inv_mu[iter_num] *
-                     program.stats.sqrt_inv_mu[iter_num]);
+  stats->mu = 1.0 / (program.stats->sqrt_inv_mu[iter_num] *
+                     program.stats->sqrt_inv_mu[iter_num]);
   stats->iteration_number = iter_num;
 }
 
