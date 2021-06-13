@@ -127,12 +127,12 @@ void QuadraticConstraintBase::ComputeNegativeSlack(double inv_sqrt_mu,
 
 // Combine this with PrepareStep
 void GetWeightedSlackEigenvalues(QuadraticConstraintBase* o, const Ref& y,
-                                 WeightedSlackEigenvalues* p) {
+                                 double c_weight, WeightedSlackEigenvalues* p) {
   Eigen::internal::set_is_malloc_allowed(false);
   auto* workspace = &o->workspace_;
   auto& minus_s_1 = workspace->temp1_1;
   double minus_s_0;
-  o->ComputeNegativeSlack(1, y, &minus_s_0, &minus_s_1);
+  o->ComputeNegativeSlack(c_weight, y, &minus_s_0, &minus_s_1);
 
   double wsqrt_q0 = *o->workspace_.W0;
   auto& wsqrt_q1 = o->workspace_.temp3_1;

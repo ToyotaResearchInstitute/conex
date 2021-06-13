@@ -58,7 +58,7 @@ class HermitianPsdConstraint {
 
   template <typename H>
   friend void GetWeightedSlackEigenvalues(HermitianPsdConstraint<H>* o,
-                                          const Ref& y,
+                                          const Ref& y, double c_weight,
                                           WeightedSlackEigenvalues* p);
 
   int number_of_variables() { return constraint_matrices_.size(); }

@@ -50,7 +50,7 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
   };
 
   friend void GetWeightedSlackEigenvalues(EqualityConstraints*, const Ref&,
-                                          WeightedSlackEigenvalues*){};
+                                          double, WeightedSlackEigenvalues*){};
 
   friend void ConstructSchurComplementSystem(EqualityConstraints* o,
                                              bool initialize,

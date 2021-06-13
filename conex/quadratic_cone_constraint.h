@@ -40,7 +40,7 @@ class QuadraticConstraintBase {
 
   friend bool TakeStep(QuadraticConstraintBase* o, const StepOptions& opt);
   friend void GetWeightedSlackEigenvalues(QuadraticConstraintBase* o,
-                                          const Ref& y,
+                                          const Ref& y, double c_weight,
                                           WeightedSlackEigenvalues* p);
   friend void ConstructSchurComplementSystem(QuadraticConstraintBase* o,
                                              bool initialize,

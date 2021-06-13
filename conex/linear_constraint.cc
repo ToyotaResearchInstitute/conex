@@ -49,11 +49,11 @@ bool TakeStep(LinearConstraint* o, const StepOptions& options) {
 
 // Eigenvalues of Q(w/2)(C - A'y).
 void GetWeightedSlackEigenvalues(LinearConstraint* o, const Ref& y,
-                                 WeightedSlackEigenvalues* p) {
+                                 double c_weight, WeightedSlackEigenvalues* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& Ws = workspace->temp_2;
-  o->ComputeNegativeSlack(1, y, &minus_s);
+  o->ComputeNegativeSlack(c_weight, y, &minus_s);
   Ws.noalias() = workspace->W.cwiseProduct(minus_s);
 
   const double lamda_max = -Ws.minCoeff();

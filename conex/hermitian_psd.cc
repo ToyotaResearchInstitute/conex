@@ -48,9 +48,9 @@ void PrepareStep(HermitianPsdConstraint<T>* o, const StepOptions& opt,
 
 template <typename T>
 void GetWeightedSlackEigenvalues(HermitianPsdConstraint<T>* o, const Ref& y,
-                                 WeightedSlackEigenvalues* p) {
+                                 double c_weight, WeightedSlackEigenvalues* p) {
   typename T::Matrix minus_s;
-  o->ComputeNegativeSlack(1, y, &minus_s);
+  o->ComputeNegativeSlack(c_weight, y, &minus_s);
 
   int n = Rank(*o);
   auto WS = T::Multiply(o->W, minus_s);
@@ -80,13 +80,13 @@ template bool TakeStep(HermitianPsdConstraint<Quaternions>* o,
                        const StepOptions& opt);
 
 template void GetWeightedSlackEigenvalues(HermitianPsdConstraint<Real>* o,
-                                          const Ref& y,
+                                          const Ref& y, double c_weight,
                                           WeightedSlackEigenvalues* p);
 template void GetWeightedSlackEigenvalues(HermitianPsdConstraint<Complex>* o,
-                                          const Ref& y,
+                                          const Ref& y, double c_weight,
                                           WeightedSlackEigenvalues* p);
 template void GetWeightedSlackEigenvalues(
-    HermitianPsdConstraint<Quaternions>* o, const Ref& y,
+    HermitianPsdConstraint<Quaternions>* o, const Ref& y, double c_weight,
     WeightedSlackEigenvalues* p);
 
 template <>
@@ -122,10 +122,11 @@ void PrepareStep(HermitianPsdConstraint<Octonions>* o, const StepOptions& opt,
 
 template <>
 void GetWeightedSlackEigenvalues(HermitianPsdConstraint<Octonions>* o,
-                                 const Ref& y, WeightedSlackEigenvalues* p) {
+                                 const Ref& y, double c_weight,
+                                 WeightedSlackEigenvalues* p) {
   using T = Octonions;
   typename T::Matrix minus_s;
-  o->ComputeNegativeSlack(1, y, &minus_s);
+  o->ComputeNegativeSlack(c_weight, y, &minus_s);
 
   double normsqrd =
       T::TraceInnerProduct(T::QuadraticRepresentation(o->W, minus_s), minus_s);

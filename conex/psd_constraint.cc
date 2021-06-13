@@ -95,12 +95,12 @@ void SetIdentity(PsdConstraint* o) {
 }
 
 void GetWeightedSlackEigenvalues(PsdConstraint* o, const Ref& y,
-                                 WeightedSlackEigenvalues* p) {
+                                 double c_weight, WeightedSlackEigenvalues* p) {
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   auto& WSWS = workspace->temp_1;
   auto& WS = workspace->temp_2;
-  o->ComputeNegativeSlack(1, y, &minus_s);
+  o->ComputeNegativeSlack(c_weight, y, &minus_s);
 
   WS.noalias() = workspace->W * minus_s;
 

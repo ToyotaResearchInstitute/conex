@@ -63,7 +63,8 @@ void TakeStep(ConstraintManager<Container>* kkt,
 }
 
 void GetWeightedSlackEigenvalues(ConstraintManager<Container>* constraints,
-                                 const Ref& y, WeightedSlackEigenvalues* p) {
+                                 const Ref& y, double c_weight,
+                                 WeightedSlackEigenvalues* p) {
   p->frobenius_norm_squared = 0;
   p->trace = 0;
   p->lambda_max = -30000;
@@ -74,7 +75,7 @@ void GetWeightedSlackEigenvalues(ConstraintManager<Container>* constraints,
     Eigen::Map<Eigen::MatrixXd, Eigen::Aligned> z(ysegment.data(),
                                                   ysegment.size(), 1);
     WeightedSlackEigenvalues temp;
-    GetWeightedSlackEigenvalues(&ci.constraint, z, &temp);
+    GetWeightedSlackEigenvalues(&ci.constraint, z, c_weight, &temp);
 
     if (p->lambda_max < temp.lambda_max) {
       p->lambda_max = temp.lambda_max;
@@ -151,13 +152,14 @@ double MinimizeNormInf(WeightedSlackEigenvalues& p) {
 
 double ComputeMuFromDivergence(ConstraintManager<Container>& constraints,
                                std::unique_ptr<Solver>& solver,
-                               const DenseMatrix& AQc, const DenseMatrix& b,
+                               const DenseMatrix& AQc, double c_weight,
+                               const DenseMatrix& b,
                                const SolverConfiguration& config, int rankK,
                                Ref* workspace_y) {
   WeightedSlackEigenvalues mu_param;
   *workspace_y = AQc - b;
   solver->SolveInPlace(workspace_y);
-  GetWeightedSlackEigenvalues(&constraints, *workspace_y, &mu_param);
+  GetWeightedSlackEigenvalues(&constraints, *workspace_y, c_weight, &mu_param);
   mu_param.rank = rankK;
 
   double divergence_bound = config.divergence_upper_bound * rankK;
@@ -257,6 +259,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
   int initial_centering_steps = config.initial_centering_steps_coldstart;
   int initial_centering = 1;
+  double c_scaling = 1;
+  double b_scaling = 1;
 
   if (config.initialization_mode) {
     PRINTSTATUS("Warmstarting...");
@@ -309,7 +313,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     if (update_mu) {
       double temp = ComputeMuFromDivergence(prog.kkt_system_manager_, solver,
-                                            prog.sys.AQc, b, config, rankK, &y);
+                                            prog.sys.AQc * c_scaling, c_scaling,
+                                            b * b_scaling, config, rankK, &y);
       if (temp > 0) {
         newton_step_parameters.inv_sqrt_mu = temp;
       } else {
@@ -328,14 +333,16 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     double mu = 1.0 / (newton_step_parameters.inv_sqrt_mu);
     mu *= mu;
 
-    y = newton_step_parameters.inv_sqrt_mu * (b + prog.sys.AQc) -
+    y = newton_step_parameters.inv_sqrt_mu *
+            (b * b_scaling + prog.sys.AQc * c_scaling) -
         2 * prog.sys.AW;
     START_TIMER(Solve)
     solver->SolveInPlace(&y);
     END_TIMER
 
     newton_step_parameters.e_weight = 1;
-    newton_step_parameters.c_weight = newton_step_parameters.inv_sqrt_mu;
+    newton_step_parameters.c_weight =
+        newton_step_parameters.inv_sqrt_mu * c_scaling;
 
     StepInfo info;
     START_TIMER(Update)
@@ -361,9 +368,10 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
-    by = b.col(0).dot(y.col(0)) * 1.0 / newton_step_parameters.inv_sqrt_mu;
+    by = b.col(0).dot(y.col(0)) * 1.0 /
+         (newton_step_parameters.inv_sqrt_mu * c_scaling);
     cw = prog.sys.inner_product_of_w_and_c * 1.0 /
-         newton_step_parameters.inv_sqrt_mu;
+         (newton_step_parameters.inv_sqrt_mu * b_scaling);
 
     REPORT(by);
     REPORT(cw);
@@ -403,7 +411,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     solver->Assemble();
     AssembleSchurComplementResiduals(&prog.kkt_system_manager_, &prog.sys);
     solver->Factor();
-    DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * prog.sys.AW;
+    DenseMatrix bres =
+        newton_step_parameters.inv_sqrt_mu * b * b_scaling - 1 * prog.sys.AW;
     y2 = solver->Solve(bres);
 
     newton_step_parameters.affine = true;
@@ -416,7 +425,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   }
 
   if (prog.status_.solved) {
-    yout /= newton_step_parameters.inv_sqrt_mu;
+    yout /= (newton_step_parameters.inv_sqrt_mu);
+    yout /= c_scaling;
   }
   return prog.status_.solved;
 }

@@ -46,6 +46,7 @@ class PsdConstraint {
 
   friend bool TakeStep(PsdConstraint*, const StepOptions&);
   friend void GetWeightedSlackEigenvalues(PsdConstraint* o, const Ref& y,
+                                          double c_weight,
                                           WeightedSlackEigenvalues* p);
   int number_of_variables() { return num_dual_constraints_; }
 

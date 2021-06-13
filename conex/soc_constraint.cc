@@ -198,13 +198,13 @@ void SOCConstraint::ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y,
 
 // Combine this with PrepareStep
 void GetWeightedSlackEigenvalues(SOCConstraint* o, const Ref& y,
-                                 WeightedSlackEigenvalues* p) {
+                                 double c_weight, WeightedSlackEigenvalues* p) {
   auto* workspace = &o->workspace_;
   int n = workspace->n_;
   Eigen::VectorXd minus_s_data(n + 1);
   Ref minus_s(minus_s_data.data(), n + 1, 1);
   Eigen::VectorXd Ws(n + 1);
-  o->ComputeNegativeSlack(1, y, &minus_s);
+  o->ComputeNegativeSlack(c_weight, y, &minus_s);
 
   auto wsqrt = Sqrt(*o->workspace_.W0, o->workspace_.W1);
   Ws = QuadraticRepresentation(wsqrt, minus_s);
