@@ -149,6 +149,14 @@ void T::Assemble(Eigen::VectorXd* AW, Eigen::VectorXd* AQc,
   }
 }
 
+void T::Assemble() {
+  const auto& cliques = cliques_;
+  for (int e = static_cast<int>(cliques.size()) - 1; e >= 0; e--) {
+    int i = data.clique_order.at(e);
+    assembler.at(i)->UpdateBlocks();
+  }
+}
+
 bool T::Factor() {
   use_cholesky_ = true;
   for (auto di : dual_variables_) {

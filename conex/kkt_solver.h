@@ -46,6 +46,7 @@ class Solver {
   void RelabelCliques(MatrixData* data_ptr);
   void Assemble(Eigen::VectorXd* AW, Eigen::VectorXd* AWc,
                 double* inner_product_of_c_and_w);
+  void Assemble();
   bool Factor();
   Eigen::VectorXd Solve(const Eigen::VectorXd& b);
   void SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b);

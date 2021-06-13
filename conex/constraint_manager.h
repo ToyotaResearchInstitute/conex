@@ -101,4 +101,22 @@ class ConstraintManager {
   int dual_variable_start_ = 0;
 };
 
+template <typename Container>
+void AssembleSchurComplementResiduals(ConstraintManager<Container>* kkt,
+                                      SchurComplementSystem* s) {
+  s->setZero();
+  int i = 0;
+  for (auto& ci : kkt->eqs) {
+    auto* rhs_i = &ci.kkt_assembler.schur_complement_data;
+    s->inner_product_of_w_and_c += rhs_i->inner_product_of_w_and_c;
+    int cnt = 0;
+    for (auto k : kkt->cliques.at(i)) {
+      s->AW(k) += rhs_i->AW(cnt);
+      s->AQc(k) += rhs_i->AQc(cnt);
+      cnt++;
+    }
+    i++;
+  }
+}
+
 }  // namespace conex

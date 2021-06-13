@@ -40,40 +40,51 @@ struct WorkspaceSchurComplement {
   WorkspaceSchurComplement(int m) : m_(m) {}
   WorkspaceSchurComplement() {}
 
-  static constexpr int size_of(int m) {
-    return get_size_aligned(m * m) + 3 * get_size_aligned(m);
+  static constexpr int size_of(int m, bool residual_only) {
+    int size = 2 * get_size_aligned(m);
+    if (!residual_only) {
+      size += get_size_aligned(m * m);
+    }
+    return size;
   }
 
-  friend int SizeOf(const WorkspaceSchurComplement& o) { return size_of(o.m_); }
+  friend int SizeOf(const WorkspaceSchurComplement& o) {
+    return size_of(o.m_, o.residual_only_);
+  }
 
   friend void Initialize(WorkspaceSchurComplement* o, double* data) {
     using Map = Eigen::Map<DenseMatrix, Eigen::Aligned>;
     int m = o->m_;
-    new (&o->G) Map(data, m, m);
-    // TODO(FrankPermenter): Remove b.
-    new (&o->b) Map(data + get_size_aligned(m * m), m, 1);
-    new (&o->AW)
-        Map(data + get_size_aligned(m * m) + get_size_aligned(m), m, 1);
-    new (&o->AQc)
-        Map(data + get_size_aligned(m * m) + 2 * get_size_aligned(m), m, 1);
+    new (&o->AW) Map(data, m, 1);
+    new (&o->AQc) Map(data + 1 * get_size_aligned(m), m, 1);
+
+    if (!o->residual_only_) {
+      new (&o->G) Map(data + 2 * get_size_aligned(m), m, m);
+    }
+
     o->initialized = true;
+  }
+
+  void setZero() {
+    AW.setZero();
+    AQc.setZero();
+    inner_product_of_w_and_c = 0;
   }
 
   friend void print(const WorkspaceSchurComplement& o) {
     DUMP(o.initialized);
-    DUMP(o.G);
-    DUMP(o.b);
     DUMP(o.AW);
     DUMP(o.AQc);
   }
 
   double inner_product_of_w_and_c;
+
   Eigen::Map<DenseMatrix, Eigen::Aligned> G{NULL, 0, 0};
-  Eigen::Map<DenseMatrix, Eigen::Aligned> b{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> AW{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> AQc{NULL, 0, 0};
   int m_;
   bool initialized = false;
+  bool residual_only_ = false;
 };
 
 using SchurComplementSystem = WorkspaceSchurComplement;

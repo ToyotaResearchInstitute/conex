@@ -23,7 +23,6 @@ void SetIdentity(std::vector<T*>* c) {
     SetIdentity(ci);
   }
 }
-
 Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
   Eigen::VectorXd z(indices.size());
   int cnt = 0;
@@ -114,6 +113,10 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
     prog.stats = std::make_unique<WorkspaceStats>(config.max_iterations);
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
+
+    prog.sys.m_ = prog.kkt_system_manager_.SizeOfKKTSystem();
+    prog.sys.residual_only_ = true;
+
     prog.InitializeWorkspace();
     if (config.initialization_mode == 0) {
       SetIdentity(&prog.constraints);
@@ -248,10 +251,6 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   int rankK = Rank(constraints);
   int centering_steps = 0;
   bool warmstart_aborted = false;
-  double inner_product_of_c_and_w;
-
-  Eigen::VectorXd AW(prog.kkt_system_manager_.SizeOfKKTSystem());
-  Eigen::VectorXd AQc(prog.kkt_system_manager_.SizeOfKKTSystem());
   Eigen::VectorXd b(prog.kkt_system_manager_.SizeOfKKTSystem());
   b.setZero();
   b.head(m) << bin;
@@ -290,13 +289,12 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     }
 
     START_TIMER(Assemble)
-    solver->Assemble(&AW, &AQc, &inner_product_of_c_and_w);
+    solver->Assemble();
+    AssembleSchurComplementResiduals(&prog.kkt_system_manager_, &prog.sys);
     END_TIMER
 
     START_TIMER(Factor)
     if (!solver->Factor()) {
-      solver->Assemble(&AW, &AQc, &inner_product_of_c_and_w);
-      solver->Factor();
       if (i == 0 && config.initialization_mode) {
         PRINTSTATUS("Aborting warmstart...");
         SetIdentity(&prog.constraints);
@@ -311,7 +309,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     if (update_mu) {
       double temp = ComputeMuFromDivergence(prog.kkt_system_manager_, solver,
-                                            AQc, b, config, rankK, &y);
+                                            prog.sys.AQc, b, config, rankK, &y);
       if (temp > 0) {
         newton_step_parameters.inv_sqrt_mu = temp;
       } else {
@@ -330,7 +328,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     double mu = 1.0 / (newton_step_parameters.inv_sqrt_mu);
     mu *= mu;
 
-    y = newton_step_parameters.inv_sqrt_mu * (b + AQc) - 2 * AW;
+    y = newton_step_parameters.inv_sqrt_mu * (b + prog.sys.AQc) -
+        2 * prog.sys.AW;
     START_TIMER(Solve)
     solver->SolveInPlace(&y);
     END_TIMER
@@ -363,7 +362,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     REPORT(d_2);
     REPORT(d_inf);
     by = b.col(0).dot(y.col(0)) * 1.0 / newton_step_parameters.inv_sqrt_mu;
-    cw = inner_product_of_c_and_w * 1.0 / newton_step_parameters.inv_sqrt_mu;
+    cw = prog.sys.inner_product_of_w_and_c * 1.0 /
+         newton_step_parameters.inv_sqrt_mu;
 
     REPORT(by);
     REPORT(cw);
@@ -400,10 +400,10 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
   if (config.prepare_dual_variables) {
     DenseMatrix y2;
-    double cost_w;
-    solver->Assemble(&AW, &AQc, &cost_w);
+    solver->Assemble();
+    AssembleSchurComplementResiduals(&prog.kkt_system_manager_, &prog.sys);
     solver->Factor();
-    DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * AW;
+    DenseMatrix bres = newton_step_parameters.inv_sqrt_mu * b - 1 * prog.sys.AW;
     y2 = solver->Solve(bres);
 
     newton_step_parameters.affine = true;
