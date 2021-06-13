@@ -11,17 +11,7 @@ class MatrixLMIConstraint : public PsdConstraint {
  public:
   MatrixLMIConstraint(int n,
                       const std::vector<DenseMatrix>& constraint_matrices,
-                      const DenseMatrix& constraint_affine)
-      : PsdConstraint(n, static_cast<int>(constraint_matrices.size())),
-        constraint_matrices_(constraint_matrices),
-        constraint_affine_(constraint_affine) {
-    int m = constraint_matrices_.size();
-    constraint_matrices_vect_.resize(n * n, m);
-    for (int i = 0; i < m; i++) {
-      memcpy(&(constraint_matrices_vect_(0, i)),
-             constraint_matrices_.at(i).data(), sizeof(double) * n * n);
-    }
-  }
+                      const DenseMatrix& constraint_affine);
 
   Eigen::MatrixXd constraint_matrices_vect_;
   const std::vector<DenseMatrix> constraint_matrices_;

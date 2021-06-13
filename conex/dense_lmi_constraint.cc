@@ -37,6 +37,20 @@ void MatrixLMIConstraint::ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) {
   WAW->noalias() = W * (*AW);
 }
 
+MatrixLMIConstraint::MatrixLMIConstraint(
+    int n, const std::vector<DenseMatrix>& constraint_matrices,
+    const DenseMatrix& constraint_affine)
+    : PsdConstraint(n, static_cast<int>(constraint_matrices.size())),
+      constraint_matrices_(constraint_matrices),
+      constraint_affine_(constraint_affine) {
+  int m = constraint_matrices_.size();
+  constraint_matrices_vect_.resize(n * n, m);
+  for (int i = 0; i < m; i++) {
+    memcpy(&(constraint_matrices_vect_(0, i)),
+           constraint_matrices_.at(i).data(), sizeof(double) * n * n);
+  }
+}
+
 double TraceInnerProduct(const Eigen::MatrixXd& X, const Ref& Y) {
   double val = 0;
   for (int i = 0; i < X.rows(); i++) {
