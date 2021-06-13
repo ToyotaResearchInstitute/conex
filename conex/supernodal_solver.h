@@ -48,7 +48,7 @@ inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
 
   for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
-    eqs.at(i)->SetNumberOfVariables(SizeOfOriginalClique(sn.at(e)) + 
+    eqs.at(i)->SetNumberOfVariables(SizeOfOriginalClique(sn.at(e)) +
                                     SizeOfOriginalClique(sep.at(e)));
 
     if (sep.at(e).size() > 0 && sn.at(e).size() > 0) {
