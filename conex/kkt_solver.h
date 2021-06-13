@@ -52,6 +52,7 @@ class Solver {
   Eigen::MatrixXd KKTMatrix();
 
  private:
+  int SizeOfSystem() { return Pt.rows(); }
   bool use_cholesky_ = false;
   // Copies of inputs.
   const std::vector<std::vector<int>> cliques_;
