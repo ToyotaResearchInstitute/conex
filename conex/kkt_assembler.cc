@@ -76,10 +76,6 @@ void T::BindDiagonalBlock(const DiagonalBlock* data) {
   diag.push_back(*data);
   int m = NumberOfVariables();
 
-  schur_complement_data.m_ = m;
-  memory.resize(SizeOf(schur_complement_data));
-  Initialize(&schur_complement_data, memory.data());
-
   if (m == data->num_vars) {
     direct_update = true;
     for (int i = 1; i < data->num_vars; i++) {
@@ -105,11 +101,6 @@ void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
   } else {
     scatter_block.push_back(*data);
   }
-
-  int m = NumberOfVariables();
-  schur_complement_data.m_ = m;
-  memory.resize(SizeOf(schur_complement_data));
-  Initialize(&schur_complement_data, memory.data());
 }
 
 void T::Scatter(const int* r, int sizer, const int* c, int sizec,

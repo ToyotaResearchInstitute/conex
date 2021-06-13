@@ -120,8 +120,9 @@ class Program {
 
   void InitializeWorkspace() {
     workspaces.clear();
-    for (auto& constraint : kkt_system_manager_.eqs) {
-      workspaces.push_back(constraint.constraint.workspace());
+    for (auto& c : kkt_system_manager_.eqs) {
+      workspaces.push_back(c.constraint.workspace());
+      workspaces.emplace_back(&c.kkt_assembler.schur_complement_data);
     }
     workspaces.emplace_back(stats.get());
     workspaces.emplace_back(&sys);

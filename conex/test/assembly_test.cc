@@ -22,9 +22,18 @@ class Container {
   template <typename T>
   Container(const T& x, int num_vars) : obj(x), kkt(std::any_cast<T>(&obj)) {
     kkt.SetNumberOfVariables(num_vars);
+    memory.resize(SizeOf(*kkt.GetWorkspace()));
+    Initialize(kkt.GetWorkspace(), memory.data());
   }
 
+  using T = Container;
+  Container(const Container&) = delete;
+  Container(Container&&) = delete;
+  Container& operator=(const Container&) = delete;
+  Container& operator=(Container&&) = delete;
+
   std::any obj;
+  Eigen::VectorXd memory;
   KKT_SystemAssembler kkt;
 };
 

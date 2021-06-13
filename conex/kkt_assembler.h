@@ -25,10 +25,12 @@ class LinearKKTAssemblerBase {
   virtual void SetDenseData() = 0;
 
   int NumberOfVariables() { return num_variables_; };
-  void SetNumberOfVariables(int n) { num_variables_ = n; };
+  void SetNumberOfVariables(int n) {
+    num_variables_ = n;
+    schur_complement_data.m_ = n;
+  };
 
   WorkspaceSchurComplement schur_complement_data;
-  Eigen::VectorXd memory;
 
  protected:
   double GetCoeff(int i, int j);
