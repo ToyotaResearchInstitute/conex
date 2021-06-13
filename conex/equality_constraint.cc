@@ -9,19 +9,6 @@ using std::vector;
 
 T::EqualityConstraints(const Eigen::MatrixXd& A, const Eigen::MatrixXd& b)
     : A_(A), b_(b), lambda_(Eigen::VectorXd::Zero(b_.rows())) {}
-// void T::SetDenseData() {
-//  DUMP("IN DENSE!");
-//  assert(schur_complement_data.G.rows() == schur_complement_data.G.cols());
-//  assert(schur_complement_data.G.rows() == A_.rows() + A_.cols());
-//
-//  schur_complement_data.G.setZero();
-//  schur_complement_data.G.bottomLeftCorner(A_.rows(), A_.cols()) = A_;
-//  schur_complement_data.G.topRightCorner(A_.cols(), A_.rows()) =
-//      A_.transpose();
-//  schur_complement_data.AQc.bottomRows(A_.rows()) = b_;
-//  schur_complement_data.AW.setZero();
-//  DUMP(schur_complement_data.G);
-//}
 
 void ConstructSchurComplementSystem(EqualityConstraints* o, bool initialize,
                                     SchurComplementSystem* sys_) {
