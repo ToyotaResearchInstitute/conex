@@ -20,7 +20,10 @@ namespace conex {
 class Container {
  public:
   template <typename T>
-  Container(const T& x) : obj(x), kkt(std::any_cast<T>(&obj)) {}
+  Container(const T& x, int num_vars) : obj(x), kkt(std::any_cast<T>(&obj)) {
+    kkt.SetNumberOfVariables(num_vars);
+  }
+
   std::any obj;
   KKT_SystemAssembler kkt;
 };

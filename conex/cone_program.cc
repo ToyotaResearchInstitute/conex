@@ -428,10 +428,15 @@ DenseMatrix GetFeasibleObjective(Program* prg) {
                 prog.kkt_system_manager_.dual_vars);
   std::vector<KKT_SystemAssembler> kkt;
   std::list<LinearKKTAssembler> kkt_;
+  int i = 0;
   for (auto& c : prog.kkt_system_manager_.eqs) {
     kkt_.push_back(LinearKKTAssembler());
     kkt_.back().workspace_ = &c.constraint;
+    kkt_.back().SetNumberOfVariables(
+        prog.kkt_system_manager_.cliques.at(i).size());
+
     kkt.push_back(&kkt_.back());
+    i++;
   }
   solver.Bind(&kkt);
 

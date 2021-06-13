@@ -59,7 +59,7 @@ class ConstraintManager {
     if (!IsUnique(max_number_of_variables_, variables)) {
       return false;
     }
-    eqs.emplace_back(x);
+    eqs.emplace_back(x, variables.size());
     cliques.push_back(variables);
     dual_vars.push_back({});
     return true;
@@ -70,9 +70,9 @@ class ConstraintManager {
     if (!IsUnique(max_number_of_variables_, variables)) {
       return false;
     }
-    eqs.emplace_back(x);
-    cliques.push_back(variables);
     const int m = x.SizeOfDualVariable();
+    eqs.emplace_back(x, m + variables.size());
+    cliques.push_back(variables);
     dual_vars.push_back({});
     for (int i = 0; i < m; i++) {
       cliques.back().push_back(i + dual_variable_start_);

@@ -37,7 +37,10 @@ struct ConexStatus {
 class Container {
  public:
   template <typename T>
-  Container(const T& x) : obj(x), constraint(std::any_cast<T>(&obj)) {}
+  Container(const T& x, int num_vars)
+      : obj(x), constraint(std::any_cast<T>(&obj)) {
+    kkt_assembler.SetNumberOfVariables(num_vars);
+  }
   std::any obj;
   Constraint constraint;
   LinearKKTAssembler kkt_assembler;
