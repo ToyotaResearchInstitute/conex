@@ -72,7 +72,8 @@ class Program {
       if (cnt == i) {
         ci.constraint.get_dual_variable(xi->data());
         if (status_.solved) {
-          xi->array() /= stats->sqrt_inv_mu[stats->num_iter - 1];
+          xi->array() /=
+              (stats->sqrt_inv_mu[stats->num_iter - 1] * stats->b_scaling());
         }
         return;
       }

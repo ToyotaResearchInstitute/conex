@@ -173,7 +173,7 @@ void PrepareStep(QuadraticConstraintBase* o, const StepOptions& opt,
   {  // Use temp_1
     auto& minus_s_1 = o->workspace_.temp1_1;
     double minus_s_0;
-    o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s_0, &minus_s_1);
+    o->ComputeNegativeSlack(opt.c_weight, y, &minus_s_0, &minus_s_1);
 
     wsqrt_q1 = o->workspace_.W1;
     Sqrt(Norm(o->Q_, wsqrt_q1, &o->workspace_.temp2_1), &wsqrt_q0, &wsqrt_q1);

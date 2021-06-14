@@ -12,7 +12,7 @@ void PrepareStep(LinearConstraint* o, const StepOptions& options, const Ref& y,
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   if (!options.affine) {
-    o->ComputeNegativeSlack(options.inv_sqrt_mu, y, &minus_s);
+    o->ComputeNegativeSlack(options.c_weight, y, &minus_s);
     auto& W = workspace->W;
     auto& SW = workspace->temp_1;
     auto& d = workspace->temp_2;

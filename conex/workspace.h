@@ -75,12 +75,14 @@ struct WorkspaceStats {
   friend void Initialize(WorkspaceStats* o, double* y) {
     o->sqrt_inv_mu = y;
     o->norm_inf_d = y + o->max_iter_;
+    o->c_scaling_ = y + 2 * o->max_iter_;
+    o->b_scaling_ = y + 2 * o->max_iter_ + 1;
     o->initialized = true;
   }
 
   friend int SizeOf(const WorkspaceStats& o) {
     constexpr int num_items = 2;
-    return o.max_iter_ * num_items;
+    return o.max_iter_ * num_items + 2;
   }
 
   friend void print(const WorkspaceStats& o) {
@@ -94,6 +96,21 @@ struct WorkspaceStats {
 
   double* sqrt_inv_mu;
   double* norm_inf_d;
+  double* c_scaling_;
+  double* b_scaling_;
+  double& b_scaling() {
+    if (!initialized) {
+      throw std::runtime_error("Workspace not initialized");
+    }
+    return *b_scaling_;
+  }
+  double& c_scaling() {
+    if (!initialized) {
+      throw std::runtime_error("Workspace not initialized");
+    }
+    return *c_scaling_;
+  }
+
   int num_iter;
   int max_iter_;
   bool initialized = false;

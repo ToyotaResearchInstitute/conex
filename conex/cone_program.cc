@@ -120,6 +120,8 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
 
     prog.InitializeWorkspace();
     if (config.initialization_mode == 0) {
+      prog.stats->b_scaling() = 1;
+      prog.stats->c_scaling() = 1;
       SetIdentity(&prog.constraints);
     }
 
@@ -259,8 +261,8 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
   int initial_centering_steps = config.initial_centering_steps_coldstart;
   int initial_centering = 1;
-  double c_scaling = 1;
-  double b_scaling = 1;
+  auto& c_scaling = prog.stats->c_scaling();
+  auto& b_scaling = prog.stats->b_scaling();
 
   if (config.initialization_mode) {
     PRINTSTATUS("Warmstarting...");
@@ -297,6 +299,14 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     AssembleSchurComplementResiduals(&prog.kkt_system_manager_, &prog.sys);
     END_TIMER
 
+    if (i < 1 && config.initialization_mode == 0) {
+      b_scaling = 1.0 / (1 + b.norm());
+      c_scaling = 1.0 / (1 + prog.sys.AQc.norm());
+    }
+    if (i < 1) {
+      inv_sqrt_mu_max /= std::sqrt(b_scaling * c_scaling);
+    }
+
     START_TIMER(Factor)
     if (!solver->Factor()) {
       if (i == 0 && config.initialization_mode) {
@@ -326,7 +336,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
       }
     }
 
-    const double max = config.inv_sqrt_mu_max;
+    const double max = inv_sqrt_mu_max;
     const double min = std::sqrt(1.0 / (1e-15 + config.maximum_mu));
     ApplyLimits(&newton_step_parameters.inv_sqrt_mu, min, max);
 

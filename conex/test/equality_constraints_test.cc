@@ -104,7 +104,7 @@ void DoManySeparate() {
   Solve(linear_cost, prog, config, solution.data());
 
   EXPECT_TRUE((C - A * solution).minCoeff() > -1e8);
-  EXPECT_NEAR((eq * solution - eq_affine).norm(), 0, 1e-7);
+  EXPECT_NEAR((eq * solution - eq_affine).norm(), 0, 5e-7);
   EXPECT_GE(linear_cost.dot(solution) + 1e-4, linear_cost.dot(optimal_y));
 }
 

@@ -252,7 +252,7 @@ void PrepareStep(SOCConstraint* o, const StepOptions& opt, const Ref& y,
                  StepInfo* info) {
   Eigen::VectorXd minus_s_data(o->workspace_.n_ + 1);
   Ref minus_s(minus_s_data.data(), o->workspace_.n_ + 1, 1);
-  o->ComputeNegativeSlack(opt.inv_sqrt_mu, y, &minus_s);
+  o->ComputeNegativeSlack(opt.c_weight, y, &minus_s);
 
   // e - Q(w^{1/2})(C-A^y)
   int n = minus_s.rows();

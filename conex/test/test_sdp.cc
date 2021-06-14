@@ -20,11 +20,16 @@ GTEST_TEST(SDP, Mixed) {
   for (int i = 0; i < m; i++) {
     A.at(i).resize(n, n);
   }
-  A.at(0) << -1, 0, 0, 0;
+  // clang-format off
+  A.at(0) << -1, 0, 
+              0, 0;
 
-  A.at(1) << 0, -1, -1, 0;
+  A.at(1) << 0, -1, 
+             -1, 0;
 
-  A.at(2) << 0, 0, 0, -1;
+  A.at(2) << 0, 0,
+             0, -1;
+  // clang-format on
 
   Eigen::MatrixXd C = MatrixXd::Zero(n, n);
 
