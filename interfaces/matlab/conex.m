@@ -1,13 +1,16 @@
 %Calls conex using SeDuMI formatted inputs and outputs.
-function [x, y, info] = conex(A, b, c, K, pars)
+function [x, y, info] = conex(Ain, bin, c, K, pars)
+[A, b, T] = CleanLinear(Ain, bin);
 
-if isfield('l', K) && K.l > 0 
+cone = coneBase(K);
+A = cone.Symmetrize(A); c = cone.Symmetrize(c');
+if IsNontrivialField(K, 'l') 
   error('Cone not supported yet');
 end
-if isfield('r', K) && K.r > 0 
+if IsNontrivialField(K, 'r') 
   error('Cone not supported yet');
 end
-if isfield('q', K) && K.q > 0 
+if IsNontrivialField(K, 'q') 
   error('Cone not supported yet');
 end
 
@@ -23,7 +26,6 @@ info.dinf = 0;
 info.feasratio = 1;
 info.timing = [0, 0, 0]; 
 info.cpusec = 0;
-
 
 if (pars.blkdiag)
   problem = ConexPreprocess(A, b, c, K);
@@ -46,13 +48,13 @@ else
     p.AddDenseLinearMatrixInequality(reshape(A', n, n*m) , reshape(full(c), n, n));
 end
 
-p.options.inv_sqrt_mu_max = 50000;
-p.options.infeasibility_threshold = 1e10;
+p.options.inv_sqrt_mu_max = 1000;
+p.options.infeasibility_threshold = 1e3;
 p.options.max_iteration = 25;
 p.options.prepare_dual_variables = 1;
-p.options.divergence_upper_bound = 1000;
+p.options.divergence_upper_bound = 1;
 p.options.prepare_dual_variables = 1;
-p.options.final_centering_steps = 1;
+p.options.final_centering_steps = 5;
 
 tic;
 [conex_primal, conex_dual, solved] = p.Maximize(problem.b);
@@ -66,8 +68,22 @@ else
   y = conex_primal;
   x = conex_dual{1};
 end
+y = T * y;
 
 if pars.errors
-  info.errors(1) = abs(c'*x - b'*y);
-  info.errors(2) = c'*x - b'*y;
+  info.errors(1) = abs(c'*x - bin'*y);
+  info.errors(2) = c'*x - bin'*y;
 end
+
+
+
+function y = IsNontrivialField(K, f)
+  if isfield(K, f) 
+    if isempty(getfield(K, f))
+      y = 0
+    else
+      y = getfield(K, f) > 0;
+    end
+  else
+    y = 0;
+  end
