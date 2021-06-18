@@ -242,6 +242,12 @@ Eigen::VectorXd ApproximateEigenvalues(const Eigen::MatrixXd& WS,
                                        const Eigen::MatrixXd& W,
                                        const Eigen::MatrixXd& r,
                                        int num_iterations, bool compressed) {
+  if (WS.rows() != WS.cols()) {
+    throw std::runtime_error("Input argument must be square.");
+  }
+  if (WS.rows() == 1) {
+    return WS;
+  }
   if (compressed) {
     return AsymmetricLanczos(WS, W, r, num_iterations);
   } else {
