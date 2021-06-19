@@ -64,6 +64,7 @@ void T::RelabelCliques(MatrixData* data_ptr) {
                             /*!found = fill in*/ true);
   }
 }
+
 int GetRootNode(const std::vector<std::vector<int>>& vars,
                 const std::vector<std::vector<int>>& dual_vars) {
   int arg_max = 0;
@@ -72,6 +73,7 @@ int GetRootNode(const std::vector<std::vector<int>>& vars,
   for (size_t i = 1; i < dual_vars.size(); i++) {
     if (dual_vars.at(i).size() > max) {
       arg_max = i;
+      max = dual_vars.at(i).size();
     }
   }
   if (max > 0) {
@@ -83,6 +85,7 @@ int GetRootNode(const std::vector<std::vector<int>>& vars,
   for (size_t i = 1; i < vars.size(); i++) {
     if (vars.at(i).size() > max) {
       arg_max = i;
+      max = vars.at(i).size();
     }
   }
   return arg_max;
