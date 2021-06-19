@@ -50,7 +50,7 @@ GTEST_TEST(EqualityConstraints, Basic) {
   EXPECT_NEAR((solution - optimal_y).norm(), 0, 1e-5);
 }
 
-void DoManySeparate() {
+void DoManySeparate(bool separate) {
   int num_vars = 10;
   int num_inequalities = num_vars + 10;
   int num_equalities = num_vars - 2;
@@ -75,6 +75,8 @@ void DoManySeparate() {
   LinearConstraint linear_inequality{A, C};
 
   Program prog(num_vars);
+  prog.AddConstraint(linear_inequality);
+
   MatrixXd eq = MatrixXd::Zero(num_equalities, num_vars);
   Eigen::MatrixXd Bi(1, 3);
   Bi << 1, 2, 3;
@@ -83,13 +85,17 @@ void DoManySeparate() {
     for (size_t j = 0; j < vars.size(); j++) {
       eq(i, vars.at(j)) = Bi(0, j);
     }
-    prog.AddConstraint(EqualityConstraints{Bi, eq.row(i) * optimal_y}, vars);
+    if (separate) {
+      prog.AddConstraint(EqualityConstraints{Bi, eq.row(i) * optimal_y}, vars);
+    }
   }
 
   MatrixXd eq_affine(num_equalities, 1);
   eq_affine = eq * optimal_y;
 
-  prog.AddConstraint(linear_inequality);
+  if (!separate) {
+    prog.AddConstraint(EqualityConstraints{eq, eq_affine});
+  }
 
   VectorXd linear_cost(num_vars);
   linear_cost = A.transpose() * optimal_dual;
@@ -108,10 +114,17 @@ void DoManySeparate() {
   EXPECT_GE(linear_cost.dot(solution) + 1e-4, linear_cost.dot(optimal_y));
 }
 
-GTEST_TEST(EqualityConstraints, ManySeparate) {
-  srand(0);
+GTEST_TEST(EqualityConstraints, ManyConstraints) {
   for (int i = 0; i < 10; i++) {
-    DoManySeparate();
+    srand(i);
+    DoManySeparate(false /*do not split constraints*/);
+  }
+}
+
+GTEST_TEST(EqualityConstraints, ManySeparateConstraints) {
+  for (int i = 0; i < 10; i++) {
+    srand(i);
+    DoManySeparate(true /* split constraints*/);
   }
 }
 
