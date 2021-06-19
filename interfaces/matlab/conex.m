@@ -34,7 +34,7 @@ else
   problem.b = b;
 end
 
-p = ConexProgram(length(b));
+p = ConexProgram(length(problem.b));
 if length(K.s)  > 1
   for i = 1:length(problem.K.s)
     n = problem.K.s(i);
