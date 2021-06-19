@@ -144,9 +144,13 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
   return true;
 }
 
+// Finds the k that maximizes the denominator of the divergence upperbound:
+//
+//   max( k lambda_min, 2 - k lambda_max),
+//
 double MinimizeNormInf(WeightedSlackEigenvalues& p) {
   double y = -1;
-  if (p.lambda_min + p.lambda_max > 0) {
+  if (p.lambda_min > 0) {
     y = 2.0 / (p.lambda_min + p.lambda_max);
   }
   return y;
