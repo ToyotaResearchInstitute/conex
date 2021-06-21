@@ -9,10 +9,10 @@ using std::vector;
 namespace conex {
 
 vector<int> PathInTree(int x, int y, const std::vector<int>& tree,
-                       const std::vector<int>& height) {
+                       const std::vector<int>& depth) {
   std::vector<int> path;
   while (x != y) {
-    if (height[x] < height[y]) {
+    if (depth[x] < depth[y]) {
       path.push_back(y);
       y = tree.at(y);
     } else {

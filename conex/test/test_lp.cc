@@ -311,7 +311,7 @@ void DoRandomPrimalFailsSlater(double distance_to_infeasible) {
 
   if (distance_to_infeasible < 0) {
     double scale = (-C.transpose() * x)(0, 0);
-    EXPECT_NEAR((A.transpose() * x / scale).norm(), 0, 1e-5);
+    EXPECT_NEAR((A.transpose() * x / scale).norm(), 0, 1e-4);
     EXPECT_GE((-C.transpose() * x)(0, 0), 0);
     EXPECT_GE(x.minCoeff() / scale, -1e-8);
   } else {

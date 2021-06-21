@@ -4,6 +4,7 @@
 #include "conex/kkt_system_assembler.h"
 #include "conex/supernodal_solver.h"
 
+using std::vector;
 namespace {
 
 std::vector<int> ConcatFirstN(const std::vector<int>& a, int N,
@@ -91,11 +92,20 @@ int GetRootNode(const std::vector<std::vector<int>>& vars,
   return arg_max;
 }
 
+vector<int> is_empty(const vector<std::vector<int>>& vect) {
+  vector<int> y(vect.size());
+  for (size_t i = 0; i < y.size(); i++) {
+    y[i] = vect[i].size() == 0;
+  }
+  return y;
+}
+
 T::Solver(const std::vector<std::vector<int>>& cliques,
           const std::vector<std::vector<int>>& dual_vars)
     : cliques_(cliques),
       dual_variables_(dual_vars),
-      data(GetData(cliques, GetRootNode(cliques, dual_vars))),
+      data(GetData(cliques, is_empty(dual_vars),
+                   GetRootNode(cliques, dual_vars))),
       mat(data),
       Pt(data.N),
       b_permuted_(data.N) {

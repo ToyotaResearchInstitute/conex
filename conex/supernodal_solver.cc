@@ -447,6 +447,19 @@ MatrixData GetData(const vector<vector<int>>& cliques, int init) {
   return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
 }
 
+MatrixData GetData(const vector<vector<int>>& cliques,
+                   const std::vector<int>& valid_leaf, int init) {
+  vector<vector<int>> separators;
+  vector<vector<int>> supernodes;
+  vector<std::vector<int>> cliques_sorted = cliques;
+  Sort(&cliques_sorted);
+  vector<int> order;
+
+  PickCliqueOrder(cliques_sorted, valid_leaf, init, &order, &supernodes,
+                  &separators);
+  return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
+}
+
 MatrixData SupernodesToData(int num_vars, const std::vector<int>& order,
                             const std::vector<std::vector<int>>& supernodes,
                             const std::vector<std::vector<int>>& separators) {
