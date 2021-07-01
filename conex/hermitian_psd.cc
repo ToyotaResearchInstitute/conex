@@ -20,6 +20,13 @@ bool TakeStep(HermitianPsdConstraint<T>* o, const StepOptions& opt) {
   ExponentialMap(WS, &expWS);
   o->W = T::Multiply(expWS, o->W);
   o->W = T::ScalarMultiply(T::Add(o->W, T::ConjugateTranspose(o->W)), .5);
+
+  // TODO(FrankPermenter): Remove this hack, which provides
+  // the dual-variable-interface access to real part of W.
+  if (o->W.at(0).data() != o->workspace_.W.data()) {
+    new (&o->workspace_.W)
+        Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>(o->W.at(0).data(), n, n);
+  }
   return true;
 }
 
@@ -32,7 +39,7 @@ void PrepareStep(HermitianPsdConstraint<T>* o, const StepOptions& opt,
 
   WS = T::Multiply(o->W, minus_s);
   int n = Rank(*o);
-  auto gw_eig = T::ApproximateEigenvalues(WS, o->W, T::Random(n, 1), n / 2);
+  auto gw_eig = T::ApproximateEigenvalues(WS, o->W, T::Random(n, 1), n / 2 + 1);
   const double lambda_1 = std::fabs(opt.e_weight + gw_eig.minCoeff());
   const double lambda_2 = std::fabs(opt.e_weight + gw_eig.maxCoeff());
   double norminf = lambda_1;
@@ -56,11 +63,11 @@ void GetWeightedSlackEigenvalues(HermitianPsdConstraint<T>* o, const Ref& y,
   auto WS = T::Multiply(o->W, minus_s);
   auto gw_eig = T::ApproximateEigenvalues(WS, o->W, T::Random(n, 1), n / 2 + 1);
 
-  const double lamda_max = -gw_eig.minCoeff();
-  const double lamda_min = -gw_eig.maxCoeff();
+  const double lambda_max = -gw_eig.minCoeff();
+  const double lambda_min = -gw_eig.maxCoeff();
 
-  p->lambda_max = lamda_max;
-  p->lambda_min = lamda_min;
+  p->lambda_max = lambda_max;
+  p->lambda_min = lambda_min;
   auto WSWS = T::Multiply(WS, WS);
   p->frobenius_norm_squared = WSWS.at(0).trace();
   p->trace = -WS.at(0).trace();
