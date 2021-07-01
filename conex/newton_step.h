@@ -77,6 +77,8 @@ struct WorkspaceSchurComplement {
     DUMP(o.AQc);
   }
 
+  void InitializeWorkspace(double* data) { Initialize(this, data); }
+
   double inner_product_of_w_and_c;
 
   Eigen::Map<DenseMatrix, Eigen::Aligned> G{NULL, 0, 0};
