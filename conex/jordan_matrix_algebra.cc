@@ -381,7 +381,7 @@ Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(
   // polynomials with respect to the inner-product <p, q> :=  r^T  p(WS)  q(WS)
   // W r>
   //         =  r^T M p(D) q(D) inv(M) r
-  //         =  r^T W^{1/2} Q p(D) q(D) Q^T W{1/2}
+  //         =  r^T W^{1/2} Q p(D) q(D) Q^T W{1/2} r
   //
   //  where M =  W^{1/2} Q  for diagonal D and orthogonal Q since
   //
@@ -409,13 +409,14 @@ Eigen::VectorXd MatrixAlgebra<d>::ApproximateEigenvalues(
   U.col(0) = T::Multiply(WS, V.col(0));
   U.col(1) = T::Multiply(T::ConjugateTranspose(WS), V.col(1));
 
+  double scaling = inner_product<d>(U, U);
   alpha(0) = inner_product<d>(V, U);
   U = T::Add(U, T::ScalarMultiply(V, -alpha(0)));
 
   int cnt = 0;
   for (int j = 1; j < num_iter; j++) {
     beta(j - 1) = inner_product<d>(U, U);
-    if (beta(j - 1) < 1e-6) {
+    if (beta(j - 1) < 1e-5 * scaling) {
       break;
     } else {
       beta(j - 1) = std::sqrt(beta(j - 1));
