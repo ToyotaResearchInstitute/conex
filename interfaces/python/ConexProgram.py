@@ -87,7 +87,8 @@ class Conex:
         return stats
 
     def AddLinearInequality(self, A, c): 
-        const_id = self.wrapper.CONEX_AddDenseLinearConstraint(self.a, A, c)
+        c_ = np.squeeze(np.array(c[:])).transpose()
+        const_id = self.wrapper.CONEX_AddDenseLinearConstraint(self.a, A, c_)
         self.m = A.shape[1]
         self.n = A.shape[0]
         self.A.append(np.matrix(A))
@@ -142,6 +143,8 @@ class Conex:
         status = self.wrapper.CONEX_NewLinearMatrixInequality(self.a, order, hyper_complex_dim, constraint)
         if status != 0:
             raise NameError("Failed to add constraint.")
+        self.num_constraints = self.num_constraints + 1
+        self.c.append(np.zeros((order, order)).astype(real))
         return constraint.value()
 
     def NewLorentzConeConstraint(self, order):
@@ -149,17 +152,18 @@ class Conex:
         status = self.wrapper.CONEX_NewLorentzConeConstraint(self.a, order, constraint)
         if status != 0:
             raise NameError("Failed to add constraint.")
+        self.num_constraints = self.num_constraints + 1
         return constraint.value()
 
     def UpdateLinearOperator(self, constraint, value, variable, row, col = 0, hyper_complex_dim = 0):
         status = self.wrapper.CONEX_UpdateLinearOperator(self.a, constraint,
-                value, variable, row, col, hyper_complex_dim)
+                float(value), variable, row, col, hyper_complex_dim)
         if status != 0:
             raise NameError("Failed to update operator.")
 
     def UpdateAffineTerm(self, constraint, value,  row, col = 0, hyper_complex_dim = 0):
         status = self.wrapper.CONEX_UpdateAffineTerm(self.a, constraint, 
-                value, row, col, hyper_complex_dim)
+                float(value), row, col, hyper_complex_dim)
         if status != 0:
             raise NameError("Failed to update affine term.")
 
