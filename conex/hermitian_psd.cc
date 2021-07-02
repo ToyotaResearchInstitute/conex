@@ -178,6 +178,7 @@ void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o,
       }
       sys->AQc(i, 0) = o->EvalDualObjective(WAW);
     }
+    sys->inner_product_of_w_and_c = 0;
   } else {
     for (int i = 0; i < m; i++) {
       if constexpr (std::is_same<T, Octonions>::value) {
@@ -199,6 +200,7 @@ void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o,
       sys->AQc(i, 0) += o->EvalDualObjective(WAW);
     }
   }
+  sys->inner_product_of_w_and_c += o->EvalDualObjective(W);
 }
 
 template void ConstructSchurComplementSystem(HermitianPsdConstraint<Real>* o,
