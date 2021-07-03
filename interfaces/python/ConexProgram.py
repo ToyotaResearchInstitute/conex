@@ -56,10 +56,11 @@ class LMIOperator:
         return y;
 
 class Conex:
-    def __init__(self, m = 0):
+    def __init__(self, m = -1):
         self.wrapper = conex
         self.a = self.wrapper.CONEX_CreateConeProgram();
-        self.wrapper.CONEX_SetNumberOfVariables(self.a, m);
+        if (m >= 0):
+            self.wrapper.CONEX_SetNumberOfVariables(self.a, m);
         self.num_constraints = 0
         self.num_lmi_constraints = 0
         self.linear_constraints = []
