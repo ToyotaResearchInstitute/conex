@@ -69,6 +69,7 @@ struct WorkspaceSchurComplement {
     AW.setZero();
     AQc.setZero();
     inner_product_of_w_and_c = 0;
+    inner_product_of_c_and_Qc = 0;
   }
 
   friend void print(const WorkspaceSchurComplement& o) {
@@ -80,6 +81,7 @@ struct WorkspaceSchurComplement {
   void InitializeWorkspace(double* data) { Initialize(this, data); }
 
   double inner_product_of_w_and_c;
+  double inner_product_of_c_and_Qc;
 
   Eigen::Map<DenseMatrix, Eigen::Aligned> G{NULL, 0, 0};
   Eigen::Map<DenseMatrix, Eigen::Aligned> AW{NULL, 0, 0};

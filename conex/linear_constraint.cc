@@ -92,6 +92,7 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
 
   if (initialize) {
     sys->inner_product_of_w_and_c = WC.sum();
+    sys->inner_product_of_c_and_Qc = WC.squaredNorm();
     if (G->rows() != m) {
       G->setZero();
       sys->AW.setZero();
@@ -102,6 +103,7 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
     sys->AQc.topRows(m).noalias() = WA.transpose() * WC;
   } else {
     sys->inner_product_of_w_and_c += WC.sum();
+    sys->inner_product_of_c_and_Qc += WC.squaredNorm();
     (*G).topLeftCorner(m, m).noalias() += WA.transpose() * WA;
     sys->AW.topRows(m).noalias() += o->constraint_matrix_.transpose() * W;
     sys->AQc.topRows(m).noalias() += WA.transpose() * WC;

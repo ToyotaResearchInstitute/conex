@@ -16,6 +16,7 @@ class MatrixLMIConstraint : public PsdConstraint {
 
  protected:
   void ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW);
+  void ComputeWCW(const Ref& W, Ref* CW, Ref* WCW);
   double EvalDualConstraint(int j, const Ref& W);
   double EvalDualObjective(const Ref& W);
 };

@@ -115,6 +115,15 @@ DenseMatrix QuadraticConstraintBase::EvalAtQX(const DenseMatrix& X, Ref* QX) {
   }
 }
 
+double QuadraticConstraintBase::EvalCQX(const DenseMatrix& X, Ref* QX) {
+  if (Q_.rows() > 0) {
+    QX->noalias() = Q_ * X;
+    return C1_.dot(QX->col(0));
+  } else {
+    return C1_.dot(X.col(0));
+  }
+}
+
 void QuadraticConstraintBase::ComputeNegativeSlack(double inv_sqrt_mu,
                                                    const Ref& y,
                                                    double* minus_s_0,
@@ -225,6 +234,8 @@ bool TakeStep(QuadraticConstraintBase* o, const StepOptions& options) {
   return true;
 }
 
+//  A' Q(w) A
+//  = A( w * w' + det w R) A
 void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
                                     SchurComplementSystem* sys) {
   const auto& A0 = o->A0_;
@@ -234,6 +245,7 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
   auto& temp = o->workspace_.temp1_1;
   auto& A_dot_x = o->A_dot_x_;
 
+  double c_dot_x = o->EvalCQX(o->workspace_.W1, &temp);
   A_dot_x = o->EvalAtQX(o->workspace_.W1, &temp);
 
   auto& Q_W1 = o->workspace_.temp2_1;
@@ -245,11 +257,13 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
                     &sys->G);
     sys->AW.noalias() = A_dot_x + A0 * (*o->workspace_.W0);
     sys->AQc.noalias() = det_w * (o->EvalAtQX(C1, &temp) - A0 * C0);
+    sys->inner_product_of_c_and_Qc = det_w * (o->EvalCQX(C1, &temp) - C0 * C0);
   } else {
     SchurComplement(A0, A_gram, *o->workspace_.W0, det_w, A_dot_x, false,
                     &sys->G);
     sys->AW.noalias() += A_dot_x + A0 * (*o->workspace_.W0);
     sys->AQc.noalias() += det_w * (o->EvalAtQX(C1, &temp) - A0 * C0);
+    sys->inner_product_of_c_and_Qc += det_w * (o->EvalCQX(C1, &temp) - C0 * C0);
   }
 
   double scale;
@@ -259,14 +273,18 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
     scale = o->workspace_.W1.col(0).dot(C1.col(0)) + C0 * (*o->workspace_.W0);
   }
   sys->AQc.noalias() += 2 * (A_dot_x + A0 * (*o->workspace_.W0)) * scale;
+  sys->inner_product_of_c_and_Qc +=
+      2 * (c_dot_x + C0 * (*o->workspace_.W0)) * scale;
   if (initialize) {
     sys->inner_product_of_w_and_c = scale;
   } else {
     sys->inner_product_of_w_and_c += scale;
   }
+
   // Account for Jordan inner-product  <x, y> := 2 x^T y.
   sys->AQc *= 2;
   sys->AW *= 2;
+  sys->inner_product_of_c_and_Qc *= 2;
   sys->inner_product_of_w_and_c *= 2;
   sys->G *= 2;
 }

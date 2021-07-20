@@ -32,6 +32,11 @@ void MatrixLMIConstraint::ComputeAW(int i, const Ref& W, Ref* AW, Ref* WAW) {
   WAW->noalias() = W * (*AW);
 }
 
+void MatrixLMIConstraint::ComputeWCW(const Ref& W, Ref* CW, Ref* WCW) {
+  auto& constraint_matrix = constraint_affine_;
+  CW->noalias() = constraint_matrix * W;
+  WCW->noalias() = W * (*CW);
+}
 MatrixLMIConstraint::MatrixLMIConstraint(
     int n, const std::vector<DenseMatrix>& constraint_matrices,
     const DenseMatrix& constraint_affine)
@@ -64,6 +69,24 @@ double MatrixLMIConstraint::EvalDualObjective(const Ref& W) {
   return TraceInnerProduct(constraint_matrix, W);
 }
 
+#define SCHUR_COMPLEMENT_FUNCTION(OP)                                        \
+  int n = Rank(*o);                                                          \
+  Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n* n);                     \
+  for (int i = 0; i < m; i++) {                                              \
+    o->ComputeAW(i, W, &AW, &WAW);                                           \
+    sys->G.row(i).head(i + 1) OP vectWAW.transpose() *                       \
+        o->constraint_matrices_vect_.leftCols(i + 1);                        \
+    sys->AW(i, 0) OP AW.trace();                                             \
+    sys->AQc(i, 0) OP o->EvalDualObjective(WAW);                             \
+  }                                                                          \
+  sys->inner_product_of_w_and_c OP o->EvalDualObjective(W);                  \
+                                                                             \
+  auto& WCW = WAW;                                                           \
+  auto& CW = AW;                                                             \
+  o->ComputeWCW(W, &CW, &WCW);                                               \
+  sys->inner_product_of_c_and_Qc OP TraceInnerProduct(o->constraint_affine_, \
+                                                      WCW);
+
 void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,
                                     SchurComplementSystem* sys) {
   auto workspace = o->workspace();
@@ -73,27 +96,10 @@ void ConstructSchurComplementSystem(DenseLMIConstraint* o, bool initialize,
   int m = o->num_dual_constraints_;
 
   if (initialize) {
-    int n = Rank(*o);
-    Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n * n);
-    for (int i = 0; i < m; i++) {
-      o->ComputeAW(i, W, &AW, &WAW);
-      sys->G.row(i).head(i + 1) =
-          vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i + 1);
-      sys->AW(i, 0) = AW.trace();
-      sys->AQc(i, 0) = o->EvalDualObjective(WAW);
-    }
-    sys->inner_product_of_w_and_c = 0;
+    SCHUR_COMPLEMENT_FUNCTION(=);
   } else {
-    int n = Rank(*o);
-    Eigen::Map<Eigen::VectorXd> vectWAW(WAW.data(), n * n);
-    for (int i = 0; i < m; i++) {
-      o->ComputeAW(i, W, &AW, &WAW);
-      sys->G.row(i).head(i + 1) +=
-          vectWAW.transpose() * o->constraint_matrices_vect_.leftCols(i + 1);
-      sys->AW(i, 0) += AW.trace();
-      sys->AQc(i, 0) += o->EvalDualObjective(WAW);
-    }
+    SCHUR_COMPLEMENT_FUNCTION(+=);
   }
-  sys->inner_product_of_w_and_c += o->EvalDualObjective(W);
 }
+
 }  // namespace conex

@@ -280,7 +280,8 @@ void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
   auto G = &sys->G;
 
   Eigen::MatrixXd WA = o->constraint_matrix_;
-  Eigen::MatrixXd WC = QuadraticRepresentation(Wsqrt, o->constraint_affine_);
+  Eigen::MatrixXd WsqrtC =
+      QuadraticRepresentation(Wsqrt, o->constraint_affine_);
 
   for (int i = 0; i < WA.cols(); i++) {
     WA.col(i) = QuadraticRepresentation(Wsqrt, WA.col(i));
@@ -289,13 +290,15 @@ void ConstructSchurComplementSystem(SOCConstraint* o, bool initialize,
   if (initialize) {
     (*G).noalias() = 2 * WA.transpose() * WA;
     sys->AW.noalias() = 2 * o->constraint_matrix_.transpose() * W;
-    sys->AQc.noalias() = 2 * WA.transpose() * WC;
-    sys->inner_product_of_w_and_c = 2 * WC(0);
+    sys->AQc.noalias() = 2 * WA.transpose() * WsqrtC;
+    sys->inner_product_of_w_and_c = 2 * WsqrtC(0);
+    sys->inner_product_of_c_and_Qc = 2 * WsqrtC.squaredNorm();
   } else {
     (*G).noalias() += 2 * WA.transpose() * WA;
     sys->AW.noalias() += 2 * o->constraint_matrix_.transpose() * W;
-    sys->AQc.noalias() += 2 * WA.transpose() * WC;
-    sys->inner_product_of_w_and_c += 2 * WC(0);
+    sys->AQc.noalias() += 2 * WA.transpose() * WsqrtC;
+    sys->inner_product_of_w_and_c += 2 * WsqrtC(0);
+    sys->inner_product_of_c_and_Qc += 2 * WsqrtC.squaredNorm();
   }
 }
 

@@ -201,6 +201,15 @@ void ConstructSchurComplementSystem(HermitianPsdConstraint<T>* o,
     }
   }
   sys->inner_product_of_w_and_c += o->EvalDualObjective(W);
+
+  // Reuse memory.
+  auto& WCW = WAW;
+  WCW = T::QuadraticRepresentation(W, o->constraint_affine_);
+  if (initialize) {
+    sys->inner_product_of_c_and_Qc = o->EvalDualObjective(WCW);
+  } else {
+    sys->inner_product_of_c_and_Qc += o->EvalDualObjective(WCW);
+  }
 }
 
 template void ConstructSchurComplementSystem(HermitianPsdConstraint<Real>* o,

@@ -52,6 +52,7 @@ class QuadraticConstraintBase {
   virtual void Initialize();
   virtual DenseMatrix EvalAtQX(const DenseMatrix& X, DenseMatrix* QX);
   virtual DenseMatrix EvalAtQX(const DenseMatrix& X, Ref* QX);
+  double EvalCQX(const DenseMatrix& X, Ref* QX);
 
   const DenseMatrix Q_;
 
