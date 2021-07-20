@@ -264,6 +264,11 @@ void ConstructSchurComplementSystem(QuadraticConstraintBase* o, bool initialize,
   } else {
     sys->inner_product_of_w_and_c += scale;
   }
+  // Account for Jordan inner-product  <x, y> := 2 x^T y.
+  sys->AQc *= 2;
+  sys->AW *= 2;
+  sys->inner_product_of_w_and_c *= 2;
+  sys->G *= 2;
 }
 
 void SetIdentity(QuadraticConstraintBase* o) {
