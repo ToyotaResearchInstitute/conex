@@ -154,12 +154,12 @@ GTEST_TEST(SDP, SparseAndDenseAgree) {
   int success = Solve(b, prog, config, y.data());
   EXPECT_EQ(success, 1);
 
-  SparseLMIConstraint sparse_LMI1{sparse_constraints_1, affine_1, variables_1};
-  SparseLMIConstraint sparse_LMI2{sparse_constraints_2, affine_2, variables_2};
+  DenseLMIConstraint sparse_LMI1{sparse_constraints_1, affine_1};
+  DenseLMIConstraint sparse_LMI2{sparse_constraints_2, affine_2};
 
   Program sparse_prog(m);
-  sparse_prog.AddConstraint(sparse_LMI1);
-  sparse_prog.AddConstraint(sparse_LMI2);
+  sparse_prog.AddConstraint(sparse_LMI1, variables_1);
+  sparse_prog.AddConstraint(sparse_LMI2, variables_2);
 
   DenseMatrix y_sparse(m1 + m2, 1);
   success = Solve(b, sparse_prog, config, y_sparse.data());

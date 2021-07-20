@@ -4,9 +4,6 @@
 
 namespace conex {
 
-// using InputRefType = Eigen::Map<const DenseMatrix>;
-using InputRefType = DenseMatrix;
-
 class MatrixLMIConstraint : public PsdConstraint {
  public:
   MatrixLMIConstraint(int n,
@@ -41,28 +38,4 @@ class DenseLMIConstraint final : public MatrixLMIConstraint {
  private:
   void ComputeNegativeSlack(double k, const Ref& y, Ref* s) override;
 };
-
-class SparseLMIConstraint final : public MatrixLMIConstraint {
- public:
-  SparseLMIConstraint(const std::vector<DenseMatrix>& constraint_matrices,
-                      const DenseMatrix& constraint_affine,
-                      const std::vector<int>& variables)
-      : MatrixLMIConstraint(constraint_affine.rows(), constraint_matrices,
-                            constraint_affine),
-        variables_(variables) {}
-
-  friend void ConstructSchurComplementSystem(SparseLMIConstraint* o,
-                                             bool initialize,
-                                             SchurComplementSystem* sys);
-
-  void ComputeNegativeSlack(double k, const Ref& y, Ref* s) override;
-
- private:
-  std::vector<int> variables_;
-  int variable(int i) {
-    // TODO(FrankPermenter): remove range check.
-    return variables_.at(i);
-  }
-};
-
 }  // namespace conex

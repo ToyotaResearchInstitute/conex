@@ -128,10 +128,10 @@ int CONEX_AddSparseLMIConstraint(void* prog, const double* A, int Ar, int Ac,
   }
   InputMatrix Cmap(c, cr, cc);
 
-  conex::SparseLMIConstraint T3{Avect, Cmap, variables};
+  conex::DenseLMIConstraint T3{Avect, Cmap};
   auto& program = *reinterpret_cast<Program*>(prog);
   int constraint_id = program.NumberOfConstraints();
-  program.AddConstraint(T3);
+  program.AddConstraint(T3, variables);
   return constraint_id;
 }
 
