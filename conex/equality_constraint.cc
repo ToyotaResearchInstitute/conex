@@ -22,12 +22,10 @@ void ConstructSchurComplementSystem(EqualityConstraints* o, bool initialize,
     sys.AQc.setZero();
     sys.AQc.bottomRows(A_.rows()) = b_;
     sys.AW.setZero();
-    sys.inner_product_of_w_and_c = o->lambda_.dot(b_.col(0));
   } else {
     sys.G.bottomLeftCorner(A_.rows(), A_.cols()) += A_;
     sys.G.topRightCorner(A_.cols(), A_.rows()) += A_.transpose();
     sys.AQc.bottomRows(A_.rows()) += b_;
-    sys.inner_product_of_w_and_c += o->lambda_.dot(b_.col(0));
   }
 }
 

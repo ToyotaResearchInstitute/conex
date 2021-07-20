@@ -247,7 +247,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   Ref y(ydata.data(), prog.kkt_system_manager_.SizeOfKKTSystem(), 1);
 
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  double cw = 1;
+  double cx = 1;
   double by = -1;
 
   StepOptions newton_step_parameters;
@@ -378,17 +378,24 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     const double d_2 = std::sqrt(std::fabs(info.normsqrd));
     const double d_inf = std::fabs(info.norminfd);
+    by = b.col(0).dot(y.col(0)) * 1.0 /
+         (newton_step_parameters.inv_sqrt_mu * c_scaling);
+    // inv_sqrt_mu * <c, x> = c' Q(w^{1/2}) (e + d)
+    //                      = c' Q(w^{1/2}) (e +  e + Q(w^{1/2})(Ay - k c))
+    //                      = c' Q(w^{1/2}) (2e + Q(w^{1/2})(Ay - k c))
+    //                      = 2 c' w + c'Q(w)(Ay - k c' Q(w) c)
+    cx = 2 * prog.sys.inner_product_of_w_and_c +
+         prog.sys.AQc.col(0).dot(y.col(0)) -
+         newton_step_parameters.inv_sqrt_mu *
+             prog.sys.inner_product_of_c_and_Qc * c_scaling;
+
+    cx /= (newton_step_parameters.inv_sqrt_mu * b_scaling);
 
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
-    by = b.col(0).dot(y.col(0)) * 1.0 /
-         (newton_step_parameters.inv_sqrt_mu * c_scaling);
-    cw = prog.sys.inner_product_of_w_and_c * 1.0 /
-         (newton_step_parameters.inv_sqrt_mu * b_scaling);
-
     REPORT(by);
-    REPORT(cw);
+    REPORT(cx);
 
     prog.stats->num_iter = i + 1;
     prog.stats->sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
@@ -412,7 +419,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     PRINTSTATUS("Infeasible Or Unbounded!!.");
     prog.status_.solved = 0;
     prog.status_.primal_infeasible =
-        cw * newton_step_parameters.inv_sqrt_mu <= -.5;
+        cx * newton_step_parameters.inv_sqrt_mu <= -.5;
     prog.status_.dual_infeasible =
         by * newton_step_parameters.inv_sqrt_mu >= .5;
   } else {
