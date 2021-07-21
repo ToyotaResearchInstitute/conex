@@ -27,6 +27,7 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
   SolverConfiguration config;
   config.inv_sqrt_mu_max = std::sqrt(1.0 / 1e-4);
   config.final_centering_tolerance = 1e-8;
+  config.prepare_dual_variables = true;
   int m = dim;
   std::vector<Matrix> constraint_matrices(m);
   Matrix constraint_affine = T::Identity(rank);
@@ -44,6 +45,8 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
 
   auto b = GetFeasibleObjective(&prog);
   bool solved_1 = Solve(b, prog, config, y.data());
+  MatrixXd X_1(rank, rank);
+  prog.GetDualVariable(0, &X_1);
 
   Program prog2(m);
   DenseMatrix y2(m, 1);
@@ -51,7 +54,10 @@ int CompareRealHermitianWithLMI(int rank, int dim) {
                                          ToMat(constraint_affine)));
 
   bool solved_2 = Solve(b, prog2, config, y2.data());
-  EXPECT_NEAR((y2 - y).norm(), 0, 1e-12);
+  MatrixXd X_2(rank, rank);
+  prog2.GetDualVariable(0, &X_2);
+  EXPECT_NEAR((y2 - y).norm(), 0, 1e-11);
+  EXPECT_NEAR((X_2 - X_1).norm(), 0, 1e-11);
 
   return solved_1 && solved_2;
 }
@@ -105,9 +111,10 @@ TYPED_TEST(TestCases, SolveRandomInstances) {
 }
 
 GTEST_TEST(Hermitian, CompareWithLMI) {
-  for (int i = 0; i < 2; i++) {
-    int num_vars = 2;
-    int rank = 3;
+  srand(0);
+  for (int i = 0; i < 4; i++) {
+    int num_vars = 4;
+    int rank = 8;
     EXPECT_TRUE(CompareRealHermitianWithLMI(rank, num_vars));
   }
 }
