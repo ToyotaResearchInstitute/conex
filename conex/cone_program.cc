@@ -211,10 +211,6 @@ void ApplyLimits(double* x, double lb, double ub) {
 
 bool Solve(const DenseMatrix& bin, Program& prog,
            const SolverConfiguration& config, double* primal_variable) {
-#ifdef EIGEN_USE_MKL_ALL
-  std::cout << "CONEX: MKL Enabled";
-#endif
-
   auto& constraints = prog.constraints;
   auto& solver = prog.solver;
   prog.status_.solved = 0;
@@ -225,6 +221,13 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   std::cout.precision(2);
   std::cout << std::scientific;
   std::cout << "Starting the Conex optimizer...\n";
+#endif
+
+#ifdef EIGEN_USE_MKL_ALL
+  std::cout << "...MKL Enabled\n";
+#endif
+#ifdef EIGEN_USE_BLAS
+  std::cout << "...BLAS Enabled\n";
 #endif
 
   CONEX_DEMAND(prog.GetNumberOfVariables() == bin.rows(),
