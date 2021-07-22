@@ -24,8 +24,8 @@ class TestCases : public testing::Test {
  public:
   void DoMultiplyByIdentity() {
     auto X = T::Random(3, 3);
-    auto I = T::Identity(3);
-    EXPECT_TRUE(T::IsEqual(X, T::Multiply(X, I)));
+    auto e = T::Identity(3);
+    EXPECT_TRUE(T::IsEqual(X, T::Multiply(X, e)));
   }
   void VerifyJordanIdentity(int n) {
     using Matrix = typename T::Matrix;
@@ -79,9 +79,9 @@ class TestCases : public testing::Test {
     Q = T::Add(Q, T::ConjugateTranspose(Q));
     Q = T::JordanMultiply(Q, Q);
 
-    auto I = T::Identity(n);
+    auto e = T::Identity(n);
     double normsqr = T::TraceInnerProduct(Q, Q);
-    double trace = T::TraceInnerProduct(I, Q);
+    double trace = T::TraceInnerProduct(e, Q);
     auto eigvals = T::Eigenvalues(Q);
 
     EXPECT_TRUE(eigvals.minCoeff() > eps);
@@ -103,8 +103,8 @@ class TestCases : public testing::Test {
 
     Q = T::Orthogonalize(Q);
 
-    auto I = T::ScalarMultiply(T::Identity(d), -1);
-    auto res = T::Add(I, T::Multiply(Q, T::ConjugateTranspose(Q)));
+    auto e = T::ScalarMultiply(T::Identity(d), -1);
+    auto res = T::Add(e, T::Multiply(Q, T::ConjugateTranspose(Q)));
     EXPECT_TRUE(T::TraceInnerProduct(res, res) < eps);
   }
 
