@@ -114,13 +114,19 @@ class PartitionVectorIterator {
 void T::ApplyBlockInverseOfTransposeInPlace(
     const TriangularMatrixWorkspace& mat, VectorXd* y) {
   PartitionVectorIterator ypart(*y, mat.N, mat.supernode_size);
-  mat.diagonal.back().triangularView<Eigen::Lower>().transpose().solveInPlace(
-      ypart.b_i());
 
   // Loop over partition {B_j} of c_{i+1}
   PartitionVectorIterator residual(*y, mat.N, mat.supernode_size);
   for (int i = static_cast<int>(mat.diagonal.size() - 2); i >= 0; i--) {
-    ypart.Decrement();
+    if (mat.diagonal.at(i + 1).size() == 0) {
+      ypart.Decrement();
+      continue;
+    }
+    mat.diagonal.at(i + 1)
+        .triangularView<Eigen::Lower>()
+        .transpose()
+        .solveInPlace(ypart.b_i());
+
     residual.Reset();
 
     int jcnt = 0;
@@ -131,12 +137,15 @@ void T::ApplyBlockInverseOfTransposeInPlace(
       // > i.
       const auto& index_and_column_list = mat.intersection_position[i][jcnt++];
       for (const auto& pair : index_and_column_list) {
-        residual.b_i().noalias() -= mat.off_diagonal[j].col(pair.second) *
-                                    ypart.b_i_plus_1()(pair.first);
+        residual.b_i().noalias() -=
+            mat.off_diagonal[j].col(pair.second) * ypart.b_i()(pair.first);
       }
     }
 
-    mat.diagonal[i].triangularView<Eigen::Lower>().transpose().solveInPlace(
+    ypart.Decrement();
+  }
+  if (mat.diagonal[0].size() > 0) {
+    mat.diagonal[0].triangularView<Eigen::Lower>().transpose().solveInPlace(
         ypart.b_i());
   }
 }
@@ -151,21 +160,25 @@ void T::ApplyBlockInverseOfTransposeInPlace(
 void T::ApplyBlockInverseInPlace(const TriangularMatrixWorkspace& mat,
                                  VectorXd* y) {
   PartitionVectorForwardIterator ypart(*y, mat.supernode_size);
-  mat.diagonal[0].triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
 
-  for (size_t i = 1; i < mat.diagonal.size(); i++) {
-    ypart.Increment();
-    if (mat.off_diagonal[i - 1].size() > 0) {
-      mat.temporaries[i - 1].noalias() =
-          mat.off_diagonal[i - 1].transpose() * ypart.b_i_minus_1();
+  for (size_t i = 0; i < mat.diagonal.size() - 1; i++) {
+    if (mat.diagonal[i].size() == 0) {
+      ypart.Increment();
+      continue;
+    }
+    mat.diagonal[i].triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
+    if (mat.off_diagonal[i].size() > 0) {
+      mat.temporaries[i].noalias() =
+          mat.off_diagonal[i].transpose() * ypart.b_i();
       int cnt = 0;
-      for (auto si : mat.separators[i - 1]) {
-        (*y)(si) -= mat.temporaries[i - 1](cnt);
+      for (auto si : mat.separators[i]) {
+        (*y)(si) -= mat.temporaries[i](cnt);
         cnt++;
       }
     }
-    mat.diagonal[i].triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
+    ypart.Increment();
   }
+  mat.diagonal.back().triangularView<Eigen::Lower>().solveInPlace(ypart.b_i());
 }
 
 bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
@@ -176,9 +189,15 @@ bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
   }
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
-    llts.emplace_back(C->diagonal[i]);
-    if (llts.back().info() != Eigen::Success) {
-      return false;
+    if (C->diagonal[i].size() > 0) {
+      llts.emplace_back(C->diagonal[i]);
+      if (llts.back().info() != Eigen::Success) {
+        return false;
+      }
+    } else {
+      // Dummy decomposition.
+      MatrixXd x(1, 1);
+      llts.emplace_back(x);
     }
 
     // Construction of [n, s] block
