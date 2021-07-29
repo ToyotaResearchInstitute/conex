@@ -119,10 +119,7 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
   Weight edge_weights(n, intersections, cliques_sorted, valid_leaf);
   assert(root_in < static_cast<int>(n));
 
-  vector<int> visited(n);
-  for (auto& b : visited) {
-    b = 0;
-  }
+  vector<int> visited(n, 0);
 
   std::stack<size_t> node_stack;
   int root = root_in;
@@ -136,6 +133,7 @@ int PickCliqueOrderHelper(const std::vector<std::vector<int>>& cliques_sorted,
   vector<Edge> edges;
 
   order->clear();
+  order->reserve(n);
 
   while (order->size() < n) {
     size_t active = node_stack.top();
