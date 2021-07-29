@@ -1,6 +1,5 @@
+build --action_env=LIBRARY_PATH
 build --cxxopt='-std=c++17'
-build --linkopt="-lblas"
-build --copt="-DEIGEN_USE_BLAS"
 build --copt="-O3"
 build --copt="-fPIC"
 
@@ -9,9 +8,25 @@ build:benchmark --copt="-fno-omit-frame-pointer"
 
 build:debug --copt="-g"
 build:debug --copt="-O0"
-#build:debug --copt="-Werror"
-#build:debug --copt="-Wall"
 build:debug -c dbg
 build:debug --javacopt="-g"
 build:debug --strip="never"
 
+build:blas --copt="-DEIGEN_USE_BLAS"
+build:blas --linkopt="-lblas"
+
+build:lapacke --copt="-DEIGEN_USE_LAPACKE"
+build:lapacke --linkopt="-llapacke"
+
+# Assume that mkl.h is in CPLUS_INCLUDE_PATH
+build:mkl --copt="-DEIGEN_USE_MKL_ALL"
+
+# Assume MKL libs are in both LIBRARY_PATH and LD_LIBRARY_PATH
+build:mkl --linkopt="-lmkl_core"
+build:mkl --linkopt="-lmkl_gnu_thread"
+build:mkl --linkopt="-lmkl_intel_lp64"
+
+build:mkl --linkopt="-lpthread"
+build:mkl --linkopt="-lm"
+build:mkl --linkopt="-ldl"
+build:mkl --linkopt="-fopenmp"

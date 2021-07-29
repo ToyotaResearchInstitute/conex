@@ -62,14 +62,8 @@ cc_library(
         "EIGEN_MPL2_ONLY",
         "EIGEN_MAX_ALIGN_BYTES=64",
         "EIGEN_HAS_TYPE_TRAITS=0",
-        "EIGEN_USE_BLAS",
-        "EIGEN_USE_LAPACKE",
     ],
     includes = ["."],
-    linkopts = [
-        "-lblas",
-        "-llapacke",
-    ],
     visibility = ["//visibility:public"],
 )
 
