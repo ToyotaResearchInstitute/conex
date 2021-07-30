@@ -26,6 +26,7 @@ struct SolverConfiguration {
   double warmstart_abort_threshold = 2;
   int max_iterations = 25;
   double infeasibility_threshold = 1e5;
+  double kkt_error_tolerance = 1;
 };
 
 struct ConexStatus {

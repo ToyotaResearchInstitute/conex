@@ -252,6 +252,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
   double inv_sqrt_mu_max = config.inv_sqrt_mu_max;
   double cx = 1;
   double by = -1;
+  double kkt_error = 0;
 
   StepOptions newton_step_parameters;
   newton_step_parameters.affine = 0;
@@ -290,6 +291,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 #endif
     bool final_centering =
         (newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) ||
+        (kkt_error > config.kkt_error_tolerance) ||
         i >= (config.max_iterations - config.final_centering_steps);
     bool update_mu = (i == 0) || !(initial_centering || final_centering) ||
                      warmstart_aborted;
@@ -399,6 +401,9 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     REPORT(d_inf);
     REPORT(by);
     REPORT(cx);
+    double s_dot_x = mu * (rankK - d_2 * d_2) / (b_scaling * c_scaling);
+    kkt_error = std::fabs(cx - by - s_dot_x) / s_dot_x;
+    REPORT(kkt_error);
 
     prog.stats->num_iter = i + 1;
     prog.stats->sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
