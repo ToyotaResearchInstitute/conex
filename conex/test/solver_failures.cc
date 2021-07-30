@@ -205,6 +205,49 @@ class MPCFailingLDLT {
   }
 };
 
+void LPFailSlater(int number_of_implicit_equations) {
+  double distance_to_infeasible = 0;
+  SolverConfiguration config;
+  config.prepare_dual_variables = true;
+  config.inv_sqrt_mu_max = 100;
+  config.final_centering_tolerance = 1;
+  config.infeasibility_threshold = 2000000;
+  config.final_centering_steps = 5;
+
+  int m = 10;
+  int n1 = number_of_implicit_equations;
+  int n2 = 8;
+  int n = 2 * n1 + n2;
+  Eigen::MatrixXd yref = DenseMatrix::Random(m, 1);
+
+  DenseMatrix A1 = DenseMatrix::Random(n1, m);
+  DenseMatrix C1 = A1 * yref;
+  DenseMatrix A2 = DenseMatrix::Random(n2, m);
+  DenseMatrix C2 = A2 * yref;
+  C2.array() += 2;
+
+  DenseMatrix A = DenseMatrix::Random(n, m);
+  DenseMatrix C = DenseMatrix::Random(n, 1);
+  A << A1, -A1, A2;
+
+  DenseMatrix offset(n1, 1);
+  offset.setConstant(distance_to_infeasible);
+  C << C1, -(C1 - offset), C2;
+
+  LinearConstraint _constraint{n, &A, &C};
+
+  Program prog(m);
+  prog.SetNumberOfVariables(m);
+  prog.AddConstraint(_constraint);
+
+  VectorXd b(2);
+  VectorXd xref = VectorXd::Random(n);
+  xref = xref.array().abs();
+  b = A.transpose() * xref;
+
+  DenseMatrix y(m, 1);
+  Solve(b, prog, config, y.data());
+}
 }  // namespace conex
 
 int main() {
@@ -214,4 +257,10 @@ int main() {
   for (int i = 0; i < 5; i++) {
     conex::DoBadInitialization(true /*trigger fail*/);
   }
+  // Triggers factorization failure
+  srand(0);
+  conex::LPFailSlater(1 /*num implicit eqs*/);
+  // Triggers bad convergence
+  srand(0);
+  conex::LPFailSlater(2 /*num implicit eqs*/);
 }
