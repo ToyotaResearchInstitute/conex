@@ -197,6 +197,7 @@ bool T::BlockCholeskyInPlace(TriangularMatrixWorkspace* C) {
     } else {
       // Dummy decomposition.
       MatrixXd x(1, 1);
+      x(0) = 1;
       llts.emplace_back(x);
     }
 
