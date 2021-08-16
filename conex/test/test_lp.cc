@@ -11,39 +11,83 @@ namespace conex {
 using DenseMatrix = Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-GTEST_TEST(LP, Dense) {
-  for (int i = 0; i < 10; i++) {
-    SolverConfiguration config;
-    config.prepare_dual_variables = true;
-    config.inv_sqrt_mu_max = 1000000;
-
-    int m = 5;
-    int n = 6 + 2 * i;
+int DoRandomDenseTest(const SolverConfiguration& config, int number_of_tests,
+                      int random_seed) {
+  srand(random_seed);
+  int total_iters = 0;
+  for (int i = 0; i < number_of_tests; i++) {
+    int num_variables = 5;
+    int num_constraints = 6 + 2 * i;
     double eps = 1e-12;
 
-    DenseMatrix Alinear = DenseMatrix::Random(n, m);
-    DenseMatrix Clinear = DenseMatrix::Random(n, 1);
+    DenseMatrix Alinear = DenseMatrix::Random(num_constraints, num_variables);
+    DenseMatrix Clinear = DenseMatrix::Random(num_constraints, 1);
     Clinear = Clinear.array().abs();
 
-    LinearConstraint linear_constraint{n, &Alinear, &Clinear};
+    LinearConstraint linear_constraint{num_constraints, &Alinear, &Clinear};
 
-    Program prog(m);
-    prog.SetNumberOfVariables(m);
+    Program prog(num_variables);
     prog.AddConstraint(linear_constraint);
 
-    VectorXd b = Alinear.transpose() * Clinear;
-    DenseMatrix y(m, 1);
+    VectorXd x0 = VectorXd::Random(num_constraints, 1);
+    x0 = x0.array().abs();
+    x0 *= 0.01 / x0.norm();
+    VectorXd b = Alinear.transpose() * x0;
+    DenseMatrix y(num_variables, 1);
     Solve(b, prog, config, y.data());
 
-    VectorXd x(n);
+    VectorXd x(num_constraints);
     prog.GetDualVariable(0, &x);
 
     VectorXd slack = Clinear - Alinear * y;
-    EXPECT_TRUE((Alinear.transpose() * x - b).norm() <= eps);
-    EXPECT_TRUE((slack).minCoeff() >= -eps);
+    EXPECT_LE((Alinear.transpose() * x - b).norm(), eps * b.norm());
+    EXPECT_GE(slack.minCoeff(), -eps);
+    EXPECT_GE(x.minCoeff(), -eps);
+    EXPECT_GE(slack.dot(x), -eps);
+    double mu = 1.0 / (config.inv_sqrt_mu_max * config.inv_sqrt_mu_max);
+    EXPECT_LE(slack.dot(x), (mu + std::sqrt(eps)) * num_constraints);
+    auto status = prog.Status();
+    total_iters += status.num_iterations;
   }
+  return total_iters;
 }
 
+GTEST_TEST(LP, Dense) {
+  SolverConfiguration config;
+  config.prepare_dual_variables = true;
+  config.inv_sqrt_mu_max = 5e5;
+  config.divergence_upper_bound = 1000;
+  config.dinf_upper_bound = 1.35;
+  config.final_centering_tolerance = 1;
+  int num_tests = 50;
+  int random_seed = 1;
+
+  config.enable_line_search = 0;
+  config.enable_rescaling = 1;
+  int num_iter_div = DoRandomDenseTest(config, num_tests, random_seed);
+
+  config.enable_line_search = 0;
+  config.enable_rescaling = 0;
+  int num_iter_div_no_rescale =
+      DoRandomDenseTest(config, num_tests, random_seed);
+
+  config.enable_line_search = 1;
+  config.enable_rescaling = 1;
+  int num_iter_line_search = DoRandomDenseTest(config, num_tests, random_seed);
+
+  config.enable_line_search = 1;
+  config.enable_rescaling = 0;
+  int num_iter_line_search_no_rescale =
+      DoRandomDenseTest(config, num_tests, random_seed);
+
+  // Empirical evidence suggests line search is better than divergence
+  // upper-bound.
+  EXPECT_LE(num_iter_div, num_iter_div_no_rescale);
+
+  // Empirical evidence suggests rescaling helps.
+  EXPECT_LE(num_iter_line_search, num_iter_div_no_rescale);
+  EXPECT_LE(num_iter_line_search, num_iter_line_search_no_rescale);
+}
 Eigen::VectorXd ExtractVars(const Eigen::VectorXd& x,
                             std::vector<int> indices) {
   Eigen::VectorXd z(indices.size());

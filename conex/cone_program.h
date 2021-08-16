@@ -19,6 +19,8 @@ struct SolverConfiguration {
   double minimum_mu = 1e-12;
   double maximum_mu = 1e4;
   double divergence_upper_bound = 1;
+  int enable_line_search = 0;
+  double dinf_upper_bound = 1;
   int final_centering_steps = 5;
   double final_centering_tolerance = .01;
   int initial_centering_steps_warmstart = 0;
@@ -26,11 +28,13 @@ struct SolverConfiguration {
   double warmstart_abort_threshold = 2;
   int max_iterations = 25;
   double infeasibility_threshold = 1e5;
-  double kkt_error_tolerance = 1;
+  double kkt_error_tolerance = 1e10;
+  int enable_rescaling = 1;
 };
 
 struct ConexStatus {
   int solved = 0;
+  int num_iterations;
   int primal_infeasible = 0;
   int dual_infeasible = 0;
 };

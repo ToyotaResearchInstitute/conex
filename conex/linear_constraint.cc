@@ -3,6 +3,64 @@
 #include "newton_step.h"
 
 namespace conex {
+using Eigen::VectorXd;
+
+bool FindMinimumMu(const VectorXd& d0, const VectorXd& delta, double dinfmax,
+                   LineSearchOutput* output) {
+  auto& upper_bound = output->upper_bound;
+  auto& lower_bound = output->lower_bound;
+  double upper_bound_i;
+  double lower_bound_i;
+  double temp;
+  int i = 0;
+
+  for (i = 0; i < d0.size(); i++) {
+    upper_bound_i = (dinfmax - d0(i)) / delta(i);
+    lower_bound_i = (-dinfmax - d0(i)) / delta(i);
+
+    if (lower_bound_i > upper_bound_i) {
+      temp = upper_bound_i;
+      upper_bound_i = lower_bound_i;
+      lower_bound_i = temp;
+    }
+
+    if (upper_bound_i < upper_bound || i == 0) {
+      upper_bound = upper_bound_i;
+    }
+
+    if (lower_bound_i > lower_bound || i == 0) {
+      lower_bound = lower_bound_i;
+    }
+  }
+
+  bool success = true;
+  if (lower_bound > upper_bound) {
+    success = false;
+  }
+  return success;
+}
+
+bool PerformLineSearch(LinearConstraint* o, const LineSearchParameters& params,
+                       const Ref& y0, const Ref& y1, LineSearchOutput* output) {
+  auto* workspace = &o->workspace_;
+
+  auto& minus_s = workspace->temp_1;
+  auto& W = workspace->W;
+  auto& SW = workspace->temp_1;
+  auto& d0 = workspace->temp_2;
+
+  o->ComputeNegativeSlack(params.c0_weight, y0, &minus_s);
+  SW = minus_s.cwiseProduct(W);
+  int n = SW.rows();
+  d0 = SW + DenseMatrix::Ones(n, 1);
+
+  o->ComputeNegativeSlack(params.c1_weight, y1, &minus_s);
+  SW = minus_s.cwiseProduct(W);
+  VectorXd d1 = SW + DenseMatrix::Ones(n, 1);
+
+  bool success = FindMinimumMu(d0, d1 - d0, params.dinf_upper_bound, output);
+  return !success;
+}
 
 void SetIdentity(LinearConstraint* o) { o->workspace_.W.setConstant(1); }
 

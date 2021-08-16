@@ -47,6 +47,12 @@ class LinearConstraint {
   friend void SetIdentity(LinearConstraint* o);
   friend void PrepareStep(LinearConstraint* o, const StepOptions& opt,
                           const Ref& y, StepInfo* data);
+
+  friend bool PerformLineSearch(LinearConstraint* o,
+                                const LineSearchParameters& params,
+                                const Ref& y0, const Ref& y1,
+                                LineSearchOutput* output);
+
   // Eigenvalues of Q(w^{1/2}) *(c-A*y)
   friend void GetWeightedSlackEigenvalues(LinearConstraint* o, const Ref& y,
                                           double c_weight,
@@ -73,6 +79,15 @@ class LowerBound : public LinearConstraint {
       : LinearConstraint(-Eigen::MatrixXd::Identity(lower_bounds.rows(),
                                                     lower_bounds.rows()),
                          -lower_bounds) {}
+
+  friend bool PerformLineSearch(LowerBound* o,
+                                const LineSearchParameters& params,
+                                const Ref& y0, const Ref& y1,
+                                LineSearchOutput* output) {
+    return PerformLineSearch(static_cast<LinearConstraint*>(o), params, y0, y1, output);
+  }
+
+
 };
 
 class UpperBound : public LinearConstraint {
@@ -81,6 +96,15 @@ class UpperBound : public LinearConstraint {
       : LinearConstraint(
             Eigen::MatrixXd::Identity(upper_bounds.rows(), upper_bounds.rows()),
             upper_bounds) {}
+
+  friend bool PerformLineSearch(UpperBound* o,
+                                const LineSearchParameters& params,
+                                const Ref& y0, const Ref& y1,
+                                LineSearchOutput* output) {
+    return PerformLineSearch(static_cast<LinearConstraint*>(o), params, y0, y1, output);
+  }
+
+
 };
 
 }  // namespace conex

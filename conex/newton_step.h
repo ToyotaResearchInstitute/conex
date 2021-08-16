@@ -35,6 +35,18 @@ struct StepInfo {
   double norminfd = 0;
 };
 
+struct LineSearchParameters {
+  double c0_weight;
+  double c1_weight;
+  bool primal = true;
+  bool dual = true;
+  double dinf_upper_bound;
+};
+struct LineSearchOutput {
+  double upper_bound = std::numeric_limits<double>::max();
+  double lower_bound = -std::numeric_limits<double>::max();
+};
+
 using DenseMatrix = Eigen::MatrixXd;
 struct WorkspaceSchurComplement {
   WorkspaceSchurComplement(int m) : m_(m) {}

@@ -27,6 +27,12 @@ bool UpdateAffineTerm(T*, double, int, int, int) {
   CONEX_DEMAND(false, "Constraint does not support updates of affine term.");
 }
 
+template <typename T>
+bool PerformLineSearch(T* o, const LineSearchParameters& params, const Ref& y0,
+                       const Ref& y1, LineSearchOutput* output) {
+  CONEX_DEMAND(false, "Constraint does not support line search.");
+}
+
 // template <typename T>
 // bool TakeStep(T*, const StepOptions&) {
 //  return true;
@@ -47,6 +53,7 @@ bool UpdateAffineTerm(T*, double, int, int, int) {
 //
 // Reference: "Inheritance is the base-class of evil" by Sean Parent.  class
 // Constraint {
+
 class Constraint {
  public:
   template <typename Implementation>
@@ -96,6 +103,13 @@ class Constraint {
     return o->model->do_take_step(opts);
   }
 
+  friend bool PerformLineSearch(Constraint* o,
+                                const LineSearchParameters& params,
+                                const Ref& y0, const Ref& y1,
+                                LineSearchOutput* output) {
+    return o->model->do_perform_line_search(params, y0, y1, output);
+  }
+
  private:
   struct Concept {
     virtual void do_schur_complement(bool initialize,
@@ -114,6 +128,11 @@ class Constraint {
                                            int col, int hyper_complex_dim) = 0;
     virtual bool do_update_affine_term(double val, int row, int col,
                                        int hyper_complex_dim) = 0;
+
+    virtual bool do_perform_line_search(const LineSearchParameters& params,
+                                        const Ref& y0, const Ref& y1,
+                                        LineSearchOutput* output) = 0;
+
     virtual int do_rank() = 0;
     virtual ~Concept() = default;
   };
@@ -121,7 +140,6 @@ class Constraint {
   template <typename Implementation>
   struct Model final : Concept {
     Model(Implementation* t) : data(t) {}
-
     void do_schur_complement(bool initialize,
                              SchurComplementSystem* sys) override {
       ConstructSchurComplementSystem(data, initialize, sys);
@@ -171,6 +189,12 @@ class Constraint {
 
     bool do_take_step(const StepOptions& opt) override {
       return TakeStep(data, opt);
+    }
+
+    bool do_perform_line_search(const LineSearchParameters& params,
+                                const Ref& y0, const Ref& y1,
+                                LineSearchOutput* output) override {
+      return PerformLineSearch(data, params, y0, y1, output);
     }
 
     Implementation* data;

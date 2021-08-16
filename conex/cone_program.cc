@@ -6,6 +6,8 @@
 #include "conex/divergence.h"
 #include "conex/newton_step.h"
 
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 namespace conex {
 
 double CalcMinMu(double lambda_max, double, WeightedSlackEigenvalues* p) {
@@ -106,6 +108,54 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
   return true;
 }
 
+//    y = newton_step_parameters.inv_sqrt_mu *
+//            (b * b_scaling + prog.sys.AQc * c_scaling) -
+//        2 * prog.sys.AW;
+
+double ComputeMuFromLineSearch(ConstraintManager<Container>& constraints,
+                               std::unique_ptr<Solver>& solver,
+                               double dinf_upper_bound, const DenseMatrix& AQc,
+                               double c_weight, const DenseMatrix& b,
+                               const DenseMatrix& AW, Ref* y0) {
+  *y0 = -2 * AW;
+  solver->SolveInPlace(y0);
+
+  VectorXd y1_data(b.rows());
+  Ref y1(y1_data.data(), b.rows(), 1);
+  y1 = AQc + b - 2 * AW;
+  solver->SolveInPlace(&y1);
+  LineSearchParameters params;
+  params.c0_weight = c_weight * 0;
+  params.c1_weight = c_weight * 1;
+  params.dinf_upper_bound = dinf_upper_bound;
+  LineSearchOutput output;
+
+  int i = 0;
+  for (auto& ci : constraints.eqs) {
+    LineSearchOutput output_i;
+    auto ysegment1 = Vars(*y0, constraints.cliques.at(i));
+    auto ysegment2 = Vars(y1, constraints.cliques.at(i));
+    Ref z1(ysegment1.data(), ysegment1.rows(), 1);
+    Ref z2(ysegment2.data(), ysegment2.rows(), 1);
+    bool failure = PerformLineSearch(&ci.constraint, params, z1, z2, &output_i);
+    if (failure) {
+      return -1;
+    }
+    if (output_i.lower_bound > output.lower_bound) {
+      output.lower_bound = output_i.lower_bound;
+    }
+    if (output_i.upper_bound < output.upper_bound) {
+      output.upper_bound = output_i.upper_bound;
+    }
+    i++;
+  }
+  if (output.lower_bound <= output.upper_bound) {
+    return output.upper_bound;
+  } else {
+    return -1;
+  }
+}
+
 // Finds the k that maximizes the denominator of the divergence upperbound:
 //
 //   max( k lambda_min, 2 - k lambda_max),
@@ -117,7 +167,6 @@ double MinimizeNormInf(WeightedSlackEigenvalues& p) {
   }
   return y;
 }
-
 double ComputeMuFromDivergence(ConstraintManager<Container>& constraints,
                                std::unique_ptr<Solver>& solver,
                                const DenseMatrix& AQc, double c_weight,
@@ -270,14 +319,23 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     AssembleSchurComplementResiduals(&prog.kkt_system_manager_, &prog.sys);
     END_TIMER
 
-    if (i < 1 && config.initialization_mode == 0) {
+    if (i < 1 && config.initialization_mode == 0 && config.enable_rescaling) {
       b_scaling = 1.0 / (1 + b.norm());
       c_scaling = 1.0 / (1 + prog.sys.AQc.norm());
     }
     if (i < 1) {
-      inv_sqrt_mu_max /= std::sqrt(b_scaling * c_scaling);
+      // The solver returns xhat = b_scaling * x and
+      //                    shat = c_scaling * s
+      // satisfying xhat * shat = mu * I
+      //
+      // This means x * s = mu/(b_scaling * c_scaling).
+      // So, we rescale the target_mu by (b_scaling * c_scaling).
+      double mu_target = 1.0 / (inv_sqrt_mu_max * inv_sqrt_mu_max);
+      mu_target *= (b_scaling * c_scaling);
+      inv_sqrt_mu_max = 1.0 / std::sqrt(mu_target);
     }
 
+    auto M = solver->KKTMatrix();
     START_TIMER(Factor)
     if (!solver->Factor()) {
       if (i == 0 && config.initialization_mode) {
@@ -293,9 +351,20 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     END_TIMER
 
     if (update_mu) {
-      double temp = ComputeMuFromDivergence(prog.kkt_system_manager_, solver,
-                                            prog.sys.AQc * c_scaling, c_scaling,
-                                            b * b_scaling, config, rankK, &y);
+      double temp = -1;
+      if (config.enable_line_search) {
+        temp = ComputeMuFromLineSearch(prog.kkt_system_manager_, solver,
+                                       config.dinf_upper_bound,
+                                       prog.sys.AQc * c_scaling, c_scaling,
+                                       b * b_scaling, prog.sys.AW, &y);
+      }
+
+      if (temp < 0) {
+        temp = ComputeMuFromDivergence(prog.kkt_system_manager_, solver,
+                                       prog.sys.AQc * c_scaling, c_scaling,
+                                       b * b_scaling, config, rankK, &y);
+      }
+
       if (temp > 0) {
         newton_step_parameters.inv_sqrt_mu = temp;
       } else {
@@ -310,9 +379,6 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     const double max = inv_sqrt_mu_max;
     const double min = std::sqrt(1.0 / (1e-15 + config.maximum_mu));
     ApplyLimits(&newton_step_parameters.inv_sqrt_mu, min, max);
-
-    double mu = 1.0 / (newton_step_parameters.inv_sqrt_mu);
-    mu *= mu;
 
     y = newton_step_parameters.inv_sqrt_mu *
             (b * b_scaling + prog.sys.AQc * c_scaling) -
@@ -358,12 +424,17 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     cx /= (newton_step_parameters.inv_sqrt_mu * b_scaling);
 
+    double mu = 1.0 / (newton_step_parameters.inv_sqrt_mu);
+    mu *= mu;
+
+    double s_dot_x = mu * (rankK - d_2 * d_2) / (b_scaling * c_scaling);
+
+    mu = mu / (c_scaling * b_scaling);
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
     REPORT(by);
     REPORT(cx);
-    double s_dot_x = mu * (rankK - d_2 * d_2) / (b_scaling * c_scaling);
     kkt_error = std::fabs(cx - by - s_dot_x) / s_dot_x;
     REPORT(kkt_error);
 
@@ -381,6 +452,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     }
   }
 
+  prog.status_.num_iterations = prog.stats->num_iter;
   yout = y.topRows(m);
 
   double mu = 1.0 / (newton_step_parameters.inv_sqrt_mu);
