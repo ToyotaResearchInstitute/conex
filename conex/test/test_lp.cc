@@ -44,7 +44,8 @@ GTEST_TEST(LP, Dense) {
   }
 }
 
-Eigen::VectorXd Vars(const Eigen::VectorXd& x, std::vector<int> indices) {
+Eigen::VectorXd ExtractVars(const Eigen::VectorXd& x,
+                            std::vector<int> indices) {
   Eigen::VectorXd z(indices.size());
   int cnt = 0;
   for (auto i : indices) {
@@ -142,7 +143,7 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
     Solve(b, prog, config, y.data());
     MatrixXd Ax = b * 0;
     for (int i = 0; i < number_of_constraints; i++) {
-      VectorXd slack = C.at(i) - A.at(i) * Vars(y, variables.at(i));
+      VectorXd slack = C.at(i) - A.at(i) * ExtractVars(y, variables.at(i));
       EXPECT_TRUE((slack).minCoeff() >= -eps);
 
       MatrixXd xi(A.at(i).rows(), 1);
@@ -229,7 +230,7 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
     Solve(b, prog, config, y.data());
     MatrixXd Ax = b * 0;
     for (int i = 0; i < number_of_constraints; i++) {
-      VectorXd slack = C.at(i) - A.at(i) * Vars(y, variables.at(i));
+      VectorXd slack = C.at(i) - A.at(i) * ExtractVars(y, variables.at(i));
       EXPECT_TRUE((slack).minCoeff() >= -eps);
 
       MatrixXd xi(A.at(i).rows(), 1);
