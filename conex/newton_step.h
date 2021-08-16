@@ -66,6 +66,9 @@ struct WorkspaceSchurComplement {
   }
 
   void setZero() {
+    if (!residual_only_) {
+      G.setZero();
+    }
     AW.setZero();
     AQc.setZero();
     inner_product_of_w_and_c = 0;

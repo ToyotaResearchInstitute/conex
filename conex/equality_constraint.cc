@@ -16,14 +16,10 @@ void ConstructSchurComplementSystem(EqualityConstraints* o, bool initialize,
   auto& A_ = o->A_;
   auto& b_ = o->b_;
   if (initialize) {
-    sys.G.setZero();
+    sys.setZero();
     sys.G.bottomLeftCorner(A_.rows(), A_.cols()) = A_;
     sys.G.topRightCorner(A_.cols(), A_.rows()) = A_.transpose();
-    sys.AQc.setZero();
     sys.AQc.bottomRows(A_.rows()) = b_;
-    sys.AW.setZero();
-    sys.inner_product_of_w_and_c = 0;
-    sys.inner_product_of_c_and_Qc = 0;
   } else {
     sys.G.bottomLeftCorner(A_.rows(), A_.cols()) += A_;
     sys.G.topRightCorner(A_.cols(), A_.rows()) += A_.transpose();
