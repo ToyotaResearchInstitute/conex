@@ -14,7 +14,7 @@ namespace conex {
 #else
 #define CONEX_DEMAND(x, msg)                                                   \
   if (!(x)) {                                                                  \
-    std::cout << __FILE__ << " line " << __LINE__ << ": " << msg << std::endl; \
+    std::cerr << __FILE__ << " line " << __LINE__ << ": " << msg << std::endl; \
     return 1;                                                                  \
   }
 #endif
