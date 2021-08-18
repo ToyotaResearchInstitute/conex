@@ -84,10 +84,9 @@ class LowerBound : public LinearConstraint {
                                 const LineSearchParameters& params,
                                 const Ref& y0, const Ref& y1,
                                 LineSearchOutput* output) {
-    return PerformLineSearch(static_cast<LinearConstraint*>(o), params, y0, y1, output);
+    return PerformLineSearch(static_cast<LinearConstraint*>(o), params, y0, y1,
+                             output);
   }
-
-
 };
 
 class UpperBound : public LinearConstraint {
@@ -101,10 +100,9 @@ class UpperBound : public LinearConstraint {
                                 const LineSearchParameters& params,
                                 const Ref& y0, const Ref& y1,
                                 LineSearchOutput* output) {
-    return PerformLineSearch(static_cast<LinearConstraint*>(o), params, y0, y1, output);
+    return PerformLineSearch(static_cast<LinearConstraint*>(o), params, y0, y1,
+                             output);
   }
-
-
 };
 
 }  // namespace conex
