@@ -1,3 +1,4 @@
+#pragma once
 #include "newton_step.h"
 #include "workspace_soc.h"
 
