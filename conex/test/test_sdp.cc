@@ -47,10 +47,6 @@ GTEST_TEST(SDP, Mixed) {
   Eigen::MatrixXd y(m, 1);
   auto config = SolverConfiguration();
   config.max_iterations = 30;
-  // Set this to ensure that line search failure
-  // logic correctly triggers (line search not yet implemented
-  // for SDP)
-  config.enable_line_search = 1;
   Solve(b, prog, config, y.data());
 
   MatrixXd S = MatrixXd::Zero(2, 2);
