@@ -368,7 +368,6 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     if (update_mu) {
       double temp = -1;
       if (config.enable_line_search) {
-        DUMP("HEHEH!");
         temp = ComputeMuFromLineSearch(prog.kkt_system_manager_, solver,
                                        config.dinf_upper_bound,
                                        prog.sys.AQc * c_scaling, c_scaling,

@@ -139,16 +139,7 @@ void SolveQPInstance(ProblemData& data, const SolverConfiguration& config,
 
 }  // namespace conex
 
-struct ExperimentalSetup {
-  int num_trial;
-  int num_vars;
-  int num_ineqs;
-  int rank_of_quadratic;
-};
-
 void SolveRandomQP(int num_vars, int num_ineqs) {
-  ExperimentalSetup s;
-
   conex::SolverConfiguration config;
 
   config.enable_line_search = true;
