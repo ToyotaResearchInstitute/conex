@@ -1,7 +1,7 @@
 #include "conex/cone_program.h"
 #include "conex/equality_constraint.h"
 #include "conex/linear_constraint.h"
-#include "conex/quadratic_cost.h"
+#include "conex/quadratic_cone_constraint.h"
 #include <Eigen/Dense>
 
 namespace conex {
@@ -187,10 +187,10 @@ class MPCFailingLDLT {
         }
       }
 
-      AddQuadraticCost(&prog, MatrixXd::Identity(nu, nu), InputVars(i),
-                       epigraph_start++);
-      AddQuadraticCost(&prog, MatrixXd::Identity(nx, nx), StateVars(i + 1),
-                       epigraph_start++);
+      AddQuadraticCostEpigraph(&prog, MatrixXd::Identity(nu, nu), InputVars(i),
+                               epigraph_start++);
+      AddQuadraticCostEpigraph(&prog, MatrixXd::Identity(nx, nx),
+                               StateVars(i + 1), epigraph_start++);
     }
 
     Eigen::VectorXd var(num_vars);

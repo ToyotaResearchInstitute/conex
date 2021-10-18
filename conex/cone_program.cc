@@ -6,6 +6,8 @@
 #include "conex/divergence.h"
 #include "conex/newton_step.h"
 
+#include "conex/quadratic_cost.h"
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 namespace conex {
@@ -86,7 +88,7 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
     if (config.initialization_mode == 0) {
       prog.stats->b_scaling() = 1;
       prog.stats->c_scaling() = 1;
-      SetIdentity(&prog.constraints);
+      SetIdentity(&prog.constraints_);
     }
 
     START_TIMER(Sparsity Analysis);
@@ -220,9 +222,25 @@ void ApplyLimits(double* x, double lb, double ub) {
   }
 }
 
-bool Solve(const DenseMatrix& bin, Program& prog,
-           const SolverConfiguration& config, double* primal_variable) {
-  auto& constraints = prog.constraints;
+bool Program::AddLinearCost(const VectorXd& b) {
+  CONEX_DEMAND(GetNumberOfVariables() == b.rows(),
+               "Cost vector dimension does not equal number of variables");
+  linear_cost_ += b;
+  return true;
+}
+
+void Program::ClearLinearCosts() { linear_cost_.setZero(); }
+
+bool Solve(Program& prog, const SolverConfiguration& config,
+           double* primal_variable) {
+  CONEX_DEMAND(prog.contains_quadratic_costs_ == false ||
+                   (config.enable_line_search && !config.enable_rescaling),
+               "Must enable line search and disable rescaling for problems "
+               "with quadratic costs.");
+
+  VectorXd bin = -prog.linear_cost_;
+
+  auto& constraints = prog.constraints_;
   auto& solver = prog.solver;
   prog.status_.solved = 0;
   prog.status_.primal_infeasible = 0;
@@ -240,9 +258,6 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 #ifdef EIGEN_USE_BLAS
   std::cout << "...BLAS Enabled\n";
 #endif
-
-  CONEX_DEMAND(prog.GetNumberOfVariables() == bin.rows(),
-               "Cost vector dimension does not equal number of variables");
 
   int m = bin.rows();
   // Empty program
@@ -340,7 +355,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     if (!solver->Factor()) {
       if (i == 0 && config.initialization_mode) {
         PRINTSTATUS("Aborting warmstart...");
-        SetIdentity(&prog.constraints);
+        SetIdentity(&prog.constraints_);
         warmstart_aborted = true;
         continue;
       }
@@ -357,9 +372,14 @@ bool Solve(const DenseMatrix& bin, Program& prog,
                                        config.dinf_upper_bound,
                                        prog.sys.AQc * c_scaling, c_scaling,
                                        b * b_scaling, prog.sys.AW, &y);
+        if (temp < 0) {
+          temp = newton_step_parameters.inv_sqrt_mu;
+        }
       }
 
       if (temp < 0) {
+        CONEX_DEMAND(!prog.contains_quadratic_costs_,
+                     "Solver terminating with error: line-search failed.");
         temp = ComputeMuFromDivergence(prog.kkt_system_manager_, solver,
                                        prog.sys.AQc * c_scaling, c_scaling,
                                        b * b_scaling, config, rankK, &y);
@@ -402,10 +422,10 @@ bool Solve(const DenseMatrix& bin, Program& prog,
     if (i == 0 && config.initialization_mode &&
         info.norminfd >= config.warmstart_abort_threshold) {
       PRINTSTATUS("Aborting warmstart...");
-      SetIdentity(&prog.constraints);
+      SetIdentity(&prog.constraints_);
       warmstart_aborted = true;
     } else {
-      TakeStep(&prog.kkt_system_manager_, newton_step_parameters);
+      TakeStep(&prog.constraints_, newton_step_parameters);
     }
     END_TIMER
 
@@ -446,7 +466,7 @@ bool Solve(const DenseMatrix& bin, Program& prog,
 
     if (final_centering ||
         newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) {
-      if (d_inf < config.final_centering_tolerance) {
+      if (d_inf <= config.final_centering_tolerance) {
         break;
       }
     }
@@ -504,6 +524,30 @@ DenseMatrix GetFeasibleObjective(Program* prg) {
   prog.solver->Assemble(&AW, &AQc, &inner_product_of_c_and_w);
 
   return .5 * AW;
+}
+
+bool Solve(const DenseMatrix& b, Program& prog,
+           const SolverConfiguration& config, double* primal_variable) {
+  prog.ClearLinearCosts();
+  prog.AddLinearCost(-b);
+  return Solve(prog, config, primal_variable);
+}
+
+bool Program::AddQuadraticCost(const DenseMatrix& Q,
+                               const std::vector<int>& vars) {
+  contains_quadratic_costs_ = true;
+  conex::AddQuadraticCost(this, Q, vars);
+  return true;
+}
+
+bool Program::AddQuadraticCost(const Eigen::MatrixXd& Q) {
+  CONEX_DEMAND(Q.rows() == GetNumberOfVariables(),
+               "Order of matrix must equal number of variables.");
+  std::vector<int> variables(GetNumberOfVariables());
+  for (int i = 0; i < GetNumberOfVariables(); i++) {
+    variables[i] = i;
+  }
+  return AddQuadraticCost(Q, variables);
 }
 
 }  // namespace conex

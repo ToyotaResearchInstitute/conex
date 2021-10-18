@@ -298,7 +298,10 @@ cc_library(
 
 cc_library(
     name = "core",
-    srcs = ["cone_program.cc"],
+    srcs = [
+        "cone_program.cc",
+        "quadratic_cost.cc",
+    ],
     hdrs = [
         "cone_program.h",
         "constraint.h",
@@ -310,6 +313,7 @@ cc_library(
         "kkt_system_assembler.h",
         "memory_utils.h",
         "newton_step.h",
+        "quadratic_cost.h",
         "supernodal_cholesky_data.h",
         "workspace.h",
     ],
@@ -365,7 +369,6 @@ cc_library(
     ],
     hdrs = [
         "quadratic_cone_constraint.h",
-        "quadratic_cost.h",
         "soc_constraint.h",
     ],
     copts = COPTS,
@@ -416,6 +419,16 @@ cc_library(
 cc_test(
     name = "equality_constraints_test",
     srcs = glob(["test/equality_constraints_test.cc"]),
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
+)
+
+cc_test(
+    name = "quadratic_objective_test",
+    srcs = glob(["test/quadratic_objective_test.cc"]),
     copts = ["-Iexternal/gtest/include"],
     deps = [
         "conex_lib",

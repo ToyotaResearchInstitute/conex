@@ -9,14 +9,12 @@
 
 namespace conex {
 
-//  Allocates memory for internal computations.
-
 struct SolverConfiguration {
   int prepare_dual_variables = 0;
   int initialization_mode = 0;
   // TODO(FrankPermenter): Remove inv_sqrt_mu_max
   double inv_sqrt_mu_max = 1000;
-  double minimum_mu = 1e-12;
+  double minimum_mu = 1e-15;
   double maximum_mu = 1e4;
   double divergence_upper_bound = 1;
   int enable_line_search = 0;
@@ -84,12 +82,13 @@ inline void PrepareStep(ConstraintManager<Container>* kkt,
   }
 }
 
-inline void TakeStep(ConstraintManager<Container>* kkt,
+inline void TakeStep(std::vector<Constraint*>* constraints,
                      const StepOptions& newton_step_parameters) {
-  for (auto& ci : kkt->eqs) {
-    TakeStep(&ci.constraint, newton_step_parameters);
+  for (auto& c : *constraints) {
+    TakeStep(c, newton_step_parameters);
   }
 }
+
 class Program {
  public:
   Program(int number_of_variables) {
@@ -105,6 +104,7 @@ class Program {
   void SetNumberOfVariables(int m) {
     kkt_system_manager_.SetNumberOfVariables(m);
     sys.m_ = m;
+    linear_cost_ = Eigen::VectorXd::Zero(m);
   }
 
   int GetNumberOfVariables() { return sys.m_; }
@@ -185,7 +185,7 @@ class Program {
     if constexpr (!std::is_same<T, EqualityConstraints>::value) {
       bool result = kkt_system_manager_.AddConstraint<T>(std::forward<T>(d));
       if (result) {
-        constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+        constraints_.push_back(&kkt_system_manager_.eqs.back().constraint);
       }
       return result;
     } else {
@@ -200,7 +200,7 @@ class Program {
       bool result =
           kkt_system_manager_.AddConstraint<T>(std::forward<T>(d), variables);
       if (result) {
-        constraints.push_back(&kkt_system_manager_.eqs.back().constraint);
+        constraints_.push_back(&kkt_system_manager_.eqs.back().constraint);
       }
       return result;
     } else {
@@ -213,7 +213,7 @@ class Program {
   ConexStatus Status() { return status_; }
 
   ConstraintManager<Container> kkt_system_manager_;
-  std::vector<Constraint*> constraints;
+  std::vector<Constraint*> constraints_;
   SchurComplementSystem sys;
   std::unique_ptr<WorkspaceStats> stats;
   std::vector<Workspace> workspaces;
@@ -222,10 +222,23 @@ class Program {
   Eigen::VectorXd memory_;
   Eigen::VectorXd* workspace_data_;
   bool is_initialized = false;
+  bool contains_quadratic_costs_ = false;
   ConexStatus status_;
+
+  bool AddLinearCost(const Eigen::VectorXd& b);
+  bool AddQuadraticCost(const Eigen::MatrixXd& Q,
+                        const std::vector<int>& variables);
+  bool AddQuadraticCost(const Eigen::MatrixXd& Q);
+  void ClearLinearCosts();
+
+  Eigen::VectorXd linear_cost_;
 };
 
 DenseMatrix GetFeasibleObjective(Program* prog);
+
+bool Solve(Program& prog, const SolverConfiguration& config,
+           double* primal_variable);
+
 bool Solve(const DenseMatrix& b, Program& prog,
            const SolverConfiguration& config, double* primal_variable);
 
