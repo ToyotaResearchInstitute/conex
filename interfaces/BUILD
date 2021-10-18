@@ -1,30 +1,34 @@
-cc_library(
-    name = "libconex",
-    srcs = ["conex.cc"],
-    hdrs = ["conex.h"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//conex:conex_lib",
-        "@eigen",
-    ],
-)
-
 cc_test(
     name = "interface_test",
-    srcs = ["test/interface_test.cc"],
+    srcs = [
+        "conex.h",
+        "test/interface_test.cc",
+    ],
     copts = ["-Iexternal/gtest/include"],
+    linkopts = ["-lconex"],
     deps = [
-        "libconex",
         "@gtest//:main",
     ],
 )
 
 cc_test(
     name = "interface_test_soc",
-    srcs = ["test/interface_test_soc.cc"],
+    srcs = [
+        "conex.h",
+        "test/interface_test_soc.cc",
+    ],
     copts = ["-Iexternal/gtest/include"],
+    linkopts = ["-lconex"],
     deps = [
-        "libconex",
         "@gtest//:main",
     ],
+)
+
+cc_binary(
+    name = "test_app",
+    srcs = [
+        "conex.h",
+        "test/test_app.cc",
+    ],
+    linkopts = ["-lconex"],
 )

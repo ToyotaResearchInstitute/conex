@@ -35,7 +35,7 @@ SOURCES = approximate_eigenvalues.cc \
 
 OBJECTS := $(SOURCES:.cc=.o)
 
-%.o : ../conex/%.cc
+%.o : $(CONEX)/conex/%.cc
 	$(CXX) -c $(CPPFLAGS_LIBRARY) $< 
 
 libsource: $(SOURCES:.cc=.o)
@@ -47,7 +47,7 @@ libconex.so:  conex.o libsource
 	g++ -static-libstdc++ -Wl,--exclude-libs,ALL -Wl,--gc-sections -shared -o libconex.so conex.o $(OBJECTS) $(LFLAGS)
 
 main: libconex.so
-	g++ test/test_app.cc libconex.so
+	g++ -L./ test/test_app.cc -lconex 
 
 .PHONY: clean
 

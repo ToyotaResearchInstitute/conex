@@ -1,4 +1,3 @@
-#include "conex/debug_macros.h"
 #include "interfaces/conex.h"
 
 #include "gtest/gtest.h"
