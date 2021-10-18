@@ -8,18 +8,18 @@ mydir=$(dirname $(realpath $0))
 [[ $PWD != $mydir ]] && { echo "Error: Script cannot be run from different directory."; exit 1; }
 
 
-bazel run //:buildifier --config=mkl
+bazel_config=blas
+bazel run //:buildifier --config=$bazel_config
 find ./conex/ -iname *.h -o -iname *.cc | xargs clang-format -i
 find ./interfaces/ -iname *.h -o -iname *.cc | xargs clang-format -i
 
-bazel_config=blas
 
 ## Build and test repo. 
 bazel test ... --config=$bazel_config
 
 ## Build and test C API. 
 cd interfaces
-make 
+make
 bazel test --cache_test_results=no --config=$bazel_config ...
 cd ..
 
