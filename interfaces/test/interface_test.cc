@@ -82,3 +82,39 @@ TEST(TestArguments, UpdateLMI) {
   EXPECT_EQ(CONEX_FAILURE, status);
   CONEX_DeleteConeProgram(p);
 }
+
+TEST(TestArguments, SetVariables) {
+  int num_vars = 4;
+  void* p = CONEX_CreateConeProgram();
+
+  int status = CONEX_SetNumberOfVariables(p, num_vars);
+  EXPECT_EQ(CONEX_SUCCESS, status);
+
+  status = CONEX_SetNumberOfVariables(p, num_vars);
+  EXPECT_EQ(CONEX_FAILURE, status);
+  CONEX_DeleteConeProgram(p);
+}
+
+TEST(TestArguments, UpdateQuadraticCost) {
+  int num_vars = 4;
+  void* p = CONEX_CreateConeProgram();
+
+  int status = CONEX_SetNumberOfVariables(p, num_vars);
+  EXPECT_EQ(CONEX_SUCCESS, status);
+
+  int id = 0;
+  status = CONEX_NewQuadraticCost(p, &id);
+
+  for (int i = 0; i < num_vars; i++) {
+    for (int j = 0; j < num_vars; j++) {
+      status = CONEX_UpdateQuadraticCostMatrix(p, id, i * num_vars + j, i, j);
+      EXPECT_EQ(CONEX_SUCCESS, status);
+    }
+  }
+
+  // Trigger out of bounds error.
+  status = CONEX_UpdateQuadraticCostMatrix(p, id, 1, num_vars, num_vars);
+  EXPECT_EQ(CONEX_FAILURE, status);
+
+  CONEX_DeleteConeProgram(p);
+}

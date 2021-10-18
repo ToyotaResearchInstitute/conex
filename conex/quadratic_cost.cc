@@ -30,6 +30,14 @@ class QuadraticFunction {
     info_i->norminfd = 0;
   }
 
+  friend bool UpdateAffineTerm(QuadraticFunction* o, double val, int r, int c,
+                               int dim) {
+    CONEX_DEMAND(dim == 0, "Quadratic cost must be real valued matrix.");
+    CONEX_DEMAND(r < o->A_.rows() && c < o->A_.cols(), "Index out of bounds");
+    o->A_(r, c) = val;
+    return CONEX_SUCCESS;
+  }
+
   friend bool TakeStep(QuadraticFunction*, const StepOptions&) { return true; };
 
   friend void GetWeightedSlackEigenvalues(QuadraticFunction*, const Ref&,

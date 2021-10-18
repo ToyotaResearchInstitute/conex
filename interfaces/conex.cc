@@ -248,6 +248,27 @@ CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order,
   return CONEX_SUCCESS;
 }
 
+CONEX_STATUS CONEX_NewQuadraticCost(void* p, int* constraint_id) {
+  CONEX_DEMAND(constraint_id, "Received output null pointer.");
+
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+  int n = prg->GetNumberOfVariables();
+  Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(n, n);
+  bool status = prg->AddQuadraticCost(Q);
+  *constraint_id = prg->NumberOfConstraints() - 1;
+  return status;
+}
+
+CONEX_STATUS CONEX_UpdateQuadraticCostMatrix(void* p, int constraint,
+                                             double value, int row, int col) {
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+  CONEX_DEMAND(constraint < prg->NumberOfConstraints(), "Invalid Constraint.");
+  return prg->UpdateAffineTermOfConstraint(constraint, value, row, col,
+                                           0 /*hyper complex dimension*/);
+}
+
 CONEX_STATUS CONEX_UpdateLinearOperator(void* p, int constraint, double value,
                                         int variable, int row, int col,
                                         int hyper_complex_dim) {
