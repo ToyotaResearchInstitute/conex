@@ -12,7 +12,7 @@ bazel run //:buildifier --config=mkl
 find ./conex/ -iname *.h -o -iname *.cc | xargs clang-format -i
 find ./interfaces/ -iname *.h -o -iname *.cc | xargs clang-format -i
 
-bazel_config=mkl
+bazel_config=blas
 
 ## Build and test repo. 
 bazel test ... --config=$bazel_config
