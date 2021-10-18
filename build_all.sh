@@ -15,7 +15,9 @@ find ./interfaces/ -iname *.h -o -iname *.cc | xargs clang-format -i
 
 
 ## Build and test repo. 
-bazel test ... --config=$bazel_config
+cd conex 
+bazel test --config=$bazel_config ...
+cd ..
 
 ## Build and test C API. 
 cd interfaces

@@ -90,7 +90,7 @@ classdef ConexProgram < handle
       num_var = length(b);
       bptr = libpointer('doublePtr', full(b));
       yptr = libpointer('doublePtr', zeros(num_var, 1));
-      status = calllib('libconex', 'CONEX_Solve', self.p, bptr, length(b), self.options, yptr, num_var);
+      status = calllib('libconex', 'CONEX_Maximize', self.p, bptr, length(b), self.options, yptr, num_var);
 
       x = {};
       for i = 1:length(self.constraints)

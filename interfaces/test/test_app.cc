@@ -27,7 +27,7 @@ int main() {
   std::cout << status;
   CONEX_SolverConfiguration config;
   CONEX_SetDefaultOptions(&config);
-  CONEX_Solve(p, &b[0], num_vars, &config, &y[0], num_vars);
+  CONEX_Maximize(p, &b[0], num_vars, &config, &y[0], num_vars);
 
   CONEX_DeleteConeProgram(p);
 }

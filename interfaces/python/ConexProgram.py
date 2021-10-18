@@ -122,7 +122,7 @@ class Conex:
             raise NameError("Cost vector dimension does not match number of variables.")
 
         sol.y = np.ones((self.m)).astype(real)
-        sol.status = self.wrapper.CONEX_Solve(self.a, np.squeeze(np.array(b), 1), config, sol.y)
+        sol.status = self.wrapper.CONEX_Maximize(self.a, np.squeeze(np.array(b), 1), config, sol.y)
 
         return sol
 

@@ -37,8 +37,8 @@ using conex::HermitianPsdConstraint;
 using conex::Program;
 using conex::SolverConfiguration;
 
-int CONEX_Solve(void* prog_ptr, const double* b, int br,
-                const CONEX_SolverConfiguration* config, double* y, int yr) {
+int CONEX_Maximize(void* prog_ptr, const double* b, int br,
+                   const CONEX_SolverConfiguration* config, double* y, int yr) {
   using InputMatrix = Eigen::Map<const DenseMatrix>;
   InputMatrix bmap(b, br, 1);
   DenseMatrix blinear = bmap;
