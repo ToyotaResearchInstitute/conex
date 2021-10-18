@@ -56,11 +56,13 @@ int CONEX_AddSparseLMIConstraint(void* prog, const double* Aarray, int Aarrayr,
 int CONEX_Maximize(void* prog, const double* b, int br,
                    const CONEX_SolverConfiguration* config, double* y, int yr);
 
+int CONEX_Solve(void* prog, const CONEX_SolverConfiguration* config, double* y,
+                int yr);
+
 void CONEX_GetDualVariable(void* prog, int i, double* x, int xr, int xc);
 
 int CONEX_GetDualVariableSize(void* prog_ptr, int i);
 
-// TODO(FrankPermenter): Rename Options to Configuration
 void CONEX_SetDefaultOptions(CONEX_SolverConfiguration* config);
 
 void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,

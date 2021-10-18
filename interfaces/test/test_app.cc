@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../conex.h"
 
-int main() {
+void SolveLP() {
   void* p = CONEX_CreateConeProgram();
 
   int status;
@@ -30,4 +30,35 @@ int main() {
   CONEX_Maximize(p, &b[0], num_vars, &config, &y[0], num_vars);
 
   CONEX_DeleteConeProgram(p);
+}
+
+void SolveQP() {
+  void* p = CONEX_CreateConeProgram();
+
+  int status;
+  int constraint_id = 0;
+  int num_vars = 4;
+
+  double y[num_vars];
+
+  status = CONEX_SetNumberOfVariables(p, num_vars);
+  status = CONEX_NewQuadraticCost(p, &constraint_id);
+
+  for (int i = 0; i < num_vars; i++) {
+    status = CONEX_UpdateQuadraticCostMatrix(p, constraint_id, 1, i, i);
+  }
+
+  std::cout << status;
+  CONEX_SolverConfiguration config;
+  CONEX_SetDefaultOptions(&config);
+  config.enable_rescaling = 0;
+  config.enable_line_search = 1;
+  CONEX_Solve(p, &config, &y[0], num_vars);
+  CONEX_DeleteConeProgram(p);
+}
+
+int main() {
+  SolveLP();
+  SolveQP();
+  return 0;
 }

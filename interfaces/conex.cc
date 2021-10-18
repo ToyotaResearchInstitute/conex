@@ -37,14 +37,11 @@ using conex::HermitianPsdConstraint;
 using conex::Program;
 using conex::SolverConfiguration;
 
-int CONEX_Maximize(void* prog_ptr, const double* b, int br,
-                   const CONEX_SolverConfiguration* config, double* y, int yr) {
-  using InputMatrix = Eigen::Map<const DenseMatrix>;
-  InputMatrix bmap(b, br, 1);
-  DenseMatrix blinear = bmap;
+namespace {
 
+SolverConfiguration APIConvertSolverConfiguration(
+    const CONEX_SolverConfiguration* config) {
   SolverConfiguration c;
-
   c.prepare_dual_variables = config->prepare_dual_variables;
   c.initialization_mode = config->initialization_mode;
   c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
@@ -64,10 +61,29 @@ int CONEX_Maximize(void* prog_ptr, const double* b, int br,
   c.infeasibility_threshold = config->infeasibility_threshold;
   c.kkt_error_tolerance = config->kkt_error_tolerance;
   c.enable_rescaling = config->enable_rescaling;
+  return c;
+}
+}  // namespace
+
+int CONEX_Maximize(void* prog_ptr, const double* b, int br,
+                   const CONEX_SolverConfiguration* config_input, double* y,
+                   int yr) {
+  using InputMatrix = Eigen::Map<const DenseMatrix>;
+  InputMatrix bmap(b, br, 1);
+  DenseMatrix blinear = bmap;
+
+  SolverConfiguration config = APIConvertSolverConfiguration(config_input);
 
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
 
-  return Solve(blinear, prog, c, y);
+  return Solve(blinear, prog, config, y);
+}
+
+int CONEX_Solve(void* prog_ptr, const CONEX_SolverConfiguration* config_input,
+                double* y, int yr) {
+  SolverConfiguration config = APIConvertSolverConfiguration(config_input);
+  Program& prog = *reinterpret_cast<Program*>(prog_ptr);
+  return Solve(prog, config, y);
 }
 
 void CONEX_GetDualVariable(void* prog_ptr, int i, double* x, int xr, int xc) {
