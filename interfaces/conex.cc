@@ -44,15 +44,26 @@ int CONEX_Solve(void* prog_ptr, const double* b, int br,
   DenseMatrix blinear = bmap;
 
   SolverConfiguration c;
+
   c.prepare_dual_variables = config->prepare_dual_variables;
-  c.max_iterations = config->max_iterations;
+  c.initialization_mode = config->initialization_mode;
   c.inv_sqrt_mu_max = config->inv_sqrt_mu_max;
-  c.divergence_upper_bound = config->divergence_upper_bound;
-  c.final_centering_steps = config->final_centering_steps;
-  c.infeasibility_threshold = config->infeasibility_threshold;
   c.minimum_mu = config->minimum_mu;
   c.maximum_mu = config->maximum_mu;
-  c.initialization_mode = config->initialization_mode;
+  c.divergence_upper_bound = config->divergence_upper_bound;
+  c.enable_line_search = config->enable_line_search;
+  c.dinf_upper_bound = config->dinf_upper_bound;
+  c.final_centering_steps = config->final_centering_steps;
+  c.final_centering_tolerance = config->final_centering_tolerance;
+  c.initial_centering_steps_warmstart =
+      config->initial_centering_steps_warmstart;
+  c.initial_centering_steps_coldstart =
+      config->initial_centering_steps_coldstart;
+  c.warmstart_abort_threshold = config->warmstart_abort_threshold;
+  c.max_iterations = config->max_iterations;
+  c.infeasibility_threshold = config->infeasibility_threshold;
+  c.kkt_error_tolerance = config->kkt_error_tolerance;
+  c.enable_rescaling = config->enable_rescaling;
 
   Program& prog = *reinterpret_cast<Program*>(prog_ptr);
 
@@ -156,15 +167,26 @@ void CONEX_SetDefaultOptions(CONEX_SolverConfiguration* c) {
     return;
   }
   SolverConfiguration config;
+
   c->prepare_dual_variables = config.prepare_dual_variables;
-  c->max_iterations = config.max_iterations;
-  c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
-  c->maximum_mu = config.maximum_mu;
-  c->minimum_mu = config.minimum_mu;
-  c->divergence_upper_bound = config.divergence_upper_bound;
-  c->final_centering_steps = config.final_centering_steps;
-  c->infeasibility_threshold = config.infeasibility_threshold;
   c->initialization_mode = config.initialization_mode;
+  c->inv_sqrt_mu_max = config.inv_sqrt_mu_max;
+  c->minimum_mu = config.minimum_mu;
+  c->maximum_mu = config.maximum_mu;
+  c->divergence_upper_bound = config.divergence_upper_bound;
+  c->enable_line_search = config.enable_line_search;
+  c->dinf_upper_bound = config.dinf_upper_bound;
+  c->final_centering_steps = config.final_centering_steps;
+  c->final_centering_tolerance = config.final_centering_tolerance;
+  c->initial_centering_steps_warmstart =
+      config.initial_centering_steps_warmstart;
+  c->initial_centering_steps_coldstart =
+      config.initial_centering_steps_coldstart;
+  c->warmstart_abort_threshold = config.warmstart_abort_threshold;
+  c->max_iterations = config.max_iterations;
+  c->infeasibility_threshold = config.infeasibility_threshold;
+  c->kkt_error_tolerance = config.kkt_error_tolerance;
+  c->enable_rescaling = config.enable_rescaling;
 }
 
 void CONEX_GetIterationStats(void* prog, CONEX_IterationStats* stats,

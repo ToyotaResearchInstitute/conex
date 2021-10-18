@@ -9,15 +9,22 @@ enum { CONEX_SUCCESS = 0, CONEX_FAILURE = 1 };
 
 typedef struct {
   int prepare_dual_variables;
-  int max_iterations;
+  int initialization_mode;
   double inv_sqrt_mu_max;
   double minimum_mu;
   double maximum_mu;
   double divergence_upper_bound;
+  int enable_line_search;
+  double dinf_upper_bound;
   int final_centering_steps;
+  double final_centering_tolerance;
+  int initial_centering_steps_warmstart;
+  int initial_centering_steps_coldstart;
+  double warmstart_abort_threshold;
+  int max_iterations;
   double infeasibility_threshold;
-  double initialization_mode;
-  int collect_statistics;
+  double kkt_error_tolerance;
+  int enable_rescaling;
 } CONEX_SolverConfiguration;
 
 typedef struct {
