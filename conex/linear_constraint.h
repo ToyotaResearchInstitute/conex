@@ -63,14 +63,19 @@ class LinearConstraint {
                                              SchurComplementSystem* sys);
   friend bool TakeStep(LinearConstraint*, const StepOptions&);
 
+  friend bool UpdateLinearOperator(LinearConstraint* o, double val, int var,
+                                   int r, int c, int dim);
+  friend bool UpdateAffineTerm(LinearConstraint* o, double val, int r, int c,
+                               int dim);
+
  private:
   void ComputeNegativeSlack(double inv_sqrt_mu, const Ref& y, Ref* minus_s);
   void GeodesicUpdate(const Ref& S, StepInfo* data);
   void AffineUpdate(const Ref& S);
 
   WorkspaceLinear workspace_;
-  const DenseMatrix constraint_matrix_;
-  const DenseMatrix constraint_affine_;
+  DenseMatrix constraint_matrix_;
+  DenseMatrix constraint_affine_;
 };
 
 class LowerBound : public LinearConstraint {

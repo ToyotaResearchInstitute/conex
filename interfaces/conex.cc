@@ -34,6 +34,7 @@
 using DenseMatrix = Eigen::MatrixXd;
 using conex::DenseLMIConstraint;
 using conex::HermitianPsdConstraint;
+using conex::LinearConstraint;
 using conex::Program;
 using conex::SolverConfiguration;
 
@@ -262,6 +263,19 @@ CONEX_STATUS CONEX_NewLinearMatrixInequality(void* p, int order,
   }
   *constraint_id = prg->NumberOfConstraints() - 1;
   return CONEX_SUCCESS;
+}
+
+CONEX_STATUS CONEX_NewLinearInequality(void* program, int num_rows,
+                                       int* constraint_id) {
+  CONEX_DEMAND(constraint_id, "Received output null pointer.");
+  Program* prg;
+  SAFER_CAST_TO_Program(program, prg);
+  int n = prg->GetNumberOfVariables();
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(num_rows, n);
+  Eigen::MatrixXd b = Eigen::MatrixXd::Zero(num_rows, 1);
+  bool status = prg->AddConstraint(LinearConstraint{A, b});
+  *constraint_id = prg->NumberOfConstraints() - 1;
+  return status;
 }
 
 CONEX_STATUS CONEX_NewQuadraticCost(void* p, int* constraint_id) {

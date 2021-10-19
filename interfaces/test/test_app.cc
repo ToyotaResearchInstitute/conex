@@ -48,6 +48,14 @@ void SolveQP() {
     status = CONEX_UpdateQuadraticCostMatrix(p, constraint_id, 1, i, i);
   }
 
+  status = CONEX_NewLinearInequality(p, 1, &constraint_id);
+  int row = 0;
+  for (int i = 0; i < num_vars; i++) {
+    int var = i;
+    status = CONEX_UpdateLinearOperator(p, constraint_id, 1, var, row, 0, 0);
+  }
+  status = CONEX_UpdateAffineTerm(p, constraint_id, 1, row, 0, 0);
+
   std::cout << status;
   CONEX_SolverConfiguration config;
   CONEX_SetDefaultOptions(&config);

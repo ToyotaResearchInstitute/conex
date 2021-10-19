@@ -82,6 +82,9 @@ CONEX_STATUS CONEX_UpdateAffineTerm(void* program, int constraint, double value,
 CONEX_STATUS CONEX_NewLorentzConeConstraint(void* program, int order,
                                             int* constraint_id);
 
+CONEX_STATUS CONEX_NewLinearInequality(void* program, int num_rows,
+                                       int* constraint_id);
+
 CONEX_STATUS CONEX_NewQuadraticCost(void* p, int* constraint_id);
 CONEX_STATUS CONEX_UpdateQuadraticCostMatrix(void* p, int id, double value,
                                              int row, int col);

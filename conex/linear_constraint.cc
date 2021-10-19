@@ -1,4 +1,3 @@
-#define EIGEN_NO_MALLOC
 #include "linear_constraint.h"
 #include "newton_step.h"
 
@@ -39,7 +38,7 @@ bool FindMinimumMu(const VectorXd& d0, const VectorXd& delta, double dinfmax,
   }
   return success;
 }
-
+// TODO(FrankPermenter): Remove dynamic memory allocation and define EIGEN_NO_MALLOC 
 bool PerformLineSearch(LinearConstraint* o, const LineSearchParameters& params,
                        const Ref& y0, const Ref& y1, LineSearchOutput* output) {
   auto* workspace = &o->workspace_;
@@ -166,6 +165,27 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
     sys->AW.topRows(m).noalias() += o->constraint_matrix_.transpose() * W;
     sys->AQc.topRows(m).noalias() += WA.transpose() * WC;
   }
+}
+
+bool UpdateLinearOperator(LinearConstraint* o, double val, int var, int r,
+                          int c, int dim) {
+  CONEX_DEMAND(dim == 0, "Complex linear constraints not supported.");
+  CONEX_DEMAND(c == 0, "Linear constraint is not matrix valued.");
+  CONEX_DEMAND(r < o->constraint_matrix_.rows(), "Row index out of bounds.");
+  CONEX_DEMAND((var >= 0) && (r >= 0), "Indices cannot be negative.");
+
+  o->constraint_matrix_(r, var) = val;
+  return CONEX_SUCCESS;
+}
+
+bool UpdateAffineTerm(LinearConstraint* o, double val, int r, int c, int dim) {
+  CONEX_DEMAND(dim == 0, "Complex linear cone not supported.");
+  CONEX_DEMAND(c == 0, "Linear constraint is not matrix valued.");
+  CONEX_DEMAND(r < o->constraint_matrix_.rows(), "Row index out of bounds.");
+  CONEX_DEMAND(r >= 0, "Indices cannot be negative.");
+
+  o->constraint_affine_(r) = val;
+  return CONEX_SUCCESS;
 }
 
 }  // namespace conex
