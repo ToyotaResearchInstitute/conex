@@ -184,7 +184,7 @@ class Program {
   bool AddConstraint(T&& d) {
     if constexpr (!std::is_same<T, EqualityConstraints>::value) {
       bool result = kkt_system_manager_.AddConstraint<T>(std::forward<T>(d));
-      if (result) {
+      if (result == CONEX_SUCCESS) {
         constraints_.push_back(&kkt_system_manager_.eqs.back().constraint);
       }
       return result;
@@ -199,7 +199,7 @@ class Program {
     if constexpr (!std::is_same<T, EqualityConstraints>::value) {
       bool result =
           kkt_system_manager_.AddConstraint<T>(std::forward<T>(d), variables);
-      if (result) {
+      if (result == CONEX_SUCCESS) {
         constraints_.push_back(&kkt_system_manager_.eqs.back().constraint);
       }
       return result;

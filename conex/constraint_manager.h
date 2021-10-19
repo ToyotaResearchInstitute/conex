@@ -5,6 +5,8 @@
 #include "conex/equality_constraint.h"
 #include "conex/kkt_system_assembler.h"
 
+#include "conex/error_checking_macros.h"
+
 namespace conex {
 
 inline int IsUnique(int N, const std::vector<int>& x) {
@@ -51,24 +53,24 @@ class ConstraintManager {
       clique[i] = i;
     }
     AddConstraint(x, clique);
-    return true;
+    return CONEX_SUCCESS;
   }
 
   template <typename T>
   bool AddConstraint(T&& x, const std::vector<int>& variables) {
     if (!IsUnique(max_number_of_variables_, variables)) {
-      return false;
+      return CONEX_FAILURE;
     }
     eqs.emplace_back(x, variables.size());
     cliques.push_back(variables);
     dual_vars.push_back({});
-    return true;
+    return CONEX_SUCCESS;
   }
 
   bool AddEqualityConstraint(EqualityConstraints&& x,
                              const std::vector<int>& variables) {
     if (!IsUnique(max_number_of_variables_, variables)) {
-      return false;
+      return CONEX_FAILURE;
     }
     const int m = x.SizeOfDualVariable();
     eqs.emplace_back(x, m + variables.size());
@@ -79,7 +81,7 @@ class ConstraintManager {
       dual_vars.back().push_back(i + dual_variable_start_);
     }
     dual_variable_start_ += m;
-    return true;
+    return CONEX_SUCCESS;
   }
 
   bool AddEqualityConstraint(EqualityConstraints&& x) {
@@ -88,7 +90,7 @@ class ConstraintManager {
       clique[i] = i;
     }
     AddEqualityConstraint(std::forward<EqualityConstraints>(x), clique);
-    return true;
+    return CONEX_SUCCESS;
   }
 
   // Use a list so that we do not trigger reallocations.
