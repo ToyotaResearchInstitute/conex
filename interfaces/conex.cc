@@ -14,8 +14,8 @@
 #include "conex/soc_constraint.h"
 
 #include "conex/error_checking_macros.h"
-// TODO(FrankPermenter): check for null pointers.
 
+// TODO(FrankPermenter): check for null pointers.
 #define SAFER_CAST_TO_Program(x, prog)                                     \
   CONEX_DEMAND(x, "Program pointer is null.");                             \
   prog = static_cast<Program*>(x);                                         \
