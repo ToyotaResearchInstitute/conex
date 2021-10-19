@@ -38,7 +38,8 @@ bool FindMinimumMu(const VectorXd& d0, const VectorXd& delta, double dinfmax,
   }
   return success;
 }
-// TODO(FrankPermenter): Remove dynamic memory allocation and define EIGEN_NO_MALLOC 
+// TODO(FrankPermenter): Remove dynamic memory allocation and define
+// EIGEN_NO_MALLOC
 bool PerformLineSearch(LinearConstraint* o, const LineSearchParameters& params,
                        const Ref& y0, const Ref& y1, LineSearchOutput* output) {
   auto* workspace = &o->workspace_;
