@@ -137,6 +137,8 @@ Eigen::VectorXd SolveSparseHelper(bool sparse) {
   using std::vector;
   SolverConfiguration config;
   config.prepare_dual_variables = true;
+  config.final_centering_tolerance = 1;
+  config.divergence_upper_bound = 1e4;
 
   int number_of_constraints = 50;
   std::vector<std::vector<int> > variables(number_of_constraints);
@@ -231,6 +233,8 @@ Eigen::VectorXd SolveFillIn(bool sparse) {
   using std::vector;
   SolverConfiguration config;
   config.prepare_dual_variables = true;
+  config.divergence_upper_bound = 10000;
+  config.final_centering_tolerance = 1;
 
   int number_of_constraints = 4;
   std::vector<std::vector<int> > variables{{0, 1}, {1, 2}, {2, 3}, {0, 3}};
@@ -315,8 +319,10 @@ void DoRandomPrimalFailsSlater(double distance_to_infeasible) {
   config.prepare_dual_variables = true;
   config.inv_sqrt_mu_max = 10000;
   config.maximum_mu = 10000000;
+  config.divergence_upper_bound = 10000;
   config.infeasibility_threshold = 2000000;
   config.final_centering_steps = 5;
+  config.final_centering_tolerance = 1;
 
   int m = 10;
   int n1 = 3;  // The number of implicit equations
@@ -382,6 +388,7 @@ void DoRandomDualFailsSlater(double distance_to_infeasible) {
   config.maximum_mu = 1e7;
   config.infeasibility_threshold = 1e5;
   config.final_centering_steps = 2;
+  config.final_centering_tolerance = 1;
 
   int m1 = 4;
   int m2 = 4;

@@ -115,7 +115,7 @@ class Program {
     for (auto& ci : kkt_system_manager_.eqs) {
       if (cnt == i) {
         ci.constraint.get_dual_variable(xi->data());
-        if (status_.solved) {
+        if (!status_.primal_infeasible) {
           xi->array() /=
               (stats->sqrt_inv_mu[stats->num_iter - 1] * stats->b_scaling());
         }

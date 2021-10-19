@@ -146,7 +146,6 @@ def TestLMI():
     b = prog.A[0].transpose().__mul__(np.eye(n))
     sol = prog.Maximize(b)
 
-    sol = prog.Maximize(b)
     if sol.status:
         sol.x = prog.GetDualVariables();
         sol.s,  sol.err = prog.ComputeErrors(np.matrix(sol.y).transpose(), sol.x, np.matrix(b))

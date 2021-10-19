@@ -145,8 +145,8 @@ void SolveRandomQP(int num_vars, int num_ineqs) {
   config.enable_line_search = true;
   config.initial_centering_steps_coldstart = 0;
   config.enable_rescaling = false;
-  config.inv_sqrt_mu_max = 1e7;
-  config.max_iterations = 25;
+  config.inv_sqrt_mu_max = 2e5;
+  config.max_iterations = 30;
   config.final_centering_tolerance = 1.05;
   config.final_centering_steps = 0;
   config.minimum_mu = 0;

@@ -245,6 +245,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
   prog.status_.solved = 0;
   prog.status_.primal_infeasible = 0;
   prog.status_.dual_infeasible = 0;
+  bool max_iters_reached = true;
 
 #if CONEX_VERBOSE
   std::cout.precision(2);
@@ -325,6 +326,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
 
     if (final_centering) {
       if (centering_steps >= config.final_centering_steps) {
+        max_iters_reached = (i >= config.max_iterations - 1);
         break;
       }
     }
@@ -467,6 +469,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     if (final_centering ||
         newton_step_parameters.inv_sqrt_mu >= inv_sqrt_mu_max) {
       if (d_inf <= config.final_centering_tolerance) {
+        max_iters_reached = false;
         break;
       }
     }
@@ -485,10 +488,8 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     prog.status_.dual_infeasible =
         by * newton_step_parameters.inv_sqrt_mu >= .5;
   } else {
-    PRINTSTATUS("Solved.");
-    prog.status_.solved = 1;
+    prog.status_.solved = true;
   }
-
   if (config.prepare_dual_variables) {
     DenseMatrix y2;
     solver->Assemble();
@@ -511,6 +512,16 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     yout /= (newton_step_parameters.inv_sqrt_mu);
     yout /= c_scaling;
   }
+
+  if (prog.status_.solved) {
+    if (max_iters_reached) {
+      prog.status_.solved = false;
+      PRINTSTATUS("Terminating at maximum iteration limit.");
+    } else {
+      PRINTSTATUS("Solved.");
+    }
+  }
+
   return prog.status_.solved;
 }
 
