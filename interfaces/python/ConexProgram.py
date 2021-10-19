@@ -108,6 +108,19 @@ class Conex:
         config.divergence_upper_bound = 1
         return config
 
+
+    def Solve(self, config = []): 
+        if not config:
+            config = self.DefaultConfiguration();
+
+        config.enable_line_search = 1
+        config.enable_rescaling = 0
+        sol = Solution()
+        sol.y = np.ones((self.m)).astype(real)
+        sol.status = self.wrapper.CONEX_Solve(self.a,  config, sol.y)
+        return sol
+
+
     def Maximize(self, b, config = []): 
 
         if not config:
@@ -155,6 +168,28 @@ class Conex:
             raise NameError("Failed to add constraint.")
         self.num_constraints = self.num_constraints + 1
         return constraint.value()
+
+    def NewLinearInequality(self, num_rows):
+        constraint = self.wrapper.intp();
+        status = self.wrapper.CONEX_NewLinearInequality(self.a, num_rows, constraint)
+        if status != 0:
+            raise NameError("Failed to add constraint.")
+        self.num_constraints = self.num_constraints + 1
+        return constraint.value()
+
+    def NewQuadraticCost(self):
+        constraint = self.wrapper.intp();
+        status = self.wrapper.CONEX_NewQuadraticCost(self.a, constraint)
+        if status != 0:
+            raise NameError("Failed to create quadratic cost.")
+        self.num_constraints = self.num_constraints + 1
+        return constraint.value()
+
+    def UpdateQuadraticCostMatrix(self, cost_id, value, row, col):
+        status = self.wrapper.CONEX_UpdateQuadraticCostMatrix(self.a, cost_id, 
+                float(value), int(row), int(col))
+        if status != 0:
+            raise NameError("Failed to update quadratic cost.")
 
     def UpdateLinearOperator(self, constraint, value, variable, row, col = 0, hyper_complex_dim = 0):
         status = self.wrapper.CONEX_UpdateLinearOperator(self.a, constraint,
