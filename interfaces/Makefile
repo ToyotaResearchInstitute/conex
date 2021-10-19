@@ -21,6 +21,7 @@ SOURCES = approximate_eigenvalues.cc \
 	  dense_lmi_constraint.cc \
 	  divergence.cc \
 	  exponential_map.cc \
+	  equality_constraint.cc \
 	  exponential_map_pade.cc \
 	  hermitian_psd.cc \
 	  kkt_assembler.cc \

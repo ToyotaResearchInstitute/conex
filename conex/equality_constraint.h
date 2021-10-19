@@ -57,6 +57,12 @@ class EqualityConstraints : public LinearKKTAssemblerBase {
   int number_of_variables() { return 0; }
   WorkspaceEqualityConstraints workspace_;
   WorkspaceEqualityConstraints* workspace() { return &workspace_; }
+  friend bool PerformLineSearch(EqualityConstraints*,
+                                const LineSearchParameters&, const Ref&,
+                                const Ref&, LineSearchOutput*) {
+    bool failure = false;
+    return failure;
+  }
 };
 
 }  // namespace conex
