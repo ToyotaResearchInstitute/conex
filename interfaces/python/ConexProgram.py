@@ -87,6 +87,19 @@ class Conex:
         self.wrapper.CONEX_GetIterationStats(self.a, stats, num)
         return stats
 
+    def AddQuadraticCost(self, P): 
+        if P.shape[0] != self.m or P.shape[1] != self.m:
+            print self.m
+            print P.shape[0]
+            print P.shape[1]
+            raise NameError("Cost matrix dimension does not match number of variables.")
+
+        cost = self.NewQuadraticCost()
+        for i in range(0, self.m):
+            for j in range(0, self.m):
+                val = (P[i, j] + P[j, i])/2.0
+                self.UpdateQuadraticCostMatrix(cost, val, i, j)
+                self.UpdateQuadraticCostMatrix(cost, val, j, i)
     def AddLinearInequality(self, A, c): 
         c_ = np.squeeze(np.array(c[:])).transpose()
         const_id = self.wrapper.CONEX_AddDenseLinearConstraint(self.a, A, c_)
