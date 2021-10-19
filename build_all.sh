@@ -27,6 +27,7 @@ cd ..
 
 ## Build and test Python swig interface. 
 cd interfaces/python
+make clean
 make
 cd ../../
 python interfaces/python/test/run_tests.py

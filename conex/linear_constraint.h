@@ -5,6 +5,11 @@
 
 namespace conex {
 
+void PreprocessLinearInequality(const Eigen::MatrixXd& A,
+                                const Eigen::MatrixXd& lb,
+                                const Eigen::MatrixXd& ub,
+                                Eigen::MatrixXd* Aineq, Eigen::MatrixXd* bineq,
+                                Eigen::MatrixXd* Aeq, Eigen::MatrixXd* beq);
 // TODO(FrankPermenter) Rename to LinearInequality
 class LinearConstraint {
   using StorageType = DenseMatrix;

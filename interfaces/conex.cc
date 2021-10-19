@@ -9,6 +9,7 @@
 #include "conex/cone_program.h"
 #include "conex/constraint.h"
 #include "conex/dense_lmi_constraint.h"
+#include "conex/equality_constraint.h"
 #include "conex/hermitian_psd.h"
 #include "conex/linear_constraint.h"
 #include "conex/soc_constraint.h"
@@ -163,6 +164,32 @@ int CONEX_AddSparseLMIConstraint(void* prog, const double* A, int Ar, int Ac,
   return constraint_id;
 }
 
+int CONEX_AddLinearInequalities(void* prog, const double* A, int Ar, int Ac,
+                                const double* lb, int num_lb, const double* ub,
+                                int num_ub) {
+  assert(Ar == num_lb);
+  assert(Ar == num_ub);
+  Eigen::MatrixXd Ain = Eigen::Map<const Eigen::MatrixXd>(A, Ar, Ac);
+  Eigen::MatrixXd lbin = Eigen::Map<const Eigen::MatrixXd>(lb, Ar, 1);
+  Eigen::MatrixXd ubin = Eigen::Map<const Eigen::MatrixXd>(ub, Ar, 1);
+
+  Eigen::MatrixXd Aeq;
+  Eigen::MatrixXd beq;
+  Eigen::MatrixXd Aineq;
+  Eigen::MatrixXd bineq;
+  conex::PreprocessLinearInequality(Ain, lbin, ubin, &Aineq, &bineq, &Aeq,
+                                    &beq);
+
+  auto& program = *reinterpret_cast<Program*>(prog);
+  if (Aineq.rows() > 0) {
+    program.AddConstraint(conex::LinearConstraint(Aineq, bineq));
+  }
+  if (Aeq.rows() > 0) {
+    program.AddConstraint(conex::EqualityConstraints(Aeq, beq));
+  }
+  // TODO(FrankPermenter): Return the correct ID.
+  return -1;
+}
 int CONEX_AddDenseLinearConstraint(void* prog, const double* A, int Ar, int Ac,
                                    const double* c, int cr) {
   assert(Ar == cr);

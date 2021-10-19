@@ -4,6 +4,46 @@
 namespace conex {
 using Eigen::VectorXd;
 
+using Eigen::MatrixXd;
+
+void AppendRow(MatrixXd* A, const MatrixXd& new_rows) {
+  int num_cols = A->cols();
+  if (A->rows() == 0) {
+    num_cols = new_rows.cols();
+  }
+  if (num_cols != new_rows.cols()) {
+    throw std::runtime_error(
+        "Cannot stack matrices with different number of columns.");
+  }
+  A->conservativeResize(A->rows() + new_rows.rows(), num_cols);
+  A->bottomRows(new_rows.rows()) = new_rows;
+}
+
+void PreprocessLinearInequality(const MatrixXd& A, const MatrixXd& lb,
+                                const MatrixXd& ub, MatrixXd* Aineq,
+                                MatrixXd* bineq, MatrixXd* Aeq, MatrixXd* beq) {
+  for (int i = 0; i < A.rows(); i++) {
+    if (lb.row(i) == ub.row(i)) {
+      double scale =
+          1.0 / std::sqrt(A.row(i).squaredNorm() + ub.row(i).squaredNorm());
+      AppendRow(Aeq, scale * A.row(i));
+      AppendRow(beq, scale * ub.row(i));
+    } else {
+      if (ub(i, 0) < 1e8) {
+        double scale =
+            1.0 / std::sqrt(A.row(i).squaredNorm() + ub.row(i).squaredNorm());
+        AppendRow(Aineq, scale * A.row(i));
+        AppendRow(bineq, scale * ub.row(i));
+      }
+      if (lb(i, 0) > -1e8) {
+        double scale =
+            1.0 / std::sqrt(A.row(i).squaredNorm() + lb.row(i).squaredNorm());
+        AppendRow(Aineq, -scale * A.row(i));
+        AppendRow(bineq, -scale * lb.row(i));
+      }
+    }
+  }
+}
 bool FindMinimumMu(const VectorXd& d0, const VectorXd& delta, double dinfmax,
                    LineSearchOutput* output) {
   auto& upper_bound = output->upper_bound;

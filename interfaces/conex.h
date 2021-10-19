@@ -42,6 +42,9 @@ void CONEX_DeleteConeProgram(void*);
 int CONEX_AddDenseLinearConstraint(void* prog, const double* A, int Ar, int Ac,
                                    const double* c, int cr);
 
+int CONEX_AddLinearInequalities(void* prog, const double* A, int Ar, int Ac,
+                                const double* lb, int num_lb, const double* ub,
+                                int num_ub);
 //  Parameters Aarrayr, Aarrayc, cr, cc all equal the
 //  order n of LMI.
 // TODO(FrankPermenter): update this.

@@ -19,6 +19,8 @@
 %apply (double* IN_FARRAY3, int DIM1, int DIM2, int DIM3) {(const double* Aarray, int Aarrayr, int Aarrayc, int m)}
 %apply (double* IN_ARRAY1, int DIM1) {(const double* b, int br)}
 %apply (double* IN_ARRAY1, int DIM1) {(const double* c, int cr)}
+%apply (double* IN_ARRAY1, int DIM1) {(const double* lb, int num_lb)}
+%apply (double* IN_ARRAY1, int DIM1) {(const double* ub, int num_ub)}
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double* y, int yr)}
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double* x, int xr)}
 %apply (long* INPLACE_ARRAY1, int DIM1) {(const long* vars, int vars_c)}

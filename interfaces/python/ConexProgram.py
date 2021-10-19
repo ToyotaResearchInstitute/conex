@@ -109,6 +109,14 @@ class Conex:
         self.c.append(np.matrix(c))
         self.num_constraints = self.num_constraints + 1
 
+    def AddLinearInequalities(self, A, lb, ub): 
+        lb_ = np.squeeze(np.array(lb[:])).transpose()
+        ub_ = np.squeeze(np.array(ub[:])).transpose()
+        const_id = self.wrapper.CONEX_AddLinearInequalities(self.a, A, lb_, ub_)
+        #TODO(FrankPermenter) Correctly build these matrices
+        self.A.append(np.matrix(A))
+        self.c.append(np.matrix(ub_))
+        self.num_constraints = self.num_constraints + 1
     def DefaultConfiguration(self):
         config = self.wrapper.CONEX_SolverConfiguration()
         self.wrapper.CONEX_SetDefaultOptions(config);
