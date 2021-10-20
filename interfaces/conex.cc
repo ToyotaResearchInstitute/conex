@@ -41,6 +41,27 @@ using conex::SolverConfiguration;
 
 namespace {
 
+void NonZeroSubMat(const Eigen::MatrixXd& M, std::vector<int>* vars,
+                   Eigen::MatrixXd* Y) {
+  vars->clear();
+  for (int i = 0; i < M.rows(); i++) {
+    if (M(i, i) > 0) {
+      vars->push_back(i);
+    }
+  }
+
+  int row = 0;
+  Y->resize(vars->size(), vars->size());
+  for (auto& i : *vars) {
+    int col = 0;
+    for (auto& j : *vars) {
+      (*Y)(row, col) = (M(i, j) + M(j, i)) / 2.0;
+      (*Y)(col, row) = (*Y)(row, col);
+      col++;
+    }
+    row++;
+  }
+}
 SolverConfiguration APIConvertSolverConfiguration(
     const CONEX_SolverConfiguration* config) {
   SolverConfiguration c;
@@ -314,6 +335,19 @@ CONEX_STATUS CONEX_NewQuadraticCost(void* p, int* constraint_id) {
   Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(n, n);
   bool status = prg->AddQuadraticCost(Q);
   *constraint_id = prg->NumberOfConstraints() - 1;
+  return status;
+}
+
+CONEX_STATUS CONEX_AddQuadraticCost(void* p, const double* A, int Ar, int Ac) {
+  Program* prg;
+  SAFER_CAST_TO_Program(p, prg);
+  int n = prg->GetNumberOfVariables();
+  Eigen::MatrixXd Q;
+  std::vector<int> vars;
+
+  Eigen::Map<const DenseMatrix> input(A, Ar, Ac);
+  NonZeroSubMat(input, &vars, &Q);
+  bool status = prg->AddQuadraticCost(Q, vars);
   return status;
 }
 
