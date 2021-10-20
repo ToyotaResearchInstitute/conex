@@ -258,6 +258,11 @@ class RLDLT {
     return m_info;
   }
 
+  bool regularization_used() const {
+    eigen_assert(m_isInitialized && "RLDLT is not initialized.");
+    return m_regularization_used;
+  }
+
 #ifndef EIGEN_PARSED_BY_DOXYGEN
   template <typename RhsType, typename DstType>
   EIGEN_DEVICE_FUNC void _solve_impl(const RhsType& rhs, DstType& dst) const;
@@ -280,6 +285,7 @@ class RLDLT {
   TmpMatrixType m_temporary;
   internal::SignMatrix m_sign;
   bool m_isInitialized;
+  bool m_regularization_used;
   ComputationInfo m_info;
 };
 
@@ -301,13 +307,14 @@ struct rldlt_inplace<Lower> {
     const Index size = mat.rows();
     bool found_zero_pivot = false;
     bool ret = true;
+    const double regularization_value = 1e-9;
 
     if (size <= 1) {
-      if (std::fabs(mat.coeff(0, 0)) < 1e-9) {
+      if (std::fabs(mat.coeff(0, 0)) < regularization_value) {
         if (mat.coeff(0, 0) < 0) {
-          mat.coeffRef(0, 0) = -1e-9;
+          mat.coeffRef(0, 0) = -regularization_value;
         } else {
-          mat.coeffRef(0, 0) = 1e-9;
+          mat.coeffRef(0, 0) = regularization_value;
         }
       }
       transpositions.setIdentity();
@@ -376,6 +383,7 @@ struct rldlt_inplace<Lower> {
 
       if (!pivot_is_valid) {
         pivot_is_valid = true;
+        ret = false;
         if (mat.coeffRef(k, k) < 0) {
           mat.coeffRef(k, k) = -(1e-9);
         } else {
@@ -556,11 +564,10 @@ RLDLT<MatrixType, _UpLo>& RLDLT<MatrixType, _UpLo>::compute(
   m_temporary.resize(size);
   m_sign = internal::ZeroSign;
 
-  m_info = internal::rldlt_inplace<UpLo>::unblocked(m_matrix, m_transpositions,
-                                                    m_temporary, m_sign)
-               ? Success
-               : NumericalIssue;
+  m_regularization_used = !internal::rldlt_inplace<UpLo>::unblocked(
+      m_matrix, m_transpositions, m_temporary, m_sign);
 
+  m_info = Success;
   m_isInitialized = true;
   return *this;
 }

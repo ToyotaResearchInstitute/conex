@@ -181,8 +181,10 @@ bool T::Factor() {
   if (use_cholesky_) {
     return BlockTriangularOperations::BlockCholeskyInPlace(&mat.workspace_);
   } else {
-    return BlockTriangularOperations::BlockLDLTInPlace(&mat.workspace_,
-                                                       &factorization);
+    bool no_regularization = BlockTriangularOperations::BlockLDLTInPlace(
+        &mat.workspace_, &factorization);
+    factorization_regularized_ = !no_regularization;
+    return true;
   }
 }
 

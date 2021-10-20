@@ -318,11 +318,12 @@ bool T::BlockLDLTInPlace(
   auto& llts = *factorization;
   llts.clear();
 
+  bool regularization_used = false;
   for (size_t i = 0; i < C->diagonal.size(); i++) {
     // In place LLT of [n, n] block
     llts.emplace_back(C->diagonal[i]);
-    if (llts.back().info() != Eigen::Success) {
-      return false;
+    if (llts.back().regularization_used()) {
+      regularization_used = true;
     }
     Eigen::PermutationMatrix<-1> P(llts[i].transpositionsP());
 
@@ -344,7 +345,7 @@ bool T::BlockLDLTInPlace(
       }
     }
   }
-  return true;
+  return !regularization_used;
 }
 
 }  // namespace conex

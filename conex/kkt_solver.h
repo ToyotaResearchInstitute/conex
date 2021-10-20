@@ -64,6 +64,7 @@ class Solver {
   Eigen::PermutationMatrix<-1> Pt;
   Eigen::VectorXd b_permuted_;
   std::vector<KKT_SystemAssembler*> assembler;
+  bool factorization_regularized_ = false;
 };
 
 }  // namespace conex
