@@ -4,6 +4,7 @@
 #include "conex/kkt_system_assembler.h"
 #include "conex/supernodal_solver.h"
 
+using Eigen::VectorXd;
 using std::vector;
 namespace {
 
@@ -171,6 +172,12 @@ void T::Assemble() {
 }
 
 bool T::Factor() {
+  // We need the KKT matrix for iterative refinement. Since the factorization is
+  // done in-place, we save a copy here.  TODO(FrankPermenter): save a sparse
+  // copy of the matrix instead.
+  if (iterative_refinement_iterations_ > 0) {
+    kkt_matrix_ = KKTMatrix();
+  }
   use_cholesky_ = true;
   for (auto di : dual_variables_) {
     if (di.size() > 0) {
@@ -204,10 +211,16 @@ Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) {
   return Pt * b_permuted_;
 }
 
-void T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
+double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
+  double residual_norm = -1;
   if (b->rows() != Pt.rows()) {
     throw std::runtime_error(
         "Supernodal solver input error: invalid dimensions.");
+  }
+
+  Eigen::VectorXd total_residual;
+  if (iterative_refinement_iterations_ > 0) {
+    total_residual = *b;
   }
   b_permuted_ = Pt.transpose() * (*b);
 
@@ -219,6 +232,22 @@ void T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
                                                 &b_permuted_);
   }
   *b = Pt * b_permuted_;
+  for (int i = 0; i < iterative_refinement_iterations_; i++) {
+    auto& y = *b;
+    const VectorXd residual = total_residual - kkt_matrix_ * y;
+    residual_norm = residual.norm();
+    b_permuted_ = Pt.transpose() * (residual);
+    if (use_cholesky_) {
+      BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_,
+                                                      &b_permuted_);
+    } else {
+      BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
+                                                  &b_permuted_);
+    }
+    VectorXd temp = Pt * b_permuted_;
+    y += temp;
+  }
+  return residual_norm;
 }
 
 Eigen::MatrixXd T::KKTMatrix() {

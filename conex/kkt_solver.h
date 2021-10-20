@@ -47,9 +47,12 @@ class Solver {
   void Assemble(Eigen::VectorXd* AW, Eigen::VectorXd* AWc,
                 double* inner_product_of_c_and_w);
   void Assemble();
+  void SetIterativeRefinementIterations(int x) {
+    iterative_refinement_iterations_ = x;
+  }
   bool Factor();
   Eigen::VectorXd Solve(const Eigen::VectorXd& b);
-  void SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b);
+  double SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b);
   Eigen::MatrixXd KKTMatrix();
 
  private:
@@ -65,6 +68,8 @@ class Solver {
   Eigen::VectorXd b_permuted_;
   std::vector<KKT_SystemAssembler*> assembler;
   bool factorization_regularized_ = false;
+  int iterative_refinement_iterations_ = 0;
+  Eigen::MatrixXd kkt_matrix_;
 };
 
 }  // namespace conex

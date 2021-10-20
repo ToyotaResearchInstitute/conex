@@ -28,6 +28,7 @@ struct SolverConfiguration {
   double infeasibility_threshold = 1e5;
   double kkt_error_tolerance = 1e10;
   int enable_rescaling = 1;
+  int iterative_refinement_iterations = 0;
 };
 
 struct ConexStatus {

@@ -299,6 +299,8 @@ bool Solve(Program& prog, const SolverConfiguration& config,
   auto& c_scaling = prog.stats->c_scaling();
   auto& b_scaling = prog.stats->b_scaling();
 
+  solver->SetIterativeRefinementIterations(
+      config.iterative_refinement_iterations);
   if (config.initialization_mode) {
     PRINTSTATUS("Warmstarting...");
     initial_centering_steps = config.initial_centering_steps_warmstart;
@@ -352,7 +354,6 @@ bool Solve(Program& prog, const SolverConfiguration& config,
       inv_sqrt_mu_max = 1.0 / std::sqrt(mu_target);
     }
 
-    auto M = solver->KKTMatrix();
     START_TIMER(Factor)
     if (!solver->Factor()) {
       if (i == 0 && config.initialization_mode) {
@@ -406,7 +407,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
             (b * b_scaling + prog.sys.AQc * c_scaling) -
         2 * prog.sys.AW;
     START_TIMER(Solve)
-    solver->SolveInPlace(&y);
+    double residual = solver->SolveInPlace(&y);
     END_TIMER
 
     newton_step_parameters.e_weight = 1;
@@ -459,6 +460,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     REPORT(cx);
     kkt_error = std::fabs(cx - by - s_dot_x) / s_dot_x;
     REPORT(kkt_error);
+    REPORT(residual);
 
     prog.stats->num_iter = i + 1;
     prog.stats->sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;
