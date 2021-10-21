@@ -105,11 +105,12 @@ class Program {
 
   void SetNumberOfVariables(int m) {
     kkt_system_manager_.SetNumberOfVariables(m);
-    sys.m_ = m;
     linear_cost_ = Eigen::VectorXd::Zero(m);
   }
 
-  int GetNumberOfVariables() { return sys.m_; }
+  int GetNumberOfVariables() {
+    return kkt_system_manager_.GetNumberOfVariables();
+  }
 
   template <typename T>
   void GetDualVariable(int i, T* xi) {
