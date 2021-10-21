@@ -6,6 +6,12 @@
 
 namespace conex {
 
+enum : int {
+  CONEX_LLT_FACTORIZATION = 0,
+  CONEX_LDLT_FACTORIZATION = 1,
+  CONEX_QR_FACTORIZATION = 2,
+};
+
 class Solver {
  public:
   Solver(const std::vector<std::vector<int>>& cliques,
@@ -50,6 +56,8 @@ class Solver {
   void SetIterativeRefinementIterations(int x) {
     iterative_refinement_iterations_ = x;
   }
+  void SetSolverMode(int mode) { mode_ = mode; }
+
   bool Factor();
   Eigen::VectorXd Solve(const Eigen::VectorXd& b);
   double SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b);
@@ -70,6 +78,8 @@ class Solver {
   bool factorization_regularized_ = false;
   int iterative_refinement_iterations_ = 0;
   Eigen::MatrixXd kkt_matrix_;
+  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr_decomp_;
+  int mode_;
 };
 
 }  // namespace conex

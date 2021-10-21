@@ -172,50 +172,65 @@ void T::Assemble() {
 }
 
 bool T::Factor() {
-  // We need the KKT matrix for iterative refinement. Since the factorization is
-  // done in-place, we save a copy here.  TODO(FrankPermenter): save a sparse
-  // copy of the matrix instead.
-  if (iterative_refinement_iterations_ > 0) {
+  // TODO(FrankPermenter): save a sparse copy of the matrix instead.
+  bool use_qr = mode_ == CONEX_QR_FACTORIZATION;
+  if (iterative_refinement_iterations_ > 0 || use_qr) {
     kkt_matrix_ = KKTMatrix();
   }
-  use_cholesky_ = true;
-  for (auto di : dual_variables_) {
-    if (di.size() > 0) {
-      use_cholesky_ = false;
-      break;
+
+  if (!use_qr) {
+    use_cholesky_ = true;
+    for (auto di : dual_variables_) {
+      if (di.size() > 0) {
+        use_cholesky_ = false;
+        break;
+      }
     }
-  }
-  if (use_cholesky_) {
-    return BlockTriangularOperations::BlockCholeskyInPlace(&mat.workspace_);
+    if (use_cholesky_) {
+      return BlockTriangularOperations::BlockCholeskyInPlace(&mat.workspace_);
+    } else {
+      bool no_regularization = BlockTriangularOperations::BlockLDLTInPlace(
+          &mat.workspace_, &factorization);
+      factorization_regularized_ = !no_regularization;
+      return true;
+    }
   } else {
-    bool no_regularization = BlockTriangularOperations::BlockLDLTInPlace(
-        &mat.workspace_, &factorization);
-    factorization_regularized_ = !no_regularization;
+    qr_decomp_.compute(kkt_matrix_);
     return true;
   }
 }
 
-// TODO(FrankPermenter): Reimplement Solve using SolveInPlace.
 Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) {
   assert(b.rows() == Pt.rows());
-  b_permuted_ = Pt.transpose() * b;
 
-  if (use_cholesky_) {
-    BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_,
-                                                    &b_permuted_);
+  bool use_qr = mode_ == CONEX_QR_FACTORIZATION;
+  if (!use_qr) {
+    b_permuted_ = Pt.transpose() * b;
+    if (use_cholesky_) {
+      BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_,
+                                                      &b_permuted_);
+    } else {
+      BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
+                                                  &b_permuted_);
+    }
+    return Pt * b_permuted_;
   } else {
-    BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
-                                                &b_permuted_);
+    return qr_decomp_.solve(b);
   }
-
-  return Pt * b_permuted_;
 }
 
 double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
+  bool use_qr = mode_ == CONEX_QR_FACTORIZATION;
   double residual_norm = -1;
   if (b->rows() != Pt.rows()) {
     throw std::runtime_error(
         "Supernodal solver input error: invalid dimensions.");
+  }
+
+  if (use_qr) {
+    VectorXd sol = qr_decomp_.solve(*b);
+    *b = sol;
+    return -1;
   }
 
   Eigen::VectorXd total_residual;

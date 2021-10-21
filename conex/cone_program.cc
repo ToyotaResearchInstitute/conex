@@ -301,6 +301,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
 
   solver->SetIterativeRefinementIterations(
       config.iterative_refinement_iterations);
+  solver->SetSolverMode(config.kkt_solver);
   if (config.initialization_mode) {
     PRINTSTATUS("Warmstarting...");
     initial_centering_steps = config.initial_centering_steps_warmstart;

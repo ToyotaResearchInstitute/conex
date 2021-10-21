@@ -85,6 +85,7 @@ SolverConfiguration APIConvertSolverConfiguration(
   c.infeasibility_threshold = config->infeasibility_threshold;
   c.kkt_error_tolerance = config->kkt_error_tolerance;
   c.enable_rescaling = config->enable_rescaling;
+  c.kkt_solver = config->kkt_solver;
   return c;
 }
 }  // namespace

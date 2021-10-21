@@ -27,6 +27,7 @@ struct SolverConfiguration {
   int max_iterations = 25;
   double infeasibility_threshold = 1e5;
   double kkt_error_tolerance = 1e10;
+  int kkt_solver = 0; /* 0 = LLT, 1 = LDLT, 2 = QR*/
   int enable_rescaling = 1;
   int iterative_refinement_iterations = 0;
 };

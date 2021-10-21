@@ -1,0 +1,95 @@
+#include <stdlib.h>
+#include <iostream>
+#include <memory>
+#include "conex/cone_program.h"
+#include "conex/constraint.h"
+#include "conex/equality_constraint.h"
+#include "conex/linear_constraint.h"
+#include "gtest/gtest.h"
+#include <Eigen/Dense>
+
+namespace conex {
+using DenseMatrix = Eigen::MatrixXd;
+using Eigen::VectorXd;
+
+int DoRandomDenseTest(const SolverConfiguration& config, int number_of_tests,
+                      int random_seed) {
+  srand(random_seed);
+  int total_iters = 0;
+  for (int i = 0; i < number_of_tests; i++) {
+    int num_variables = 5;
+    int num_constraints = 6 + 2 * i;
+    double eps = 1e-12;
+
+    DenseMatrix Alinear = DenseMatrix::Random(num_constraints, num_variables);
+    DenseMatrix Clinear = DenseMatrix::Random(num_constraints, 1);
+    Clinear = Clinear.array().abs();
+
+    LinearConstraint linear_constraint{num_constraints, &Alinear, &Clinear};
+
+    Program prog(num_variables);
+    prog.AddConstraint(linear_constraint);
+
+    VectorXd x0 = VectorXd::Random(num_constraints, 1);
+    x0 = x0.array().abs();
+    x0 *= 0.01 / x0.norm();
+    VectorXd b = Alinear.transpose() * x0;
+    DenseMatrix y(num_variables, 1);
+    Solve(b, prog, config, y.data());
+
+    VectorXd x(num_constraints);
+    prog.GetDualVariable(0, &x);
+
+    VectorXd slack = Clinear - Alinear * y;
+    EXPECT_LE((Alinear.transpose() * x - b).norm(), eps * b.norm());
+    EXPECT_GE(slack.minCoeff(), -eps);
+    EXPECT_GE(x.minCoeff(), -eps);
+    EXPECT_GE(slack.dot(x), -eps);
+    double mu = 1.0 / (config.inv_sqrt_mu_max * config.inv_sqrt_mu_max);
+    EXPECT_LE(slack.dot(x), (mu + std::sqrt(eps)) * num_constraints);
+    auto status = prog.Status();
+    total_iters += status.num_iterations;
+  }
+  return total_iters;
+}
+
+auto GetConfiguration() {
+  SolverConfiguration config;
+  config.prepare_dual_variables = true;
+  config.inv_sqrt_mu_max = 5e5;
+  config.divergence_upper_bound = 1000;
+  config.dinf_upper_bound = 1.35;
+  config.final_centering_tolerance = 1;
+  return config;
+}
+
+int num_tests = 3;
+int random_seed = 1;
+
+GTEST_TEST(KKTSolver, UseIterativeRefinement) {
+  auto config = GetConfiguration();
+  config.iterative_refinement_iterations = 3;
+  config.kkt_solver = CONEX_LLT_FACTORIZATION;
+  DoRandomDenseTest(config, num_tests, random_seed);
+}
+
+GTEST_TEST(KKTSolver, UseLLT) {
+  auto config = GetConfiguration();
+  config.iterative_refinement_iterations = 0;
+  config.kkt_solver = CONEX_LLT_FACTORIZATION;
+  DoRandomDenseTest(config, num_tests, random_seed);
+}
+
+GTEST_TEST(LP, UseLDLT) {
+  auto config = GetConfiguration();
+  config.kkt_solver = CONEX_LDLT_FACTORIZATION;
+  DoRandomDenseTest(config, num_tests, random_seed);
+}
+
+GTEST_TEST(LP, UseQR) {
+  auto config = GetConfiguration();
+  config.kkt_solver = CONEX_QR_FACTORIZATION;
+  DoRandomDenseTest(config, num_tests, random_seed);
+}
+
+}  // namespace conex

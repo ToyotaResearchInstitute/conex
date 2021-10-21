@@ -436,6 +436,16 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "kkt_solver_options_test",
+    srcs = glob(["test/kkt_solver_options_test.cc"]),
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        "conex_lib",
+        "@gtest//:main",
+    ],
+)
+
 cc_binary(
     name = "solver_failures",
     srcs = ["test/solver_failures.cc"],

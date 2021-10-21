@@ -26,6 +26,7 @@ typedef struct {
   double infeasibility_threshold;
   double kkt_error_tolerance;
   int enable_rescaling;
+  int kkt_solver;
 } CONEX_SolverConfiguration;
 
 typedef struct {
