@@ -33,7 +33,10 @@ GTEST_TEST(Warmstart, AgreesWithFullSolveIfNoDataIsChanged) {
 
   DenseMatrix ywarm(m, 1);
   for (int i = 0; i < num_iters; i++) {
-    config.initialization_mode = i != 0;
+    config.initialization_mode = CONEX_INITIALIZATION_MODE_COLDSTART;
+    if (i != 0) {
+      config.initialization_mode = CONEX_INITIALIZATION_MODE_WARMSTART;
+    }
     config.max_iterations = 1;
     config.final_centering_steps = 0;
     Solve(b, prog, config, ywarm.data());
@@ -68,7 +71,7 @@ GTEST_TEST(Warmstart, TestWorkspaceInitialization) {
   Program prog2(m, &prog.memory_);
   prog2.AddConstraint(LMI);
   prog2.AddConstraint(linear_constraint);
-  config.initialization_mode = 1;
+  config.initialization_mode = CONEX_INITIALIZATION_MODE_WARMSTART;
   config.max_iterations = 2;
   DenseMatrix ywarm(m, 1);
   Solve(b, prog2, config, ywarm.data());

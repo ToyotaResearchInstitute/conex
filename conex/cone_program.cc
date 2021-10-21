@@ -76,7 +76,8 @@ void ConstructSchurComplementSystem(std::vector<T*>* c, bool initialize,
 }
 
 bool Initialize(Program& prog, const SolverConfiguration& config) {
-  if (!prog.is_initialized || config.initialization_mode == 0) {
+  if (!prog.is_initialized ||
+      config.initialization_mode == CONEX_INITIALIZATION_MODE_COLDSTART) {
     prog.stats = std::make_unique<WorkspaceStats>(config.max_iterations);
     auto& solver = prog.solver;
     auto& kkt = prog.kkt;
@@ -85,7 +86,7 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
     prog.sys.residual_only_ = true;
 
     prog.InitializeWorkspace();
-    if (config.initialization_mode == 0) {
+    if (config.initialization_mode == CONEX_INITIALIZATION_MODE_COLDSTART) {
       prog.stats->b_scaling() = 1;
       prog.stats->c_scaling() = 1;
       SetIdentity(&prog.constraints_);
@@ -339,11 +340,11 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     AssembleSchurComplementResiduals(&prog.kkt_system_manager_, &prog.sys);
     END_TIMER
 
-    if (i < 1 && config.initialization_mode == 0 && config.enable_rescaling) {
-      b_scaling = 1.0 / (1 + b.norm());
-      c_scaling = 1.0 / (1 + prog.sys.AQc.norm());
-    }
-    if (i < 1) {
+    if (i < 1 && config.enable_rescaling) {
+      if (config.initialization_mode == CONEX_INITIALIZATION_MODE_COLDSTART) {
+        b_scaling = 1.0 / (1 + b.norm());
+        c_scaling = 1.0 / (1 + prog.sys.AQc.norm());
+      }
       // The solver returns xhat = b_scaling * x and
       //                    shat = c_scaling * s
       // satisfying xhat * shat = mu * I
@@ -357,7 +358,8 @@ bool Solve(Program& prog, const SolverConfiguration& config,
 
     START_TIMER(Factor)
     if (!solver->Factor()) {
-      if (i == 0 && config.initialization_mode) {
+      if (i == 0 &&
+          config.initialization_mode == CONEX_INITIALIZATION_MODE_WARMSTART) {
         PRINTSTATUS("Aborting warmstart...");
         SetIdentity(&prog.constraints_);
         warmstart_aborted = true;
@@ -423,7 +425,8 @@ bool Solve(Program& prog, const SolverConfiguration& config,
       newton_step_parameters.step_size = 1;
     }
 
-    if (i == 0 && config.initialization_mode &&
+    if (i == 0 &&
+        (config.initialization_mode == CONEX_INITIALIZATION_MODE_WARMSTART) &&
         info.norminfd >= config.warmstart_abort_threshold) {
       PRINTSTATUS("Aborting warmstart...");
       SetIdentity(&prog.constraints_);

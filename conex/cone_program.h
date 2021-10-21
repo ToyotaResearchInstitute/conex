@@ -9,6 +9,11 @@
 
 namespace conex {
 
+enum : int {
+  CONEX_INITIALIZATION_MODE_COLDSTART = 0,
+  CONEX_INITIALIZATION_MODE_WARMSTART = 1,
+};
+
 struct SolverConfiguration {
   int prepare_dual_variables = 0;
   int initialization_mode = 0;
