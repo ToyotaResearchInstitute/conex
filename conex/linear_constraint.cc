@@ -44,7 +44,8 @@ void PreprocessLinearInequality(const MatrixXd& A, const MatrixXd& lb,
     }
   }
 }
-bool FindMinimumMu(const VectorXd& d0, const VectorXd& delta, double dinfmax,
+template <typename T>
+bool FindMinimumMu(const T& d0, const T& delta, double dinfmax,
                    LineSearchOutput* output) {
   auto& upper_bound = output->upper_bound;
   auto& lower_bound = output->lower_bound;
@@ -78,27 +79,26 @@ bool FindMinimumMu(const VectorXd& d0, const VectorXd& delta, double dinfmax,
   }
   return success;
 }
-// TODO(FrankPermenter): Remove dynamic memory allocation and define
-// EIGEN_NO_MALLOC
+
 bool PerformLineSearch(LinearConstraint* o, const LineSearchParameters& params,
                        const Ref& y0, const Ref& y1, LineSearchOutput* output) {
   auto* workspace = &o->workspace_;
 
-  auto& minus_s = workspace->temp_1;
-  auto& W = workspace->W;
-  auto& SW = workspace->temp_1;
-  auto& d0 = workspace->temp_2;
+  auto& d0 = workspace->temp_1;
+  auto& d1 = workspace->temp_2;
 
-  o->ComputeNegativeSlack(params.c0_weight, y0, &minus_s);
-  SW = minus_s.cwiseProduct(W);
-  int n = SW.rows();
-  d0 = SW + DenseMatrix::Ones(n, 1);
+  // d =  e + w \circ ( A'y  - c k_1)
+  o->ComputeNegativeSlack(params.c0_weight, y0, &d0);
+  d0 = d0.cwiseProduct(o->workspace_.W);
+  d0.array() += 1;
 
-  o->ComputeNegativeSlack(params.c1_weight, y1, &minus_s);
-  SW = minus_s.cwiseProduct(W);
-  VectorXd d1 = SW + DenseMatrix::Ones(n, 1);
+  o->ComputeNegativeSlack(params.c1_weight, y1, &d1);
+  d1 = d1.cwiseProduct(o->workspace_.W);
+  d1.array() += 1;
 
-  bool success = FindMinimumMu(d0, d1 - d0, params.dinf_upper_bound, output);
+  d1 = d1 - d0;
+
+  bool success = FindMinimumMu(d0, d1, params.dinf_upper_bound, output);
   return !success;
 }
 
@@ -110,15 +110,13 @@ void PrepareStep(LinearConstraint* o, const StepOptions& options, const Ref& y,
   auto* workspace = &o->workspace_;
   auto& minus_s = workspace->temp_1;
   if (!options.affine) {
-    o->ComputeNegativeSlack(options.c_weight, y, &minus_s);
-    auto& W = workspace->W;
-    auto& SW = workspace->temp_1;
     auto& d = workspace->temp_2;
-    SW = minus_s.cwiseProduct(W);
 
-    int n = SW.rows();
+    // d =  e + w \circ ( A'y  - c k_1)
+    o->ComputeNegativeSlack(options.c_weight, y, &d);
+    d = d.cwiseProduct(o->workspace_.W);
+    d.array() += options.e_weight;
 
-    d = SW + DenseMatrix::Ones(n, 1);
     double norminf = (d).array().abs().maxCoeff();
     info->norminfd = norminf;
     info->normsqrd = d.squaredNorm();
@@ -192,9 +190,7 @@ void ConstructSchurComplementSystem(LinearConstraint* o, bool initialize,
     sys->inner_product_of_w_and_c = WC.sum();
     sys->inner_product_of_c_and_Qc = WC.squaredNorm();
     if (G->rows() != m) {
-      G->setZero();
-      sys->AW.setZero();
-      sys->AQc.setZero();
+      sys->setZero();
     }
     (*G).topLeftCorner(m, m).noalias() = WA.transpose() * WA;
     sys->AW.topRows(m).noalias() = o->constraint_matrix_.transpose() * W;
