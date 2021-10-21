@@ -10,7 +10,18 @@
 
 namespace conex {
 using DenseMatrix = Eigen::MatrixXd;
+using Eigen::MatrixXd;
 using Eigen::VectorXd;
+
+auto GetConfiguration() {
+  SolverConfiguration config;
+  config.prepare_dual_variables = true;
+  config.inv_sqrt_mu_max = 5e5;
+  config.divergence_upper_bound = 1000;
+  config.dinf_upper_bound = 1.35;
+  config.final_centering_tolerance = 1;
+  return config;
+}
 
 int DoRandomDenseTest(const SolverConfiguration& config, int number_of_tests,
                       int random_seed) {
@@ -53,16 +64,6 @@ int DoRandomDenseTest(const SolverConfiguration& config, int number_of_tests,
   return total_iters;
 }
 
-auto GetConfiguration() {
-  SolverConfiguration config;
-  config.prepare_dual_variables = true;
-  config.inv_sqrt_mu_max = 5e5;
-  config.divergence_upper_bound = 1000;
-  config.dinf_upper_bound = 1.35;
-  config.final_centering_tolerance = 1;
-  return config;
-}
-
 int num_tests = 3;
 int random_seed = 1;
 
@@ -90,6 +91,56 @@ GTEST_TEST(LP, UseQR) {
   auto config = GetConfiguration();
   config.kkt_solver = CONEX_QR_FACTORIZATION;
   DoRandomDenseTest(config, num_tests, random_seed);
+}
+
+GTEST_TEST(QR, SuccessWithDependentInequalityColumns) {
+  auto config = GetConfiguration();
+  config.kkt_solver = CONEX_QR_FACTORIZATION;
+  Eigen::MatrixXd A(3, 4);
+  Eigen::VectorXd c(3);
+  A << 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0;
+  c << 1, 1, 1;
+
+  Program prog(4);
+  prog.AddConstraint(LinearConstraint{A, c});
+  MatrixXd b = A.transpose() * c;
+
+  VectorXd solution(4);
+  Solve(b, prog, config, solution.data());
+  EXPECT_EQ(prog.Status().solved, 1);
+
+  config.kkt_solver = CONEX_LLT_FACTORIZATION;
+  Solve(b, prog, config, solution.data());
+  EXPECT_EQ(prog.Status().solved, 0);
+}
+
+GTEST_TEST(QR, SuccessWithDependentEquations) {
+  auto config = GetConfiguration();
+  Eigen::MatrixXd A(3, 4);
+  Eigen::VectorXd c(3);
+  A << 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0;
+  c << 1, 1, 1;
+
+  MatrixXd B(5, 4);
+  VectorXd d(5);
+  B << 1, -1, 0, 0, 1, -1, 0, 0, 2, -2, 0, 0, 3, -3, 0, 0, 1, -1, 0, 0;
+  d << 0, 0, 0, 0, 0;
+
+  Program prog(4);
+  prog.AddConstraint(LinearConstraint{A, c});
+  prog.AddConstraint(EqualityConstraints{B, d});
+  MatrixXd b = A.transpose() * c;
+
+  VectorXd solution(4);
+  config.kkt_solver = CONEX_QR_FACTORIZATION;
+  Solve(b, prog, config, solution.data());
+  EXPECT_EQ(prog.Status().solved, 1);
+  EXPECT_NEAR((B * solution - d).norm(), 0, 1e-9);
+
+  config.kkt_solver = CONEX_LDLT_FACTORIZATION;
+  Solve(b, prog, config, solution.data());
+  EXPECT_EQ(prog.Status().solved, 1);
+  EXPECT_NEAR((B * solution - d).norm(), 0, 1e-9);
 }
 
 }  // namespace conex
