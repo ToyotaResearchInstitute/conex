@@ -34,6 +34,9 @@ MatrixData GetData(const std::vector<Clique>& cliques, int init = 0);
 MatrixData GetData(const std::vector<Clique>& cliques,
                    const std::vector<int>& valid_leafs, int init = 0);
 
+// Each KKT assembler fills a dense submatrix.
+// We Bind operation maps this submatrix to the data structures
+// used by the supernodal solver.
 template <typename T>
 inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
                    const std::vector<T*>& eqs) {
@@ -43,14 +46,15 @@ inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
   for (int e = static_cast<int>(eqs.size()) - 1; e >= 0; e--) {
     int i = data.clique_order.at(e);
 
+    if (sn.at(e).size() > 0) {
+      auto blockD = BuildBlock(&sn.at(e), workspace.diagonal.at(e).data());
+      eqs.at(i)->BindDiagonalBlock(&blockD);
+    }
+
     if (sep.at(e).size() > 0 && sn.at(e).size() > 0) {
       auto block = BuildBlock(&sn.at(e), &sep.at(e),
                               workspace.off_diagonal.at(e).data());
       eqs.at(i)->BindOffDiagonalBlock(&block);
-    }
-    if (sn.at(e).size() > 0) {
-      auto blockD = BuildBlock(&sn.at(e), workspace.diagonal.at(e).data());
-      eqs.at(i)->BindDiagonalBlock(&blockD);
     }
 
     if (workspace.seperator_diagonal.at(e).size() > 0) {

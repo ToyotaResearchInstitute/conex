@@ -70,7 +70,7 @@ double T::GetCoeff(int i, int j) {
 }
 
 void T::BindDiagonalBlock(const DiagonalBlock* data) {
-  if (direct_update) {
+  if (diag.size() > 0) {
     throw std::runtime_error("Cannot bind multiple diagonal blocks");
   }
   diag.push_back(*data);
@@ -93,9 +93,6 @@ void T::BindDiagonalBlock(const DiagonalBlock* data) {
 }
 
 void T::BindOffDiagonalBlock(const OffDiagonalBlock* data) {
-  if (direct_update) {
-    throw std::runtime_error("Cannot bind multiple off-diagonal blocks");
-  }
   if (data->stride != -1) {
     off_diag.push_back(*data);
   } else {
@@ -117,6 +114,30 @@ void T::UpdateBlocks() {
   SetDenseData();
 
   if (direct_update) {
+    // Direct update means that the diagonal blocks have been set by
+    // SetDenseData, and any off-diagonal terms are fill-in.
+    for (const auto& d : off_diag) {
+      if (d.assign) {
+        Eigen::Map<MatrixXd> data(d.data, d.num_rows, d.num_cols);
+        data.setZero();
+
+#ifndef NDEBUG
+        int sizec = d.num_cols;
+        int sizer = d.num_rows;
+        auto r = d.row_data;
+        auto c = d.col_data;
+        for (int j = 0; j < sizec; j++) {
+          for (int i = 0; i < sizer; i++) {
+            int fill_in = *(r + i) < 0 || *(c + j) < 0;
+            if (!fill_in) {
+              throw std::runtime_error(
+                  "Expected fill-in. Supernodal solver is malformed.");
+            }
+          }
+        }
+#endif
+      }
+    }
     return;
   }
 
