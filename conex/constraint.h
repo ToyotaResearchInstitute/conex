@@ -11,12 +11,6 @@
 namespace conex {
 
 template <typename T>
-bool Permute(T*, std::vector<int> P) {
-  CONEX_DEMAND(false,
-               "Constraint does not support updates of linear operator.");
-}
-
-template <typename T>
 bool UpdateLinearOperator(T*, double, int, int, int, int) {
   CONEX_DEMAND(false,
                "Constraint does not support updates of linear operator.");
@@ -28,8 +22,8 @@ bool UpdateAffineTerm(T*, double, int, int, int) {
 }
 
 template <typename T>
-bool PerformLineSearch(T* o, const LineSearchParameters& params, const Ref& y0,
-                       const Ref& y1, LineSearchOutput* output) {
+bool PerformLineSearch(T*, const LineSearchParameters&, const Ref&, const Ref&,
+                       LineSearchOutput*) {
   CONEX_DEMAND(false, "Constraint does not support line search.");
 }
 
