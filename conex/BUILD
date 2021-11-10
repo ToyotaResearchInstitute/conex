@@ -47,7 +47,8 @@ cc_test(
     srcs = glob(["test/test_sdp.cc"]),
     copts = ["-Iexternal/gtest/include -fno-omit-frame-pointer"],
     deps = [
-        "conex_lib",
+        "linear_constraint",
+        "semidefinite_constraints",
         "test_util",
         "@gtest//:main",
     ],
@@ -264,7 +265,6 @@ cc_library(
         "kkt_assembler.cc",
         "kkt_solver.cc",
         "supernodal_solver.cc",
-        "tree_utils.cc",
         "triangular_matrix_workspace.cc",
     ],
     hdrs = [
@@ -284,7 +284,6 @@ cc_library(
         "newton_step.h",
         "supernodal_cholesky_data.h",
         "supernodal_solver.h",
-        "tree_utils.h",
         "triangular_matrix_workspace.h",
         "workspace.h",
     ],
@@ -344,6 +343,30 @@ cc_library(
 )
 
 cc_library(
+    name = "semidefinite_constraints",
+    srcs = [
+        "dense_lmi_constraint.cc",
+        "hermitian_psd.cc",
+        "psd_constraint.cc",
+    ],
+    hdrs = [
+        "dense_lmi_constraint.h",
+        "hermitian_psd.h",
+        "psd_constraint.h",
+    ],
+    copts = COPTS,
+    visibility = ["//visibility:public"],
+    deps = [
+        "approximate_eigenvalues",
+        "core",
+        "exponential_map",
+        "exponential_map_pade",
+        "jordan_matrix_algebra",
+        "@eigen",
+    ],
+)
+
+cc_library(
     name = "divergence",
     srcs = [
         "divergence.cc",
@@ -381,23 +404,14 @@ cc_library(
 
 cc_library(
     name = "conex_lib",
-    srcs = [
-        "cone_program.cc",
-        "dense_lmi_constraint.cc",
-        "hermitian_psd.cc",
-        "psd_constraint.cc",
-    ],
     hdrs = [
         "cone_program.h",
         "constraint.h",
         "debug_macros.h",
-        "dense_lmi_constraint.h",
         "error_checking_macros.h",
         "error_codes.h",
-        "hermitian_psd.h",
         "memory_utils.h",
         "newton_step.h",
-        "psd_constraint.h",
         "workspace.h",
     ],
     copts = COPTS,
@@ -405,11 +419,13 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "approximate_eigenvalues",
+        "core",
         "divergence",
         "exponential_map",
         "exponential_map_pade",
         "jordan_matrix_algebra",
         "linear_constraint",
+        "semidefinite_constraints",
         "socp_constraints",
         "supernodal_solver",
         "@eigen",
