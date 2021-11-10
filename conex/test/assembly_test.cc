@@ -131,7 +131,7 @@ GTEST_TEST(LDLT, TestAssembly) {
   VectorXd yref;
   ldlt.compute(T);
 
-  Solver solver(prog.cliques, prog.dual_vars);
+  SupernodalKKTSolver solver(prog.cliques, prog.dual_vars);
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(n + m);
   Eigen::VectorXd AQc(n + m);
@@ -161,7 +161,7 @@ GTEST_TEST(LDLT, Benchmark2) {
   ConstraintManager<Container> prog;
   BuildLQRProblem(N, &prog);
 
-  Solver solver(prog.cliques, prog.dual_vars);
+  SupernodalKKTSolver solver(prog.cliques, prog.dual_vars);
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(prog.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.SizeOfKKTSystem());
@@ -189,7 +189,7 @@ GTEST_TEST(Assemble, VariablesSpecifiedOutOfOrder) {
   Q << 1, 0, 0, 0, 0, 0, 0, 0, 2;
   prog.AddConstraint(LinearKKTAssemblerStatic{Q}, vector{1, 0, 2});
 
-  Solver solver(prog.cliques, prog.dual_vars);
+  SupernodalKKTSolver solver(prog.cliques, prog.dual_vars);
   solver.Bind(GetPointers(prog.eqs));
   Eigen::VectorXd AW(prog.SizeOfKKTSystem());
   Eigen::VectorXd AQc(prog.SizeOfKKTSystem());

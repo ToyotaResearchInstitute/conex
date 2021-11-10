@@ -225,7 +225,7 @@ class Program {
   SchurComplementSystem sys;
   std::unique_ptr<WorkspaceStats> stats;
   std::vector<Workspace> workspaces;
-  std::unique_ptr<Solver> solver;
+  std::unique_ptr<SupernodalKKTSolver> solver;
   std::vector<KKT_SystemAssembler> kkt;
   Eigen::VectorXd memory_;
   Eigen::VectorXd* workspace_data_;

@@ -12,15 +12,15 @@ enum : int {
   CONEX_QR_FACTORIZATION = 2,
 };
 
-class Solver {
+class SupernodalKKTSolver {
  public:
-  Solver(const std::vector<std::vector<int>>& cliques,
-         const std::vector<std::vector<int>>& dual_vars);
+  SupernodalKKTSolver(const std::vector<std::vector<int>>& cliques,
+                      const std::vector<std::vector<int>>& dual_vars);
 
-  Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
-         const std::vector<int>& order,
-         const std::vector<std::vector<int>>& supernodes,
-         const std::vector<std::vector<int>>& separators);
+  SupernodalKKTSolver(const std::vector<std::vector<int>>& cliques,
+                      int num_vars, const std::vector<int>& order,
+                      const std::vector<std::vector<int>>& supernodes,
+                      const std::vector<std::vector<int>>& separators);
 
   template <typename T>
   void Bind(const std::vector<T*>& kkt_assembler) {
@@ -59,9 +59,9 @@ class Solver {
   void SetSolverMode(int mode) { mode_ = mode; }
 
   bool Factor();
-  Eigen::VectorXd Solve(const Eigen::VectorXd& b);
-  double SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b);
-  Eigen::MatrixXd KKTMatrix();
+  Eigen::VectorXd Solve(const Eigen::VectorXd& b) const;
+  double SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const;
+  Eigen::MatrixXd KKTMatrix() const;
 
  private:
   int SizeOfSystem() { return Pt.rows(); }
@@ -73,13 +73,13 @@ class Solver {
   SparseTriangularMatrix mat;
   std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
   Eigen::PermutationMatrix<-1> Pt;
-  Eigen::VectorXd b_permuted_;
+  mutable Eigen::VectorXd b_permuted_;
   std::vector<KKT_SystemAssembler*> assembler;
   bool factorization_regularized_ = false;
   int iterative_refinement_iterations_ = 0;
-  Eigen::MatrixXd kkt_matrix_;
+  mutable Eigen::MatrixXd kkt_matrix_;
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr_decomp_;
-  int mode_;
+  int mode_ = CONEX_LLT_FACTORIZATION;
 };
 
 }  // namespace conex

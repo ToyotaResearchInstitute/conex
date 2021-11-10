@@ -93,8 +93,8 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
     }
 
     START_TIMER(Sparsity Analysis);
-    solver = std::make_unique<Solver>(prog.kkt_system_manager_.cliques,
-                                      prog.kkt_system_manager_.dual_vars);
+    solver = std::make_unique<SupernodalKKTSolver>(
+        prog.kkt_system_manager_.cliques, prog.kkt_system_manager_.dual_vars);
 
     kkt.clear();
     for (auto& c : prog.kkt_system_manager_.eqs) {
@@ -116,7 +116,7 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
 //        2 * prog.sys.AW;
 
 double ComputeMuFromLineSearch(ConstraintManager<Container>& constraints,
-                               std::unique_ptr<Solver>& solver,
+                               std::unique_ptr<SupernodalKKTSolver>& solver,
                                double dinf_upper_bound, const DenseMatrix& AQc,
                                double c_weight, const DenseMatrix& b,
                                const DenseMatrix& AW, Ref* y0) {
@@ -171,7 +171,7 @@ double MinimizeNormInf(WeightedSlackEigenvalues& p) {
   return y;
 }
 double ComputeMuFromDivergence(ConstraintManager<Container>& constraints,
-                               std::unique_ptr<Solver>& solver,
+                               std::unique_ptr<SupernodalKKTSolver>& solver,
                                const DenseMatrix& AQc, double c_weight,
                                const DenseMatrix& b,
                                const SolverConfiguration& config, int rankK,
@@ -410,7 +410,7 @@ bool Solve(Program& prog, const SolverConfiguration& config,
             (b * b_scaling + prog.sys.AQc * c_scaling) -
         2 * prog.sys.AW;
     START_TIMER(Solve)
-    double residual = solver->SolveInPlace(&y);
+    solver->SolveInPlace(&y);
     END_TIMER
 
     newton_step_parameters.e_weight = 1;
@@ -460,11 +460,12 @@ bool Solve(Program& prog, const SolverConfiguration& config,
     REPORT(mu);
     REPORT(d_2);
     REPORT(d_inf);
-    REPORT(by);
-    REPORT(cx);
-    kkt_error = std::fabs(cx - by - s_dot_x) / s_dot_x;
-    REPORT(kkt_error);
-    REPORT(residual);
+    if (!prog.contains_quadratic_costs_) {
+      REPORT(by);
+      REPORT(cx);
+      kkt_error = std::fabs(cx - by - s_dot_x) / s_dot_x;
+      REPORT(kkt_error);
+    }
 
     prog.stats->num_iter = i + 1;
     prog.stats->sqrt_inv_mu[i] = newton_step_parameters.inv_sqrt_mu;

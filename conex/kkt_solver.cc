@@ -43,7 +43,7 @@ std::vector<int> ReplaceWithPosition(const std::vector<int>& a,
 
 namespace conex {
 
-using T = Solver;
+using T = SupernodalKKTSolver;
 void T::RelabelCliques(MatrixData* data_ptr) {
   auto cliques = cliques_;
   auto& data = *data_ptr;
@@ -101,8 +101,8 @@ vector<int> is_empty(const vector<std::vector<int>>& vect) {
   return y;
 }
 
-T::Solver(const std::vector<std::vector<int>>& cliques,
-          const std::vector<std::vector<int>>& dual_vars)
+T::SupernodalKKTSolver(const std::vector<std::vector<int>>& cliques,
+                       const std::vector<std::vector<int>>& dual_vars)
     : cliques_(cliques),
       dual_variables_(dual_vars),
       data(GetData(cliques, is_empty(dual_vars),
@@ -117,10 +117,10 @@ T::Solver(const std::vector<std::vector<int>>& cliques,
 
 using std::vector;
 
-T::Solver(const std::vector<std::vector<int>>& cliques, int num_vars,
-          const std::vector<int>& order,
-          const std::vector<std::vector<int>>& supernodes,
-          const std::vector<std::vector<int>>& separators)
+T::SupernodalKKTSolver(const std::vector<std::vector<int>>& cliques,
+                       int num_vars, const std::vector<int>& order,
+                       const std::vector<std::vector<int>>& supernodes,
+                       const std::vector<std::vector<int>>& separators)
     : cliques_(cliques),
       dual_variables_(vector<vector<int>>(cliques.size())),
       data(SupernodesToData(num_vars, order, supernodes, separators)),
@@ -200,7 +200,7 @@ bool T::Factor() {
   }
 }
 
-Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) {
+Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) const {
   assert(b.rows() == Pt.rows());
 
   bool use_qr = mode_ == CONEX_QR_FACTORIZATION;
@@ -219,7 +219,7 @@ Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) {
   }
 }
 
-double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
+double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const {
   bool use_qr = mode_ == CONEX_QR_FACTORIZATION;
   double residual_norm = -1;
   if (b->rows() != Pt.rows()) {
@@ -265,7 +265,7 @@ double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) {
   return residual_norm;
 }
 
-Eigen::MatrixXd T::KKTMatrix() {
+Eigen::MatrixXd T::KKTMatrix() const {
   Eigen::MatrixXd G =
       TriangularMatrixOperations::ToDense(mat).selfadjointView<Eigen::Lower>();
   return Pt * G * Pt.transpose();
