@@ -1,7 +1,7 @@
 all: _conex.so
 
 numpy.i:
-	python dependencies/get_numpy_interface.py
+	python3 dependencies/get_numpy_interface.py
 
 _conex.so: numpy.i ../libconex.so conex.i
 	rm -rf build

@@ -4,18 +4,17 @@
 
 #include <Eigen/Dense>
 
-#include "conex/kkt_system_assembler.h"
+#include "conex/supernodal_assembler.h"
 #include "conex/triangular_matrix_workspace.h"
 
 namespace conex {
 
 using Clique = std::vector<int>;
 
-// TODO(FrankPermenter): Deprecate this class.
-
 std::vector<int> UnionOfSorted(const std::vector<int>& x1,
                                const std::vector<int>& x2);
 
+// TODO(FrankPermenter): Deprecate this struct.
 struct MatrixData {
   std::vector<std::vector<int>> cliques;
   std::vector<std::vector<int>> supernodes_original_labels;
@@ -34,9 +33,6 @@ MatrixData GetData(const std::vector<Clique>& cliques, int init = 0);
 MatrixData GetData(const std::vector<Clique>& cliques,
                    const std::vector<int>& valid_leafs, int init = 0);
 
-// Each KKT assembler fills a dense submatrix.
-// We Bind operation maps this submatrix to the data structures
-// used by the supernodal solver.
 template <typename T>
 inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
                    const std::vector<T*>& eqs) {
@@ -65,11 +61,12 @@ inline void DoBind(const MatrixData& data, TriangularMatrixWorkspace& workspace,
   }
 }
 
-struct SparseTriangularMatrix {
-  SparseTriangularMatrix(int N_, const std::vector<Clique>& cliques,
+class SparseTriangularMatrix {
+ public:
+  SparseTriangularMatrix(int num_cols, const std::vector<Clique>& cliques,
                          const std::vector<int>& supernode_sizes,
                          const Eigen::VectorXd& memory)
-      : N(N_),
+      : N(num_cols),
         workspace_(cliques, supernode_sizes),
         memory_(memory),
         path(cliques),
@@ -91,6 +88,13 @@ struct SparseTriangularMatrix {
   SparseTriangularMatrix(const MatrixData& data)
       : SparseTriangularMatrix(data.N, data.cliques, data.supernode_size) {}
 
+  SparseTriangularMatrix(const SparseTriangularMatrix& s)
+      : SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_) {}
+
+  SparseTriangularMatrix operator=(const SparseTriangularMatrix& s) {
+    return SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_);
+  }
+
   int N;
   TriangularMatrixWorkspace workspace_;
   Eigen::VectorXd memory_;
@@ -99,13 +103,6 @@ struct SparseTriangularMatrix {
   std::vector<Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>>& supernodes;
   std::vector<std::vector<int>>& snodes;
   std::vector<Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>>& separator;
-
-  SparseTriangularMatrix(const SparseTriangularMatrix& s)
-      : SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_) {}
-
-  SparseTriangularMatrix operator=(const SparseTriangularMatrix& s) {
-    return SparseTriangularMatrix(s.N, s.path, s.supernode_size, s.memory_);
-  }
 };
 std::vector<Clique> Permute(std::vector<Clique>& path,
                             std::vector<int>& permutation);
@@ -113,11 +110,6 @@ void Sort(std::vector<Clique>* path);
 
 void IntersectionOfSorted(const std::vector<int>& v1,
                           const std::vector<int>& v2, std::vector<int>* v3);
-
-void RunningIntersectionClosure(std::vector<Clique>* path);
-SparseTriangularMatrix GetFillInPattern(int N, const std::vector<Clique>& path);
-SparseTriangularMatrix MakeSparseTriangularMatrix(
-    int N, const std::vector<Clique>& path);
 
 class TriangularMatrixOperations {
  public:

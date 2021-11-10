@@ -3,8 +3,8 @@
 #include "conex/constraint_manager.h"
 #include "conex/equality_constraint.h"
 #include "conex/error_checking_macros.h"
-#include "conex/kkt_assembler.h"
 #include "conex/kkt_solver.h"
+#include "conex/supernodal_assembler.h"
 #include "workspace.h"
 
 namespace conex {
@@ -49,11 +49,11 @@ class Container {
   template <typename T>
   Container(const T& x, int num_vars)
       : obj(x), constraint(std::any_cast<T>(&obj)) {
-    kkt_assembler.SetNumberOfVariables(num_vars);
+    supernodal_assembler.SetNumberOfVariables(num_vars);
   }
   std::any obj;
   Constraint constraint;
-  LinearKKTAssembler kkt_assembler;
+  SupernodalAssembler supernodal_assembler;
 };
 
 inline Eigen::VectorXd Vars(const Eigen::VectorXd& x,
@@ -175,7 +175,7 @@ class Program {
     workspaces.clear();
     for (auto& c : kkt_system_manager_.eqs) {
       workspaces.push_back(c.constraint.workspace());
-      workspaces.emplace_back(&c.kkt_assembler.schur_complement_data);
+      workspaces.emplace_back(&c.supernodal_assembler.submatrix_data_);
     }
     workspaces.emplace_back(stats.get());
     workspaces.emplace_back(&sys);
@@ -226,7 +226,7 @@ class Program {
   std::unique_ptr<WorkspaceStats> stats;
   std::vector<Workspace> workspaces;
   std::unique_ptr<SupernodalKKTSolver> solver;
-  std::vector<KKT_SystemAssembler> kkt;
+  std::vector<SupernodalAssemblerBase*> kkt;
   Eigen::VectorXd memory_;
   Eigen::VectorXd* workspace_data_;
   bool is_initialized = false;

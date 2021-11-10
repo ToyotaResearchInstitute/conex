@@ -24,7 +24,7 @@ SOURCES = approximate_eigenvalues.cc \
 	  equality_constraint.cc \
 	  exponential_map_pade.cc \
 	  hermitian_psd.cc \
-	  kkt_assembler.cc \
+	  supernodal_assembler.cc \
 	  kkt_solver.cc \
 	  linear_constraint.cc \
 	  psd_constraint.cc \

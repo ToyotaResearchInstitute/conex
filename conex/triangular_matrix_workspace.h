@@ -24,14 +24,6 @@ struct TriangularMatrixWorkspace {
   std::vector<std::vector<int>> snodes;
   std::vector<std::vector<int>> separators;
 
-  int SizeOfSupernode(int i) const {
-    return get_size_aligned(supernode_size.at(i) * supernode_size.at(i));
-  }
-
-  int SizeOfSeparator(int i) const {
-    return get_size_aligned(supernode_size.at(i) * separators.at(i).size());
-  }
-
   friend int SizeOf(const TriangularMatrixWorkspace& o) {
     int size = 0;
     for (size_t j = 0; j < o.snodes.size(); j++) {
@@ -63,6 +55,13 @@ struct TriangularMatrixWorkspace {
  private:
   // TODO(FrankPermenter): Remove this method.
   void S_S(int clique, std::vector<double*>*);
+  int SizeOfSupernode(int i) const {
+    return get_size_aligned(supernode_size.at(i) * supernode_size.at(i));
+  }
+
+  int SizeOfSeparator(int i) const {
+    return get_size_aligned(supernode_size.at(i) * separators.at(i).size());
+  }
 };
 
 }  // namespace conex

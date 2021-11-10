@@ -4,13 +4,12 @@
 #include "conex/constraint_manager.h"
 #include "conex/debug_macros.h"
 #include "conex/kkt_solver.h"
-#include "conex/kkt_system_assembler.h"
 
 #include "gtest/gtest.h"
 
 #include "conex/block_triangular_operations.h"
 #include "conex/equality_constraint.h"
-#include "conex/kkt_assembler.h"
+#include "conex/supernodal_assembler.h"
 #include "conex/supernodal_solver.h"
 
 #include <chrono>
@@ -19,11 +18,23 @@ namespace conex {
 
 class Container {
  public:
-  template <typename T>
-  Container(const T& x, int num_vars) : obj(x), kkt(std::any_cast<T>(&obj)) {
-    kkt.SetNumberOfVariables(num_vars);
-    memory.resize(SizeOf(*kkt.GetWorkspace()));
-    Initialize(kkt.GetWorkspace(), memory.data());
+  Container(const SupernodalAssemblerStatic& x, int num_vars)
+      : kkt_(x), kkt_ptr(&kkt_) {
+    Init(num_vars);
+  }
+
+  Container(const EqualityConstraints& x, int num_vars)
+      : eq(x),
+        eq_constraint(std::make_unique<Constraint>(&eq)),
+        eq_assembler(num_vars, eq_constraint.get()),
+        kkt_ptr(&eq_assembler) {
+    Init(num_vars);
+  }
+
+  void Init(int num_vars) {
+    kkt_ptr->SetNumberOfVariables(num_vars);
+    memory.resize(SizeOf(*kkt_ptr->GetWorkspace()));
+    Initialize(kkt_ptr->GetWorkspace(), memory.data());
   }
 
   using T = Container;
@@ -32,16 +43,20 @@ class Container {
   Container& operator=(const Container&) = delete;
   Container& operator=(Container&&) = delete;
 
-  std::any obj;
   Eigen::VectorXd memory;
-  KKT_SystemAssembler kkt;
+  SupernodalAssemblerStatic kkt_;
+
+  EqualityConstraints eq;
+  std::unique_ptr<Constraint> eq_constraint;
+  SupernodalAssembler eq_assembler;
+
+  SupernodalAssemblerBase* kkt_ptr;
 };
 
-std::vector<KKT_SystemAssembler*> GetPointers(std::list<Container>& r) {
-  std::vector<KKT_SystemAssembler*> y;
+std::vector<SupernodalAssemblerBase*> GetPointers(std::list<Container>& r) {
+  std::vector<SupernodalAssemblerBase*> y;
   for (auto& ri : r) {
-    y.push_back(&ri.kkt);
-    // y.push_back(&ri.kkt);
+    y.push_back(ri.kkt_ptr);
   }
   return y;
 }
@@ -80,13 +95,13 @@ void BuildLQRProblem(int N, ConstraintManager<Container>* prg) {
                                vars);
   }
 
-  prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vector{0, 1, 2});
+  prog.AddConstraint(SupernodalAssemblerStatic{Qi}, vector{0, 1, 2});
 
   o = 3;
   for (int i = 0; i < N; i++) {
     vector vars{o, 1 + o, 2 + o};
     o += 3;
-    prog.AddConstraint(LinearKKTAssemblerStatic{Qi}, vars);
+    prog.AddConstraint(SupernodalAssemblerStatic{Qi}, vars);
   }
 }
 
@@ -185,9 +200,9 @@ GTEST_TEST(Assemble, VariablesSpecifiedOutOfOrder) {
   prog.SetNumberOfVariables(4);
   Q << 1, 0, 0, 0, 0, 0, 0, 0, 3;
 
-  prog.AddConstraint(LinearKKTAssemblerStatic{Q}, vector{1, 0, 3});
+  prog.AddConstraint(SupernodalAssemblerStatic{Q}, vector{1, 0, 3});
   Q << 1, 0, 0, 0, 0, 0, 0, 0, 2;
-  prog.AddConstraint(LinearKKTAssemblerStatic{Q}, vector{1, 0, 2});
+  prog.AddConstraint(SupernodalAssemblerStatic{Q}, vector{1, 0, 2});
 
   SupernodalKKTSolver solver(prog.cliques, prog.dual_vars);
   solver.Bind(GetPointers(prog.eqs));

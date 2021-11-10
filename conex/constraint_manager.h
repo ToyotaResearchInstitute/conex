@@ -3,7 +3,6 @@
 #include <any>
 #include <list>
 #include "conex/equality_constraint.h"
-#include "conex/kkt_system_assembler.h"
 
 #include "conex/error_checking_macros.h"
 
@@ -111,7 +110,7 @@ void AssembleSchurComplementResiduals(ConstraintManager<Container>* kkt,
   s->setZero();
   int i = 0;
   for (auto& ci : kkt->eqs) {
-    auto* rhs_i = &ci.kkt_assembler.schur_complement_data;
+    auto* rhs_i = &ci.supernodal_assembler.submatrix_data_;
     s->inner_product_of_w_and_c += rhs_i->inner_product_of_w_and_c;
     s->inner_product_of_c_and_Qc += rhs_i->inner_product_of_c_and_Qc;
     int cnt = 0;

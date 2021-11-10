@@ -1,9 +1,9 @@
 #include "conex/kkt_solver.h"
 
 #include "conex/block_triangular_operations.h"
-#include "conex/kkt_system_assembler.h"
 #include "conex/supernodal_solver.h"
 
+using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 namespace {
@@ -114,8 +114,6 @@ T::SupernodalKKTSolver(const std::vector<std::vector<int>>& cliques,
   Pt.indices() =
       Eigen::Map<Eigen::MatrixXi>(data.permutation_inverse.data(), data.N, 1);
 }
-
-using std::vector;
 
 T::SupernodalKKTSolver(const std::vector<std::vector<int>>& cliques,
                        int num_vars, const std::vector<int>& order,

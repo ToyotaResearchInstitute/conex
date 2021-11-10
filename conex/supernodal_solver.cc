@@ -241,17 +241,6 @@ class LowerTriangularSuperNodal {
   std::vector<MapT>& separator_;
 };
 
-std::vector<int> ResidualSize(std::vector<Clique>& path) {
-  std::vector<int> y;
-  for (size_t j = 0; j < path.size() - 1; j++) {
-    std::vector<int> temp;
-    IntersectionOfSorted(path.at(j), path.at(j + 1), &temp);
-    y.push_back(path.at(j).size() - temp.size());
-  }
-  y.push_back(path.back().size());
-  return y;
-}
-
 }  // namespace
 
 void IntersectionOfSorted(const std::vector<int>& v1,
@@ -259,28 +248,6 @@ void IntersectionOfSorted(const std::vector<int>& v1,
   v3->clear();
   std::set_intersection(v1.begin(), v1.end(), v2.begin(), v2.end(),
                         back_inserter(*v3));
-}
-
-SparseTriangularMatrix GetFillInPattern(
-    int N, const std::vector<Clique>& cliques_input) {
-  auto mat = MakeSparseTriangularMatrix(N, cliques_input);
-
-  for (int j = static_cast<int>(mat.path.size()) - 1; j >= 0; j--) {
-    // Initialize columns of super nodes.
-    mat.supernodes.at(j).setConstant(1);
-    mat.separator.at(j).setConstant(1);
-
-    // Update other columns: the (seperator, seperator) components.
-    int index = 0;
-    auto s_s = mat.workspace_.seperator_diagonal.at(j);
-    int n = mat.path.at(j).size();
-    for (int i = mat.supernode_size.at(j); i < n; i++) {
-      for (int k = i; k < n; k++) {
-        *s_s.at(index++) += 1;
-      }
-    }
-  }
-  return mat;
 }
 
 std::vector<Clique> Permute(std::vector<Clique>& path,
@@ -297,29 +264,6 @@ std::vector<Clique> Permute(std::vector<Clique>& path,
 void Sort(std::vector<Clique>* path) {
   for (size_t i = 0; i < path->size(); i++) {
     std::sort(path->at(i).begin(), path->at(i).end());
-  }
-}
-
-// Want A B  C  D  E
-//   Add A_i \cap A_k
-//    to all A_j for i < j < k.
-//
-void RunningIntersectionClosure(std::vector<Clique>* path) {
-  if (path->size() < 2) {
-    return;
-  }
-  int n = path->size();
-  for (int i = 0; i < n - 2; i++) {
-    for (int j = n - 1; j > i + 1; j--) {
-      std::vector<int> temp;
-      IntersectionOfSorted(path->at(i), path->at(j), &temp);
-      if (temp.size() == 0) {
-        continue;
-      }
-      for (int k = j - 1; k > i; k--) {
-        path->at(k) = UnionOfSorted(path->at(k), temp);
-      }
-    }
   }
 }
 
@@ -342,15 +286,6 @@ void TriangularMatrixOperations::SetConstant(SparseTriangularMatrix* mat,
   for (auto& n : mat->separator) {
     n.array() = val;
   }
-}
-
-SparseTriangularMatrix MakeSparseTriangularMatrix(
-    int N, const std::vector<Clique>& path_) {
-  auto path = path_;
-  Sort(&path);
-  RunningIntersectionClosure(&path);
-  auto supernode_size = ResidualSize(path);
-  return SparseTriangularMatrix(N, path, supernode_size);
 }
 
 void T::CholeskyInPlace(SparseTriangularMatrix* C) {
@@ -431,31 +366,28 @@ std::vector<int> UnionOfSorted(const std::vector<int>& x1,
   return y;
 }
 
-MatrixData SupernodesToData(int num_vars, const std::vector<int>& order,
-                            const std::vector<std::vector<int>>& supernodes,
-                            const std::vector<std::vector<int>>& separators);
-
-MatrixData GetData(const vector<vector<int>>& cliques, int init) {
+MatrixData GetData(const vector<vector<int>>& cliques, int root_clique) {
   vector<vector<int>> separators;
   vector<vector<int>> supernodes;
   vector<std::vector<int>> cliques_sorted = cliques;
   Sort(&cliques_sorted);
   vector<int> order;
 
-  PickCliqueOrder(cliques_sorted, init, &order, &supernodes, &separators);
+  PickCliqueOrder(cliques_sorted, root_clique, &order, &supernodes,
+                  &separators);
 
   return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
 }
 
 MatrixData GetData(const vector<vector<int>>& cliques,
-                   const std::vector<int>& valid_leaf, int init) {
+                   const std::vector<int>& valid_leaf, int root_clique) {
   vector<vector<int>> separators;
   vector<vector<int>> supernodes;
   vector<std::vector<int>> cliques_sorted = cliques;
   Sort(&cliques_sorted);
   vector<int> order;
 
-  PickCliqueOrder(cliques_sorted, valid_leaf, init, &order, &supernodes,
+  PickCliqueOrder(cliques_sorted, valid_leaf, root_clique, &order, &supernodes,
                   &separators);
   return SupernodesToData(GetMax(cliques) + 1, order, supernodes, separators);
 }

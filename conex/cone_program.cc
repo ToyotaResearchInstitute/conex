@@ -98,14 +98,14 @@ bool Initialize(Program& prog, const SolverConfiguration& config) {
 
     kkt.clear();
     for (auto& c : prog.kkt_system_manager_.eqs) {
-      c.kkt_assembler.Reset();
+      c.supernodal_assembler.Reset();
     }
 
     for (auto& c : prog.kkt_system_manager_.eqs) {
-      c.kkt_assembler.workspace_ = &c.constraint;
-      kkt.push_back(&c.kkt_assembler);
+      c.supernodal_assembler.workspace_ = &c.constraint;
+      kkt.push_back(&c.supernodal_assembler);
     }
-    solver->Bind(&kkt);
+    solver->Bind(kkt);
     END_TIMER
   }
   return true;

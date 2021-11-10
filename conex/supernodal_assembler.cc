@@ -1,9 +1,9 @@
-#include "conex/kkt_assembler.h"
+#include "conex/supernodal_assembler.h"
 #include "conex/debug_macros.h"
 #include "conex/newton_step.h"
 
 namespace conex {
-using T = LinearKKTAssemblerBase;
+using T = SupernodalAssemblerBase;
 using Eigen::MatrixXd;
 using std::vector;
 
@@ -63,9 +63,9 @@ double T::GetCoeff(int i, int j) {
     return 0;
   }
   if (i >= j) {
-    return schur_complement_data.G(i, j);
+    return submatrix_data_.G(i, j);
   } else {
-    return schur_complement_data.G(j, i);
+    return submatrix_data_.G(j, i);
   }
 }
 
@@ -87,7 +87,7 @@ void T::BindDiagonalBlock(const DiagonalBlock* data) {
   }
 
   if (direct_update) {
-    new (&schur_complement_data.G)
+    new (&submatrix_data_.G)
         Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>(data->data, m, m);
   }
 }
