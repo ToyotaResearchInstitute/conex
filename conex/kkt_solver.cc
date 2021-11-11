@@ -217,9 +217,8 @@ Eigen::VectorXd T::Solve(const Eigen::VectorXd& b) const {
   }
 }
 
-double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const {
+void T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const {
   bool use_qr = mode_ == CONEX_QR_FACTORIZATION;
-  double residual_norm = -1;
   if (b->rows() != Pt.rows()) {
     throw std::runtime_error(
         "Supernodal solver input error: invalid dimensions.");
@@ -228,7 +227,7 @@ double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const {
   if (use_qr) {
     VectorXd sol = qr_decomp_.solve(*b);
     *b = sol;
-    return -1;
+    return;
   }
 
   Eigen::VectorXd total_residual;
@@ -244,11 +243,11 @@ double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const {
     BlockTriangularOperations::SolveInPlaceLDLT(mat.workspace_, factorization,
                                                 &b_permuted_);
   }
+
   *b = Pt * b_permuted_;
   for (int i = 0; i < iterative_refinement_iterations_; i++) {
     auto& y = *b;
     const VectorXd residual = total_residual - kkt_matrix_ * y;
-    residual_norm = residual.norm();
     b_permuted_ = Pt.transpose() * (residual);
     if (use_cholesky_) {
       BlockTriangularOperations::SolveInPlaceCholesky(mat.workspace_,
@@ -260,7 +259,7 @@ double T::SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const {
     VectorXd temp = Pt * b_permuted_;
     y += temp;
   }
-  return residual_norm;
+  return;
 }
 
 Eigen::MatrixXd T::KKTMatrix() const {

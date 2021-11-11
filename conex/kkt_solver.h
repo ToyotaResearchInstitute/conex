@@ -41,7 +41,7 @@ class SupernodalKKTSolver {
   void SetSolverMode(int mode) { mode_ = mode; }
   bool Factor();
   Eigen::VectorXd Solve(const Eigen::VectorXd& b) const;
-  double SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const;
+  void SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const;
   Eigen::MatrixXd KKTMatrix() const;
 
  private:

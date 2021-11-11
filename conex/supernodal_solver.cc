@@ -94,12 +94,6 @@ class TriangularMatrixColumnOperations {
     return y;
   }
 
-  // double DotProduct(const Eigen::MatrixXd& x) {
-  //  double y = 0;
-  //  mat_->supernodes.at(supernode_index_).col(supernode_column_).tail(dense_size).dot(
-  //      x.segment(column, dense_size);
-  //}
-
  private:
   int supernode_index_ = 0;
   int dense_size = 0;
