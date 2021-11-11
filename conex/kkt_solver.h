@@ -32,7 +32,6 @@ class SupernodalKKTSolver {
     }
   }
 
-  void RelabelCliques(MatrixData* data_ptr);
   void Assemble(Eigen::VectorXd* AW, Eigen::VectorXd* AWc,
                 double* inner_product_of_c_and_w);
   void Assemble();
@@ -40,13 +39,13 @@ class SupernodalKKTSolver {
     iterative_refinement_iterations_ = x;
   }
   void SetSolverMode(int mode) { mode_ = mode; }
-
   bool Factor();
   Eigen::VectorXd Solve(const Eigen::VectorXd& b) const;
   double SolveInPlace(Eigen::Map<Eigen::MatrixXd, Eigen::Aligned>* b) const;
   Eigen::MatrixXd KKTMatrix() const;
 
  private:
+  void RelabelCliques(MatrixData* data_ptr);
   int SizeOfSystem() { return Pt.rows(); }
   bool use_cholesky_ = false;
   // Copies of inputs.
