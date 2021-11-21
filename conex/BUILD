@@ -38,7 +38,7 @@ cc_test(
 cc_test(
     name = "sdp",
     srcs = glob(["test/test_sdp.cc"]),
-    copts = ["-Iexternal/gtest/include -fno-omit-frame-pointer"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "linear_constraint",
         "semidefinite_constraints",
@@ -70,7 +70,7 @@ cc_test(
 cc_test(
     name = "divergence_test",
     srcs = glob(["test/test_divergence.cc"]),
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "divergence",
         "@gtest//:main",
@@ -80,7 +80,7 @@ cc_test(
 cc_test(
     name = "warmstart",
     srcs = glob(["test/test_warmstart.cc"]),
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "conex_lib",
         "test_util",
@@ -150,7 +150,7 @@ cc_library(
 cc_test(
     name = "jordan_matrix_algebra_test",
     srcs = ["test/jordan_matrix_algebra_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "jordan_matrix_algebra",
         "test_util",
@@ -161,7 +161,7 @@ cc_test(
 cc_test(
     name = "exponential_map_test",
     srcs = ["test/exponential_map_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "exponential_map",
         "@gtest//:main",
@@ -182,7 +182,7 @@ cc_library(
 cc_test(
     name = "supernodal_solver_test",
     srcs = ["test/supernodal_solver_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "supernodal_solver",
         "@gtest//:main",
@@ -192,7 +192,7 @@ cc_test(
 cc_test(
     name = "block_triangular_operations_test",
     srcs = ["test/block_triangular_operations_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "supernodal_solver",
         "@gtest//:main",
@@ -202,7 +202,7 @@ cc_test(
 cc_test(
     name = "clique_ordering_test",
     srcs = ["test/clique_ordering_test.cc"],
-    copts = ["-Iexternal/gtest/include -O0"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         "supernodal_solver",
         "@gtest//:main",
@@ -394,7 +394,6 @@ cc_library(
         "newton_step.h",
         "workspace.h",
     ],
-    linkopts = ["-lm"],
     visibility = ["//visibility:public"],
     deps = [
         "approximate_eigenvalues",
@@ -444,7 +443,6 @@ cc_test(
 cc_binary(
     name = "solver_failures",
     srcs = ["test/solver_failures.cc"],
-    copts = ["-g"],
     deps = [
         "conex_lib",
     ],
