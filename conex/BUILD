@@ -1,10 +1,3 @@
-COPTS = [
-    "-DEIGEN_NO_DEBUG",
-    "-DNDEBUG",
-    "-O3",
-    #    "-ffast-math",
-]
-
 cc_library(
     name = "test_util",
     srcs = glob(["test/test_util.cc"]),
@@ -115,7 +108,6 @@ cc_library(
     name = "approximate_eigenvalues",
     srcs = ["approximate_eigenvalues.cc"],
     hdrs = ["approximate_eigenvalues.h"],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -138,7 +130,6 @@ cc_library(
         "exponential_map_pade.cc",
     ],
     hdrs = ["exponential_map_pade.h"],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -150,7 +141,6 @@ cc_library(
         "jordan_matrix_algebra.cc",
     ],
     hdrs = ["jordan_matrix_algebra.h"],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "@eigen",
@@ -182,7 +172,6 @@ cc_library(
     name = "exponential_map",
     srcs = ["exponential_map.cc"],
     hdrs = ["exponential_map.h"],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "jordan_matrix_algebra",
@@ -249,7 +238,6 @@ cc_library(
     hdrs = [
         "tree_utils.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -286,7 +274,6 @@ cc_library(
         "triangular_matrix_workspace.h",
         "workspace.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "tree_utils",
@@ -314,7 +301,6 @@ cc_library(
         "supernodal_cholesky_data.h",
         "workspace.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "divergence",
@@ -332,7 +318,6 @@ cc_library(
         "linear_constraint.h",
         "linear_workspace.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "core",
@@ -352,7 +337,6 @@ cc_library(
         "hermitian_psd.h",
         "psd_constraint.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "approximate_eigenvalues",
@@ -375,7 +359,6 @@ cc_library(
         "memory_utils.h",
         "newton_step.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = ["@eigen"],
 )
@@ -392,7 +375,6 @@ cc_library(
         "quadratic_cone_constraint.h",
         "soc_constraint.h",
     ],
-    copts = COPTS,
     visibility = ["//visibility:public"],
     deps = [
         "core",
@@ -412,7 +394,6 @@ cc_library(
         "newton_step.h",
         "workspace.h",
     ],
-    copts = COPTS,
     linkopts = ["-lm"],
     visibility = ["//visibility:public"],
     deps = [

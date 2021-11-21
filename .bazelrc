@@ -2,6 +2,8 @@ build --action_env=LIBRARY_PATH
 build --cxxopt='-std=c++17'
 build --copt="-O3"
 build --copt="-fPIC"
+build --copt="-DEIGEN_NO_DEBUG"
+build --copt="-DNDEBUG"
 
 build:benchmark --copt="-g"
 build:benchmark --copt="-fno-omit-frame-pointer"
