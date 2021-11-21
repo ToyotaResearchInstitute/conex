@@ -1,7 +1,7 @@
 EIGEN=$(EIGEN_DIR)
 CONEX=../
 
-CPPFLAGS =-O3 -fPIC -std=c++17 -fdata-sections -ffunction-sections  
+CPPFLAGS =-O3 -fPIC -std=c++17 -fdata-sections -ffunction-sections -DNDEBUG -DEIGEN_NO_DEBUG 
 
 # BLAS 
 CPPFLAGS_LIBRARY=$(CPPFLAGS) -I $(EIGEN) -I $(CONEX) -DEIGEN_USE_BLAS -fvisibility=hidden
