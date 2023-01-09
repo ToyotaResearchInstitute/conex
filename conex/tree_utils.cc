@@ -2,7 +2,6 @@
 #include "assert.h"
 #include <stack>
 #include <vector>
-#include <array>
 
 using std::array;
 using std::vector;
