@@ -317,7 +317,7 @@ void PickCliqueOrder(const vector<vector<int>>& cliques_sorted,
   FillIn(tree, num_vars, *order, supernodes, separators);
 
   if (post_order_pointer) {
-    int count = 0;
+    [[maybe_unused]] int count = 0;
     auto& post_order = *post_order_pointer;
     for (auto& e : *separators) {
       std::vector<int> intersection;
