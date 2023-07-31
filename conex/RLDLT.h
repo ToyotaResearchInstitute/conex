@@ -1,6 +1,6 @@
-#include "conex/debug_macros.h"
-#include <Eigen/Dense>
-// This file is part of Eigen, a lightweight C++ template library
+#pragma once
+
+// This file was copied from Eigen, a lightweight C++ template library
 // for linear algebra.
 //
 // Copyright (C) 2008-2011 Gael Guennebaud <gael.guennebaud@inria.fr>
@@ -12,19 +12,20 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EIGEN_RLDLT_H
-#define EIGEN_RLDLT_H
+#include <Eigen/Dense>
 
-namespace Eigen {
+#include "conex/debug_macros.h"
 
-namespace internal {
+namespace conex {
+namespace eigen_stuff {
+
+using namespace Eigen;
+namespace internal = Eigen::internal;
+
+namespace detail {
 template <typename MatrixType, int UpLo>
 struct RLDLT_Traits;
-
-// PositiveSemiDef means positive semi-definite and non-zero; same for
-// NegativeSemiDef
-// enum SignMatrix { PositiveSemiDef, NegativeSemiDef, ZeroSign, Indefinite };
-}  // namespace internal
+}  // namespace detail
 
 /** \ingroup Cholesky_Module
  *
@@ -78,7 +79,7 @@ class RLDLT {
   typedef PermutationMatrix<RowsAtCompileTime, MaxRowsAtCompileTime>
       PermutationType;
 
-  typedef internal::LDLT_Traits<MatrixType, UpLo> Traits;
+  typedef detail::RLDLT_Traits<MatrixType, UpLo> Traits;
 
   /** \brief Default Constructor.
    *
@@ -289,7 +290,9 @@ class RLDLT {
   ComputationInfo m_info;
 };
 
-namespace internal {
+namespace detail {
+
+using namespace Eigen::internal;
 
 template <int UpLo>
 struct rldlt_inplace;
@@ -564,7 +567,7 @@ RLDLT<MatrixType, _UpLo>& RLDLT<MatrixType, _UpLo>::compute(
   m_temporary.resize(size);
   m_sign = internal::ZeroSign;
 
-  m_regularization_used = !internal::rldlt_inplace<UpLo>::unblocked(
+  m_regularization_used = !detail::rldlt_inplace<UpLo>::unblocked(
       m_matrix, m_transpositions, m_temporary, m_sign);
 
   m_info = Success;
@@ -598,7 +601,7 @@ RLDLT<MatrixType, _UpLo>& RLDLT<MatrixType, _UpLo>::rankUpdate(
     m_isInitialized = true;
   }
 
-  internal::rldlt_inplace<UpLo>::update(m_matrix, m_transpositions, m_temporary,
+  detail::rldlt_inplace<UpLo>::update(m_matrix, m_transpositions, m_temporary,
                                         w, sigma);
 
   return *this;
@@ -696,6 +699,5 @@ MatrixType RLDLT<MatrixType, _UpLo>::reconstructedMatrix() const {
   return res;
 }
 
-}  // end namespace Eigen
-
-#endif  // EIGEN_RLDLT_H
+}  // namespace eigen_stuff
+}  // namespace conex
