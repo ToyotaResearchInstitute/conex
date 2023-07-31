@@ -14,22 +14,22 @@ struct BlockTriangularOperations {
   static bool BlockCholeskyInPlace(TriangularMatrixWorkspace* mat);
   static bool BlockLDLTInPlace(
       TriangularMatrixWorkspace* mat,
-      std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>* factorization);
+      std::vector<eigen_stuff::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>* factorization);
   static void ApplyBlockInverseOfMTranspose(
       const TriangularMatrixWorkspace& mat,
-      const std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>
+      const std::vector<eigen_stuff::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>
           factorization,
       Eigen::VectorXd* y);
 
   static void ApplyBlockInverseOfMD(
       const TriangularMatrixWorkspace& mat,
-      const std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>
+      const std::vector<eigen_stuff::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>
           factorization,
       Eigen::VectorXd* y);
 
   static void SolveInPlaceLDLT(
       const TriangularMatrixWorkspace& mat,
-      const std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>
+      const std::vector<eigen_stuff::RLDLT<Eigen::Ref<Eigen::MatrixXd>>>
           factorization,
       Eigen::VectorXd* y) {
     ApplyBlockInverseOfMD(mat, factorization, y);

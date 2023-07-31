@@ -202,7 +202,7 @@ void DoLDLTTest(bool diagonal, const std::vector<Clique>& cliques) {
 
   Eigen::MatrixXd X = T::ToDense(mat).selfadjointView<Eigen::Lower>();
 
-  std::vector<Eigen::RLDLT<Eigen::Ref<MatrixXd>>> factorization;
+  std::vector<eigen_stuff::RLDLT<Eigen::Ref<MatrixXd>>> factorization;
   B::BlockLDLTInPlace(&mat.workspace_, &factorization);
 
   Eigen::VectorXd z = Eigen::VectorXd::Random(X.cols());

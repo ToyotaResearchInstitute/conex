@@ -53,7 +53,7 @@ class SupernodalKKTSolver {
   const std::vector<std::vector<int>> dual_variables_;
   MatrixData data;
   SparseTriangularMatrix mat;
-  std::vector<Eigen::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
+  std::vector<eigen_stuff::RLDLT<Eigen::Ref<Eigen::MatrixXd>>> factorization;
   Eigen::PermutationMatrix<-1> Pt;
   mutable Eigen::VectorXd b_permuted_;
   std::vector<SupernodalAssemblerBase*> assembler;
